@@ -1,26 +1,24 @@
 ---
-import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+import { Link } from '@digdir/designsystemet-react';
 import Logo from '../shared/Logo.astro';
 
 const partners = [
-  { name: 'Nkom', url: 'https://www.nkom.no', logo: '/images/partners/nkom.svg' },
-  { name: 'Datatilsynet', url: 'https://www.datatilsynet.no', logo: '/images/partners/datatilsynet.svg' },
-  { name: 'Digdir', url: 'https://www.digdir.no', logo: '/images/partners/digdir.svg' },
+  { name: 'Nkom', subtitle: 'Nasjonal kommunikasjonsmyndighet', url: 'https://www.nkom.no' },
+  { name: 'Datatilsynet', subtitle: 'Personvernmyndigheten', url: 'https://www.datatilsynet.no' },
+  { name: 'Digdir', subtitle: 'Digitaliseringsdirektoratet', url: 'https://www.digdir.no' },
 ];
 
-const quickLinks = [
-  { href: '/veiledning', label: 'Veiledning' },
+const resourceLinks = [
+  { href: '/veiledning', label: 'Veiledningsmateriell' },
   { href: '/sandkasse', label: 'Regulatorisk sandkasse' },
-  { href: '/eksempler', label: 'Gode eksempler' },
-  { href: '/artikler', label: 'Artikler' },
+  { href: '/eksempler', label: 'Case-bibliotek' },
+  { href: '/ressurser', label: 'Verktøykasse' },
 ];
 
 const aboutLinks = [
-  { href: '/om-oss', label: 'Om KI Norge' },
+  { href: '/om-oss', label: 'Om oss' },
   { href: '/kontakt', label: 'Kontakt oss' },
-  { href: '/faq', label: 'Ofte stilte sporsmal' },
   { href: '/personvern', label: 'Personvern' },
-  { href: '/tilgjengelighet', label: 'Tilgjengelighet' },
 ];
 ---
 
@@ -29,21 +27,19 @@ const aboutLinks = [
     <div class="footer-container">
       <!-- Brand Column -->
       <div class="footer-brand">
-        <Link href="/" className="footer-logo-link">
+        <div class="footer-logo">
           <Logo />
-        </Link>
-        <Paragraph size="small" className="footer-description">
-          Norges nasjonale strategi for kunstig intelligens. Et samarbeid mellom Nkom, Datatilsynet og Digdir.
-        </Paragraph>
+        </div>
+        <p class="footer-description">
+          Et tverrsektorielt samarbeid for a fremme ansvarlig og sikker bruk av kunstig intelligens i den norske forvaltningen.
+        </p>
       </div>
 
-      <!-- Quick Links Column -->
+      <!-- Resources Column -->
       <div class="footer-section">
-        <Heading level={2} size="xsmall" className="footer-heading">
-          Ressurser
-        </Heading>
+        <h4 class="footer-heading">Ressurser</h4>
         <ul class="footer-list">
-          {quickLinks.map((link) => (
+          {resourceLinks.map((link) => (
             <li>
               <Link href={link.href} className="footer-link">
                 {link.label}
@@ -55,9 +51,7 @@ const aboutLinks = [
 
       <!-- About Column -->
       <div class="footer-section">
-        <Heading level={2} size="xsmall" className="footer-heading">
-          Om oss
-        </Heading>
+        <h4 class="footer-heading">Om portalen</h4>
         <ul class="footer-list">
           {aboutLinks.map((link) => (
             <li>
@@ -74,17 +68,17 @@ const aboutLinks = [
   <!-- Partners Section -->
   <div class="footer-partners">
     <div class="footer-container">
-      <span class="partners-label">Et samarbeid mellom:</span>
+      <p class="partners-label">Partnere i KI Norge</p>
       <div class="partners-logos">
         {partners.map((partner) => (
           <a
             href={partner.url}
-            class="partner-logo-link"
+            class="partner-item"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`Besok ${partner.name}`}
           >
             <span class="partner-name">{partner.name}</span>
+            <span class="partner-subtitle">{partner.subtitle}</span>
           </a>
         ))}
       </div>
@@ -94,57 +88,71 @@ const aboutLinks = [
   <!-- Copyright -->
   <div class="footer-bottom">
     <div class="footer-container">
-      <Paragraph size="small" className="copyright">
-        &copy; {new Date().getFullYear()} KI Norge. Alle rettigheter reservert.
-      </Paragraph>
+      <p class="copyright">
+        &copy; {new Date().getFullYear()} Digitaliseringsdirektoratet (Digdir) for KI Norge. Alle rettigheter reservert.
+      </p>
     </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    background-color: var(--ds-color-neutral-surface-default);
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+    background-color: #ffffff;
+    border-top: 1px solid #e2e8f0;
     margin-top: auto;
   }
 
+  :global(html.dark) .footer {
+    background-color: #0f172a;
+    border-top-color: #1e293b;
+  }
+
   .footer-container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
     padding: 0 var(--ds-size-4);
   }
 
+  @media (min-width: 1024px) {
+    .footer-container {
+      padding: 0 var(--ds-size-10);
+    }
+  }
+
   .footer-main {
-    padding: var(--ds-size-10) 0;
+    padding: var(--ds-size-12) 0;
   }
 
   .footer-main .footer-container {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--ds-size-8);
+    gap: var(--ds-size-10);
   }
 
   @media (min-width: 768px) {
     .footer-main .footer-container {
       grid-template-columns: 2fr 1fr 1fr;
-      gap: var(--ds-size-10);
+      gap: var(--ds-size-12);
     }
   }
 
   .footer-brand {
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-4);
+    gap: var(--ds-size-6);
   }
 
-  :global(.footer-logo-link) {
-    display: inline-flex;
-    color: var(--ds-color-neutral-text-default);
+  .footer-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-size-3);
+    color: #136dec;
   }
 
-  :global(.footer-description) {
-    color: var(--ds-color-neutral-text-subtle);
+  .footer-description {
     margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
     line-height: 1.6;
     max-width: 320px;
   }
@@ -152,13 +160,20 @@ const aboutLinks = [
   .footer-section {
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-3);
+    gap: var(--ds-size-4);
   }
 
-  :global(.footer-heading) {
+  .footer-heading {
     margin: 0;
-    color: var(--ds-color-neutral-text-default);
-    font-weight: var(--ds-font-weight-semibold);
+    color: #0f172a;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  :global(html.dark) .footer-heading {
+    color: #ffffff;
   }
 
   .footer-list {
@@ -171,80 +186,85 @@ const aboutLinks = [
   }
 
   :global(.footer-link) {
-    color: var(--ds-color-neutral-text-subtle);
+    color: #64748b;
     text-decoration: none;
-    font-size: var(--ds-font-size-1);
+    font-size: 0.875rem;
     transition: color 0.2s ease;
   }
 
   :global(.footer-link:hover) {
-    color: var(--ds-color-accent-text-default);
+    color: #136dec;
   }
 
   /* Partners Section */
   .footer-partners {
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
-    padding: var(--ds-size-6) 0;
+    border-top: 1px solid #f1f5f9;
+    padding: var(--ds-size-10) 0;
   }
 
-  .footer-partners .footer-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ds-size-4);
-  }
-
-  @media (min-width: 640px) {
-    .footer-partners .footer-container {
-      flex-direction: row;
-      justify-content: center;
-    }
+  :global(html.dark) .footer-partners {
+    border-top-color: #1e293b;
   }
 
   .partners-label {
-    font-size: var(--ds-font-size-0);
-    color: var(--ds-color-neutral-text-subtle);
-    white-space: nowrap;
+    margin: 0 0 var(--ds-size-8) 0;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
   }
 
   .partners-logos {
     display: flex;
-    align-items: center;
-    gap: var(--ds-size-6);
     flex-wrap: wrap;
     justify-content: center;
-  }
-
-  .partner-logo-link {
-    display: flex;
     align-items: center;
-    text-decoration: none;
-    color: var(--ds-color-neutral-text-subtle);
-    font-size: var(--ds-font-size-1);
-    font-weight: var(--ds-font-weight-medium);
-    transition: color 0.2s ease;
-    opacity: 0.7;
+    gap: var(--ds-size-10);
+    filter: grayscale(1);
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
   }
 
-  .partner-logo-link:hover {
-    color: var(--ds-color-neutral-text-default);
+  .partners-logos:hover {
     opacity: 1;
+  }
+
+  .partner-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-2);
+    text-decoration: none;
+  }
+
+  .partner-name {
+    color: #475569;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: -0.025em;
+  }
+
+  :global(html.dark) .partner-name {
+    color: #cbd5e1;
+  }
+
+  .partner-subtitle {
+    color: #64748b;
+    font-size: 0.625rem;
+    font-weight: 500;
   }
 
   /* Copyright */
   .footer-bottom {
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
-    padding: var(--ds-size-4) 0;
+    padding: var(--ds-size-6) 0;
   }
 
-  .footer-bottom .footer-container {
-    display: flex;
-    justify-content: center;
-  }
-
-  :global(.copyright) {
+  .copyright {
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
     text-align: center;
+    color: #94a3b8;
+    font-size: 0.75rem;
   }
 </style>

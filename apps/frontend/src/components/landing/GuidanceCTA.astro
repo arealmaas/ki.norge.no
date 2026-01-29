@@ -1,104 +1,168 @@
 ---
-import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
+import { Button } from '@digdir/designsystemet-react';
 ---
 
 <section class="guidance-cta">
   <div class="guidance-container">
-    <div class="guidance-icon-wrapper">
-      <span class="material-symbols-outlined guidance-icon">menu_book</span>
-    </div>
-
     <div class="guidance-content">
-      <Heading level={2} size="large" className="guidance-title">
-        Trenger du veiledning for KI-prosjekter?
-      </Heading>
-      <Paragraph size="medium" className="guidance-description">
-        Vi har samlet ressurser, sjekklister og beste praksis for a hjelpe deg med a ta i bruk kunstig intelligens pa en ansvarlig mate.
-      </Paragraph>
-    </div>
-
-    <div class="guidance-actions">
+      <span class="guidance-label">Veiledning & Ressurser</span>
+      <h2 class="guidance-title">Omfattende veiledning for din KI-reise</h2>
+      <p class="guidance-description">
+        Vi har samlet alt du trenger av regulatoriske, tekniske og etiske veiledere for a implementere kunstig intelligens pa en trygg og forsvarlig mate i din organisasjon.
+      </p>
       <Button
         asChild
         variant="primary"
         size="large"
       >
-        <a href="/veiledning">Utforsk veiledning</a>
+        <a href="/veiledning" class="guidance-button">Utforsk veiledning</a>
       </Button>
-      <Button
-        asChild
-        variant="secondary"
-        size="large"
-      >
-        <a href="/kontakt">Kontakt oss</a>
-      </Button>
+    </div>
+    <div class="guidance-visual">
+      <div class="icon-glow"></div>
+      <span class="material-symbols-outlined guidance-icon">menu_book</span>
     </div>
   </div>
 </section>
 
 <style>
   .guidance-cta {
-    padding: var(--ds-size-12) var(--ds-size-4);
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-accent-surface-default) 0%,
-      var(--ds-color-neutral-background-default) 50%,
-      var(--ds-color-accent-surface-default) 100%
-    );
+    width: 100%;
+    padding: var(--ds-size-14) 0;
+    background: linear-gradient(to right, rgba(19, 109, 236, 0.1) 0%, #eff6ff 50%, rgba(19, 109, 236, 0.05) 100%);
+    border-top: 1px solid rgba(19, 109, 236, 0.05);
+    border-bottom: 1px solid rgba(19, 109, 236, 0.05);
+    overflow: hidden;
+  }
+
+  :global(html.dark) .guidance-cta {
+    background: linear-gradient(to right, rgba(30, 41, 59, 0.5) 0%, #0f172a 50%, rgba(30, 41, 59, 0.5) 100%);
   }
 
   .guidance-container {
-    max-width: 800px;
+    max-width: 1280px;
     margin: 0 auto;
+    padding: 0 var(--ds-size-4);
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
-    gap: var(--ds-size-6);
+    gap: var(--ds-size-12);
   }
 
-  .guidance-icon-wrapper {
-    width: 80px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--ds-color-accent-base-default);
-    border-radius: var(--ds-border-radius-full);
-    box-shadow: var(--ds-shadow-lg);
-  }
-
-  .guidance-icon {
-    font-size: 40px;
-    color: white;
+  @media (min-width: 768px) {
+    .guidance-container {
+      flex-direction: row;
+      padding: 0 var(--ds-size-10);
+    }
   }
 
   .guidance-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ds-size-3);
+    flex: 1;
+    text-align: center;
   }
 
-  :global(.guidance-title) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-default);
+  @media (min-width: 768px) {
+    .guidance-content {
+      text-align: left;
+    }
   }
 
-  :global(.guidance-description) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    line-height: 1.6;
-    max-width: 600px;
+  .guidance-label {
+    display: inline-block;
+    color: #136dec;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: var(--ds-size-4);
   }
 
-  .guidance-actions {
-    display: flex;
-    gap: var(--ds-size-3);
-    flex-wrap: wrap;
+  .guidance-title {
+    margin: 0 0 var(--ds-size-6) 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #0d131b;
+    line-height: 1.2;
+  }
+
+  @media (min-width: 768px) {
+    .guidance-title {
+      font-size: 3rem;
+    }
+  }
+
+  :global(html.dark) .guidance-title {
+    color: #ffffff;
+  }
+
+  .guidance-description {
+    margin: 0 0 var(--ds-size-10) 0;
+    color: #4c6c9a;
+    font-size: 1.125rem;
+    line-height: 1.7;
+    max-width: 640px;
+  }
+
+  @media (min-width: 768px) {
+    .guidance-description {
+      font-size: 1.25rem;
+    }
+  }
+
+  :global(html.dark) .guidance-description {
+    color: #94a3b8;
+  }
+
+  .guidance-button {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    min-width: 240px;
+    height: 56px;
+    padding: 0 var(--ds-size-8);
+    background-color: #136dec;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(19, 109, 236, 0.2);
+    transition: background-color 0.2s ease;
   }
 
-  .guidance-actions :global(a) {
-    text-decoration: none;
+  @media (min-width: 768px) {
+    .guidance-button {
+      margin: 0;
+    }
+  }
+
+  .guidance-button:hover {
+    background-color: rgba(19, 109, 236, 0.9);
+  }
+
+  .guidance-visual {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: var(--ds-size-10);
+  }
+
+  .icon-glow {
+    position: absolute;
+    width: 288px;
+    height: 288px;
+    background-color: rgba(19, 109, 236, 0.2);
+    border-radius: 50%;
+    filter: blur(80px);
+  }
+
+  .guidance-icon {
+    font-size: 160px !important;
+    color: #136dec;
+    position: relative;
+    z-index: 1;
+    opacity: 0.9;
   }
 </style>

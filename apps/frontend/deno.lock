@@ -3,6 +3,7 @@
   "specifiers": {
     "npm:@astrojs/cloudflare@^12.6.12": "12.6.12_astro@5.16.12__@types+node@22.19.7__vite@6.4.1___@types+node@22.19.7___picomatch@4.0.3__zod@3.25.76_@types+node@22.19.7_@cloudflare+workers-types@4.20260129.0",
     "npm:@astrojs/react@^4.4.2": "4.4.2_@types+react@19.2.9_@types+react-dom@19.2.3__@types+react@19.2.9_react@19.2.3_react-dom@19.2.3__react@19.2.3_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_@types+node@22.19.7",
+    "npm:@axe-core/playwright@^4.10.0": "4.11.0_playwright-core@1.58.0",
     "npm:@digdir/designsystemet-css@^1.11.0": "1.11.0",
     "npm:@digdir/designsystemet-react@^1.11.0": "1.11.0_react@19.2.3_react-dom@19.2.3__react@19.2.3",
     "npm:@navikt/aksel-icons@^8.0.1": "8.0.1",
@@ -11,6 +12,7 @@
     "npm:astro@*": "5.16.12_@types+node@22.19.7_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_zod@3.25.76",
     "npm:astro@^5.16.12": "5.16.12_@types+node@22.19.7_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_zod@3.25.76",
     "npm:clsx@^2.1.1": "2.1.1",
+    "npm:playwright@*": "1.58.0",
     "npm:react-dom@^19.2.3": "19.2.3_react@19.2.3",
     "npm:react@^19.2.3": "19.2.3",
     "npm:tailwind-merge@^3.4.0": "3.4.0"
@@ -92,6 +94,13 @@
     },
     "@astrojs/underscore-redirects@1.0.0": {
       "integrity": "sha512-qZxHwVnmb5FXuvRsaIGaqWgnftjCuMY+GSbaVZdBmE4j8AfgPqKPxYp8SUERyJcjpKCEmO4wD6ybuGH8A2kVRQ=="
+    },
+    "@axe-core/playwright@4.11.0_playwright-core@1.58.0": {
+      "integrity": "sha512-70vBT/Ylqpm65RQz2iCG2o0JJCEG/WCNyefTr2xcOcr1CoSee60gNQYUMZZ7YukoKkFLv26I/jjlsvwwp532oQ==",
+      "dependencies": [
+        "axe-core",
+        "playwright-core"
+      ]
     },
     "@babel/code-frame@7.28.6": {
       "integrity": "sha512-JYgintcMjRiCvS8mMECzaEn+m3PfoQiyqukOMCCVQtoJGYJw8j/8LBJEiqkHLkfwCcs74E3pbAUFNg7d9VNJ+Q==",
@@ -1249,6 +1258,9 @@
         "sharp@0.34.5"
       ],
       "bin": true
+    },
+    "axe-core@4.11.1": {
+      "integrity": "sha512-BASOg+YwO2C+346x3LZOeoovTIoTrRqEsqMa6fmfAV0P+U9mFr9NsyOEpiYvFjbc64NMrSswhV50WdXzdb/Z5A=="
     },
     "axobject-query@4.1.0": {
       "integrity": "sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ=="
@@ -3057,6 +3069,7 @@
       "dependencies": [
         "npm:@astrojs/cloudflare@^12.6.12",
         "npm:@astrojs/react@^4.4.2",
+        "npm:@axe-core/playwright@^4.10.0",
         "npm:@digdir/designsystemet-css@^1.11.0",
         "npm:@digdir/designsystemet-react@^1.11.0",
         "npm:@navikt/aksel-icons@^8.0.1",

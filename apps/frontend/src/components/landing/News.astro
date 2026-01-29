@@ -1,5 +1,5 @@
 ---
-import { Heading, Link } from '@digdir/designsystemet-react';
+import { Link } from '@digdir/designsystemet-react';
 import ArticleCard from '../shared/ArticleCard.astro';
 
 interface Props {
@@ -21,7 +21,7 @@ const hasArticles = articles.length > 0;
   <section class="news">
     <div class="news-container">
       <div class="news-header">
-        <Heading level={2} size="large" className="news-heading">Siste nytt</Heading>
+        <h2 class="news-heading">Siste nytt</h2>
         <Link href="/artikler" className="news-link">Se alle artikler</Link>
       </div>
       <div class="news-grid">
@@ -42,46 +42,54 @@ const hasArticles = articles.length > 0;
 
 <style>
   .news {
-    padding: var(--ds-size-12) var(--ds-size-4);
-    background-color: var(--ds-color-neutral-surface-default);
+    padding: 0 var(--ds-size-4);
+    margin-bottom: var(--ds-size-14);
   }
 
   .news-container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
   }
 
   .news-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
     margin-bottom: var(--ds-size-8);
     flex-wrap: wrap;
     gap: var(--ds-size-4);
   }
 
-  :global(.news-heading) {
+  .news-heading {
     margin: 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #0d131b;
+    letter-spacing: -0.025em;
+  }
+
+  :global(html.dark) .news-heading {
+    color: #ffffff;
   }
 
   :global(.news-link) {
-    font-size: var(--ds-font-size-1);
-    font-weight: var(--ds-font-weight-medium);
+    color: #136dec;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  :global(.news-link:hover) {
+    text-decoration: underline;
   }
 
   .news-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--ds-size-6);
+    gap: var(--ds-size-8);
   }
 
-  @media (min-width: 640px) {
-    .news-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     .news-grid {
       grid-template-columns: repeat(3, 1fr);
     }

@@ -1,9 +1,9 @@
 ---
-import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+import { Heading, Link } from '@digdir/designsystemet-react';
 
 interface Props {
   title: string;
-  excerpt: string;
+  excerpt?: string;
   slug: string;
   publishedAt: string;
   category?: string;
@@ -13,158 +13,104 @@ interface Props {
 const { title, excerpt, slug, publishedAt, category, image } = Astro.props;
 
 const formattedDate = new Date(publishedAt).toLocaleDateString('nb-NO', {
-  year: 'numeric',
+  day: '2-digit',
   month: 'long',
-  day: 'numeric',
+  year: 'numeric',
 });
 
-// Generate a placeholder gradient based on title for visual variety
-const gradients = [
-  'linear-gradient(135deg, #136dec 0%, #0f57bd 100%)',
-  'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-  'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-  'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+// Stock images for placeholder
+const stockImages = [
+  'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800&auto=format&fit=crop',
 ];
-const gradientIndex = title.length % gradients.length;
-const placeholderGradient = gradients[gradientIndex];
+const imageIndex = title.length % stockImages.length;
+const displayImage = image || stockImages[imageIndex];
 ---
 
-<article class="article-card">
+<article class="article-card group">
   <Link href={`/artikler/${slug}`} className="card-link">
     <div class="card-image-wrapper">
-      {image ? (
-        <img
-          src={image}
-          alt=""
-          class="card-image"
-          loading="lazy"
-        />
-      ) : (
-        <div class="card-image-placeholder" style={`background: ${placeholderGradient};`}>
-          <svg
-            class="placeholder-icon"
-            xmlns="http://www.w3.org/2000/svg"
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <line x1="10" y1="9" x2="8" y2="9"/>
-          </svg>
-        </div>
-      )}
+      <div class="card-image" style={`background-image: url('${displayImage}');`}></div>
     </div>
     <div class="card-content">
       {category && <span class="category">{category}</span>}
-      <Heading level={3} size="small" className="title">
-        {title}
-      </Heading>
-      <Paragraph size="small" className="excerpt">
-        {excerpt}
-      </Paragraph>
-      <time class="date" datetime={publishedAt}>{formattedDate}</time>
+      <h3 class="title">{title}</h3>
+      <p class="date">{formattedDate}</p>
     </div>
   </Link>
 </article>
 
 <style>
   .article-card {
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    overflow: hidden;
-    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
-  }
-
-  .article-card:hover {
-    box-shadow: var(--ds-shadow-lg);
-    transform: translateY(-4px);
-    border-color: var(--ds-color-accent-border-default);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-4);
+    cursor: pointer;
   }
 
   :global(.card-link) {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-4);
     text-decoration: none;
     color: inherit;
   }
 
   .card-image-wrapper {
-    position: relative;
     aspect-ratio: 16 / 10;
+    width: 100%;
+    border-radius: 12px;
     overflow: hidden;
-    background-color: var(--ds-color-neutral-background-default);
+    background-color: #e2e8f0;
   }
 
   .card-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.5s ease;
   }
 
   .article-card:hover .card-image {
     transform: scale(1.05);
   }
 
-  .card-image-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.4s ease;
-  }
-
-  .article-card:hover .card-image-placeholder {
-    transform: scale(1.05);
-  }
-
-  .placeholder-icon {
-    color: rgba(255, 255, 255, 0.6);
-  }
-
   .card-content {
-    padding: var(--ds-size-5);
     display: flex;
     flex-direction: column;
     gap: var(--ds-size-2);
   }
 
   .category {
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    color: var(--ds-color-accent-text-default);
+    color: #136dec;
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
   }
 
-  :global(.title) {
+  .title {
     margin: 0;
-    line-height: 1.3;
-    color: var(--ds-color-neutral-text-default);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #0d131b;
+    transition: color 0.2s ease;
   }
 
-  :global(.excerpt) {
-    color: var(--ds-color-neutral-text-subtle);
-    margin: 0;
-    line-height: 1.5;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  :global(html.dark) .title {
+    color: #ffffff;
+  }
+
+  .article-card:hover .title {
+    color: #136dec;
   }
 
   .date {
-    font-size: var(--ds-font-size-0);
-    color: var(--ds-color-neutral-text-subtle);
-    margin-top: var(--ds-size-1);
+    margin: 0;
+    font-size: 0.875rem;
+    color: #64748b;
   }
 </style>

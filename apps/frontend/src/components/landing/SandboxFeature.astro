@@ -1,5 +1,5 @@
 ---
-import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
+import { Button } from '@digdir/designsystemet-react';
 ---
 
 <section class="sandbox-feature">
@@ -9,45 +9,23 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
   </div>
 
   <div class="sandbox-container">
-    <span class="sandbox-badge">Regulatorisk sandkasse</span>
+    <div class="sandbox-content">
+      <span class="sandbox-badge">Regulatorisk sandkasse</span>
 
-    <Heading level={2} size="xlarge" className="sandbox-title">
-      Test KI-losninger i et trygt miljo
-    </Heading>
+      <h2 class="sandbox-title">
+        Test innovative KI-losninger i trygge rammer
+      </h2>
 
-    <Paragraph size="large" className="sandbox-description">
-      Den regulatoriske sandkassen gir virksomheter mulighet til a teste innovative KI-losninger med veiledning fra eksperter fra Datatilsynet og Nkom.
-    </Paragraph>
+      <p class="sandbox-description">
+        Var regulatoriske sandkasse gir virksomheter mulighet til a utforske hvordan nye KI-losninger kan etterleve regelverket. Her samarbeider dere direkte med tilsynsmyndigheter for a finne gode losninger pa komplekse problemstillinger.
+      </p>
 
-    <div class="sandbox-features">
-      <div class="feature-item">
-        <span class="feature-icon material-symbols-outlined">verified_user</span>
-        <span class="feature-text">Juridisk veiledning</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon material-symbols-outlined">support_agent</span>
-        <span class="feature-text">Ekspertbistand</span>
-      </div>
-      <div class="feature-item">
-        <span class="feature-icon material-symbols-outlined">science</span>
-        <span class="feature-text">Testmiljo</span>
-      </div>
-    </div>
-
-    <div class="sandbox-actions">
       <Button
         asChild
         variant="primary"
         size="large"
       >
-        <a href="/sandkasse">Les mer om sandkassen</a>
-      </Button>
-      <Button
-        asChild
-        variant="secondary"
-        size="large"
-      >
-        <a href="/sandkasse/prosjekter">Se pagaende prosjekter</a>
+        <a href="/sandkasse" class="sandbox-cta">Sok om plass</a>
       </Button>
     </div>
   </div>
@@ -56,14 +34,16 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 <style>
   .sandbox-feature {
     position: relative;
-    padding: var(--ds-size-14) var(--ds-size-4);
+    width: 100%;
+    background-color: #0f172a;
+    padding: var(--ds-size-14) 0;
+    margin-bottom: var(--ds-size-14);
     overflow: hidden;
   }
 
   .sandbox-bg {
     position: absolute;
     inset: 0;
-    background-color: var(--stitch-bg-dark);
     z-index: 0;
   }
 
@@ -71,103 +51,97 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
     position: absolute;
     inset: 0;
     background: radial-gradient(
-      ellipse 80% 50% at 50% 0%,
-      rgba(19, 109, 236, 0.25) 0%,
+      circle at 50% 50%,
+      rgba(19, 109, 236, 0.4) 0%,
       transparent 70%
     );
+    opacity: 0.25;
   }
 
   .pattern-overlay {
     position: absolute;
     inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    opacity: 0.5;
+    background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+    opacity: 0.25;
   }
 
   .sandbox-container {
     position: relative;
     z-index: 1;
-    max-width: 800px;
+    max-width: 1280px;
     margin: 0 auto;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ds-size-5);
+    padding: 0 var(--ds-size-4);
+  }
+
+  @media (min-width: 1024px) {
+    .sandbox-container {
+      padding: 0 var(--ds-size-10);
+    }
+  }
+
+  .sandbox-content {
+    max-width: 768px;
   }
 
   .sandbox-badge {
     display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
+    font-size: 0.75rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #5ba0f5;
+    color: #136dec;
     background-color: rgba(19, 109, 236, 0.2);
     padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
+    border-radius: 9999px;
     border: 1px solid rgba(19, 109, 236, 0.3);
+    margin-bottom: var(--ds-size-6);
   }
 
-  :global(.sandbox-title) {
-    margin: 0;
-    color: #f1f5f9;
+  .sandbox-title {
+    margin: 0 0 var(--ds-size-6) 0;
+    color: #ffffff;
+    font-size: 2.25rem;
+    font-weight: 900;
     line-height: 1.2;
   }
 
-  :global(.sandbox-description) {
-    margin: 0;
+  @media (min-width: 768px) {
+    .sandbox-title {
+      font-size: 3rem;
+    }
+  }
+
+  .sandbox-description {
+    margin: 0 0 var(--ds-size-10) 0;
     color: #94a3b8;
-    line-height: 1.6;
-    max-width: 600px;
+    font-size: 1.125rem;
+    line-height: 1.7;
   }
 
-  .sandbox-features {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: var(--ds-size-6);
-    margin-top: var(--ds-size-2);
+  @media (min-width: 768px) {
+    .sandbox-description {
+      font-size: 1.25rem;
+    }
   }
 
-  .feature-item {
-    display: flex;
+  .sandbox-cta {
+    display: inline-flex;
     align-items: center;
-    gap: var(--ds-size-2);
-    color: #e2e8f0;
-  }
-
-  .feature-icon {
-    color: #5ba0f5;
-    font-size: 24px;
-  }
-
-  .feature-text {
-    font-size: var(--ds-font-size-1);
-    font-weight: var(--ds-font-weight-medium);
-  }
-
-  .sandbox-actions {
-    display: flex;
-    gap: var(--ds-size-3);
-    flex-wrap: wrap;
     justify-content: center;
-    margin-top: var(--ds-size-4);
-  }
-
-  .sandbox-actions :global(a) {
+    min-width: 200px;
+    height: 56px;
+    padding: 0 var(--ds-size-8);
+    background-color: #136dec;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
     text-decoration: none;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(19, 109, 236, 0.2);
+    transition: background-color 0.2s ease;
   }
 
-  /* Override secondary button for dark background */
-  .sandbox-actions :global(button[data-variant="secondary"]),
-  .sandbox-actions :global(a):last-child {
-    color: #f1f5f9;
-    border-color: rgba(255, 255, 255, 0.3);
-  }
-
-  .sandbox-actions :global(button[data-variant="secondary"]:hover),
-  .sandbox-actions :global(a):last-child:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+  .sandbox-cta:hover {
+    background-color: rgba(19, 109, 236, 0.9);
   }
 </style>

@@ -5,8 +5,8 @@ import DarkModeToggle from '../shared/DarkModeToggle.astro';
 
 const navItems = [
   { href: '/veiledning', label: 'Veiledning' },
-  { href: '/sandkasse', label: 'Regulatorisk sandkasse' },
-  { href: '/eksempler', label: 'Gode eksempler' },
+  { href: '/sandkasse', label: 'Sandkasse' },
+  { href: '/eksempler', label: 'Eksempler' },
   { href: '/artikler', label: 'Artikler' },
   { href: '/om-oss', label: 'Om oss' },
 ];
@@ -46,7 +46,7 @@ const currentPath = Astro.url.pathname;
         variant="primary"
         size="small"
       >
-        <a href="/kontakt">Kontakt oss</a>
+        <a href="/logg-inn">Logg inn</a>
       </Button>
       <button
         type="button"
@@ -225,12 +225,12 @@ const currentPath = Astro.url.pathname;
     gap: var(--ds-size-3);
   }
 
-  .header-actions :global(a[href="/kontakt"]) {
+  .header-actions :global(a[href="/logg-inn"]) {
     display: none;
   }
 
   @media (min-width: 1024px) {
-    .header-actions :global(a[href="/kontakt"]) {
+    .header-actions :global(a[href="/logg-inn"]) {
       display: inline-flex;
     }
   }

@@ -5,12 +5,11 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 <section class="hero">
   <div class="hero-container">
     <div class="hero-content">
-      <span class="hero-badge">Nasjonal strategi</span>
       <Heading level={1} size="2xlarge" className="hero-title">
-        Kunstig intelligens for Norge
+        Kunstig intelligens i offentlig sektor
       </Heading>
       <Paragraph size="large" className="hero-subtitle">
-        Sammen bygger vi et trygt og innovativt KI-landskap for norsk offentlig sektor. Utforsk veiledning, regulatorisk sandkasse og gode eksempler.
+        Vi hjelper deg med å ta i bruk KI på en ansvarlig og innovativ måte gjennom veiledning, eksempler og vår regulatoriske sandkasse.
       </Paragraph>
       <div class="hero-actions">
         <Button
@@ -25,23 +24,14 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
           variant="secondary"
           size="large"
         >
-          <a href="/sandkasse">Regulatorisk sandkasse</a>
+          <a href="/eksempler">Se eksempler</a>
         </Button>
       </div>
     </div>
     <div class="hero-visual">
-      <div class="hero-illustration" aria-hidden="true">
-        <div class="illustration-grid">
-          <div class="grid-item item-1"></div>
-          <div class="grid-item item-2"></div>
-          <div class="grid-item item-3"></div>
-          <div class="grid-item item-4"></div>
-        </div>
-        <div class="floating-shapes">
-          <div class="shape shape-1"></div>
-          <div class="shape shape-2"></div>
-          <div class="shape shape-3"></div>
-        </div>
+      <div class="hero-image-wrapper">
+        <div class="hero-image"></div>
+        <div class="hero-gradient-overlay"></div>
       </div>
     </div>
   </div>
@@ -49,14 +39,7 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 
 <style>
   .hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 50%,
-      var(--ds-color-neutral-background-default) 100%
-    );
     padding: var(--ds-size-10) var(--ds-size-4);
-    overflow: hidden;
   }
 
   @media (min-width: 768px) {
@@ -66,18 +49,17 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
   }
 
   .hero-container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--ds-size-8);
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-10);
   }
 
   @media (min-width: 1024px) {
     .hero-container {
-      grid-template-columns: 1fr 1fr;
-      gap: var(--ds-size-12);
+      flex-direction: row;
+      align-items: center;
     }
   }
 
@@ -85,162 +67,143 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
     display: flex;
     flex-direction: column;
     gap: var(--ds-size-4);
+    flex: 1;
   }
 
-  .hero-badge {
-    display: inline-flex;
-    align-self: flex-start;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-accent-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
+  @media (min-width: 1024px) {
+    .hero-content {
+      max-width: 50%;
+    }
   }
 
   :global(.hero-title) {
     margin: 0;
-    color: var(--ds-color-neutral-text-default);
+    color: #0d131b;
     line-height: 1.1;
-    font-weight: var(--ds-font-weight-bold);
+    letter-spacing: -0.033em;
+    font-weight: 900;
+    font-size: 2.25rem;
+  }
+
+  @media (min-width: 768px) {
+    :global(.hero-title) {
+      font-size: 3.75rem;
+    }
+  }
+
+  :global(html.dark .hero-title) {
+    color: #ffffff;
   }
 
   :global(.hero-subtitle) {
-    color: var(--ds-color-neutral-text-subtle);
+    color: #4c6c9a;
     margin: 0;
     line-height: 1.6;
     max-width: 540px;
+    font-size: 1.125rem;
+  }
+
+  @media (min-width: 768px) {
+    :global(.hero-subtitle) {
+      font-size: 1.25rem;
+    }
+  }
+
+  :global(html.dark .hero-subtitle) {
+    color: #94a3b8;
   }
 
   .hero-actions {
     display: flex;
-    gap: var(--ds-size-3);
+    gap: var(--ds-size-4);
     flex-wrap: wrap;
-    margin-top: var(--ds-size-2);
+    margin-top: var(--ds-size-4);
   }
 
   .hero-actions :global(a) {
     text-decoration: none;
+    min-width: 160px;
+    height: 56px;
+    padding: 0 var(--ds-size-8);
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
   }
 
-  /* Hero Visual / Illustration */
+  .hero-actions :global(a:first-child) {
+    background-color: #136dec;
+    color: white;
+    box-shadow: 0 10px 25px -5px rgba(19, 109, 236, 0.2);
+  }
+
+  .hero-actions :global(a:first-child:hover) {
+    transform: scale(1.02);
+  }
+
+  .hero-actions :global(a:first-child:active) {
+    transform: scale(0.98);
+  }
+
+  .hero-actions :global(a:last-child) {
+    background-color: white;
+    color: #0d131b;
+    border: 1px solid #cfd9e7;
+  }
+
+  .hero-actions :global(a:last-child:hover) {
+    background-color: #f8fafc;
+  }
+
+  :global(html.dark) .hero-actions :global(a:last-child) {
+    background-color: #1e293b;
+    color: white;
+    border-color: #334155;
+  }
+
+  :global(html.dark) .hero-actions :global(a:last-child:hover) {
+    background-color: #334155;
+  }
+
+  /* Hero Visual / Image */
   .hero-visual {
-    display: none;
+    width: 100%;
+    flex: 1;
   }
 
   @media (min-width: 1024px) {
     .hero-visual {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      max-width: 50%;
     }
   }
 
-  .hero-illustration {
-    position: relative;
+  .hero-image-wrapper {
+    aspect-ratio: 16 / 9;
     width: 100%;
-    max-width: 480px;
-    aspect-ratio: 1;
-  }
-
-  .illustration-grid {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: var(--ds-size-4);
-    padding: var(--ds-size-6);
-  }
-
-  .grid-item {
-    background: var(--ds-color-neutral-surface-default);
-    border-radius: var(--ds-border-radius-lg);
-    box-shadow: var(--ds-shadow-md);
-    position: relative;
+    border-radius: 16px;
     overflow: hidden;
+    position: relative;
+    background: linear-gradient(135deg, rgba(19, 109, 236, 0.2) 0%, rgba(19, 109, 236, 0.05) 50%, transparent 100%);
+    border: 1px solid rgba(19, 109, 236, 0.1);
   }
 
-  .grid-item::after {
-    content: '';
+  .hero-image {
+    width: 100%;
+    height: 100%;
+    background-image: url('https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1000&auto=format&fit=crop');
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: overlay;
+    opacity: 0.6;
+  }
+
+  .hero-gradient-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, transparent 0%, var(--ds-color-accent-surface-default) 100%);
-    opacity: 0.5;
-  }
-
-  .item-1 {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .item-2 {
-    animation: float 6s ease-in-out infinite 1.5s;
-  }
-
-  .item-3 {
-    animation: float 6s ease-in-out infinite 3s;
-  }
-
-  .item-4 {
-    animation: float 6s ease-in-out infinite 4.5s;
-  }
-
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-8px);
-    }
-  }
-
-  .floating-shapes {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  .shape {
-    position: absolute;
-    border-radius: var(--ds-border-radius-full);
-    background: var(--ds-color-accent-base-default);
-    opacity: 0.2;
-  }
-
-  .shape-1 {
-    width: 120px;
-    height: 120px;
-    top: -20px;
-    right: -20px;
-    animation: pulse 4s ease-in-out infinite;
-  }
-
-  .shape-2 {
-    width: 80px;
-    height: 80px;
-    bottom: 20%;
-    left: -10px;
-    animation: pulse 4s ease-in-out infinite 1s;
-  }
-
-  .shape-3 {
-    width: 60px;
-    height: 60px;
-    bottom: -10px;
-    right: 30%;
-    animation: pulse 4s ease-in-out infinite 2s;
-  }
-
-  @keyframes pulse {
-    0%, 100% {
-      transform: scale(1);
-      opacity: 0.2;
-    }
-    50% {
-      transform: scale(1.1);
-      opacity: 0.3;
-    }
+    background: linear-gradient(to top, var(--ds-color-neutral-background-default) 0%, transparent 40%);
+    opacity: 0.4;
   }
 </style>
