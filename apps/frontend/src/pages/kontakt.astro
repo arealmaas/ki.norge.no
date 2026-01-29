@@ -6,69 +6,185 @@ import { getSide } from '../lib/strapi';
 
 // Fetch page content from Strapi
 let page = null;
-let fetchError = null;
 try {
   page = await getSide('kontakt');
 } catch (error) {
   console.error('Failed to fetch kontakt page:', error);
-  fetchError = error;
 }
 
 const title = page?.tittel || 'Kontakt';
-const seoDescription = page?.seoBeskrivelse || '';
+const seoDescription = page?.seoBeskrivelse || 'Ta kontakt med KI Norge for sporsmal om kunstig intelligens i offentlig sektor.';
 ---
 
 <Layout title={title} description={seoDescription}>
-  <div class="page-container">
+  <section class="page-hero">
+    <div class="hero-container">
+      <span class="page-badge">Kontakt</span>
+      <Heading level={1} size="2xlarge" className="page-title">{title}</Heading>
+      <Paragraph size="large" className="page-lead">
+        Har du sporsmal eller trenger hjelp? Vi er her for a bistå deg med kunstig intelligens i offentlig sektor.
+      </Paragraph>
+    </div>
+  </section>
+
+  <div class="page-content">
     {page?.innhold ? (
-      <>
-        <header class="page-header">
-          <Heading level={1} size="2xlarge">{page.tittel}</Heading>
-        </header>
-        <BlocksRenderer blocks={page.innhold} class="page-content" />
-      </>
+      <BlocksRenderer blocks={page.innhold} className="content-blocks" />
     ) : (
-      <div class="not-found">
-        <Heading level={1} size="2xlarge">Siden er ikke tilgjengelig</Heading>
-        <Paragraph>
-          Denne siden er ikke publisert ennå. Vennligst prøv igjen senere.
-        </Paragraph>
-        <Link href="/">Gå til forsiden</Link>
+      <div class="contact-cards">
+        <div class="contact-card">
+          <div class="card-icon-wrapper">
+            <span class="material-symbols-outlined card-icon">mail</span>
+          </div>
+          <Heading level={2} size="small" className="card-title">E-post</Heading>
+          <Paragraph className="card-description">
+            Send oss en e-post, sa svarer vi deg sa raskt vi kan.
+          </Paragraph>
+          <Link href="mailto:kontakt@ki.norge.no" className="card-link">
+            kontakt@ki.norge.no
+          </Link>
+        </div>
+
+        <div class="contact-card">
+          <div class="card-icon-wrapper">
+            <span class="material-symbols-outlined card-icon">help</span>
+          </div>
+          <Heading level={2} size="small" className="card-title">Vanlige sporsmal</Heading>
+          <Paragraph className="card-description">
+            Sjekk om svaret finnes i vare ofte stilte sporsmal.
+          </Paragraph>
+          <Link href="/faq" className="card-link">
+            Se FAQ
+          </Link>
+        </div>
+
+        <div class="contact-card">
+          <div class="card-icon-wrapper">
+            <span class="material-symbols-outlined card-icon">groups</span>
+          </div>
+          <Heading level={2} size="small" className="card-title">Om oss</Heading>
+          <Paragraph className="card-description">
+            Lar mer om KI Norge og hvem som står bak.
+          </Paragraph>
+          <Link href="/om-oss" className="card-link">
+            Les mer
+          </Link>
+        </div>
       </div>
     )}
   </div>
 </Layout>
 
 <style>
-  .page-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
-  }
-
-  .page-header {
-    margin-bottom: var(--ds-size-6);
-  }
-
-  .page-header :global(h1) {
-    margin: 0;
-  }
-
-  .page-content {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  .not-found {
-    text-align: center;
+  .page-hero {
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-neutral-background-default) 0%,
+      var(--ds-color-accent-surface-default) 100%
+    );
     padding: var(--ds-size-12) var(--ds-size-4);
   }
 
-  .not-found :global(h1) {
+  .hero-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .page-badge {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  :global(.page-title) {
     margin: 0 0 var(--ds-size-4);
   }
 
-  .not-found :global(p) {
-    margin: 0 0 var(--ds-size-6);
+  :global(.page-lead) {
+    margin: 0;
     color: var(--ds-color-neutral-text-subtle);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .page-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--ds-size-10) var(--ds-size-4);
+  }
+
+  :global(.content-blocks) {
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  .contact-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-6);
+  }
+
+  @media (min-width: 768px) {
+    .contact-cards {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .contact-card {
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    padding: var(--ds-size-6);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-3);
+    transition: all 0.3s ease;
+  }
+
+  .contact-card:hover {
+    border-color: var(--ds-color-accent-border-default);
+    box-shadow: var(--ds-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .card-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ds-color-accent-surface-default);
+    border-radius: var(--ds-border-radius-full);
+  }
+
+  .card-icon {
+    font-size: 28px;
+    color: var(--ds-color-accent-text-default);
+  }
+
+  :global(.card-title) {
+    margin: 0;
+  }
+
+  :global(.card-description) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    flex: 1;
+  }
+
+  :global(.card-link) {
+    font-weight: var(--ds-font-weight-medium);
   }
 </style>

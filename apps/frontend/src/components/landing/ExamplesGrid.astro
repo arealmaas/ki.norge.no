@@ -1,0 +1,198 @@
+---
+import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+
+interface Example {
+  title: string;
+  organization: string;
+  slug: string;
+  image?: string;
+}
+
+interface Props {
+  examples?: Example[];
+}
+
+const { examples = [] } = Astro.props;
+
+// Default examples if none provided
+const displayExamples: Example[] = examples.length > 0 ? examples : [
+  { title: 'KI-assistert saksbehandling', organization: 'NAV', slug: 'nav-saksbehandling' },
+  { title: 'Automatisk dokumentanalyse', organization: 'Skatteetaten', slug: 'skatt-dokumentanalyse' },
+  { title: 'Chatbot for innbyggertjenester', organization: 'Oslo Kommune', slug: 'oslo-chatbot' },
+  { title: 'Prediktiv vedlikehold', organization: 'Statens vegvesen', slug: 'vegvesen-vedlikehold' },
+];
+
+const hasExamples = displayExamples.length > 0;
+
+// Generate placeholder colors
+const colors = [
+  'linear-gradient(135deg, #136dec 0%, #0f57bd 100%)',
+  'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+  'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+  'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+];
+---
+
+{hasExamples && (
+  <section class="examples-section">
+    <div class="examples-container">
+      <div class="examples-header">
+        <div class="examples-header-text">
+          <Heading level={2} size="large" className="examples-heading">
+            Gode eksempler pa KI i offentlig sektor
+          </Heading>
+          <Paragraph size="medium" className="examples-intro">
+            Se hvordan andre virksomheter har tatt i bruk kunstig intelligens
+          </Paragraph>
+        </div>
+        <Link href="/eksempler" className="examples-link">Se alle eksempler</Link>
+      </div>
+
+      <div class="examples-grid">
+        {displayExamples.slice(0, 4).map((example, index) => (
+          <Link href={`/eksempler/${example.slug}`} className="example-card">
+            <div class="example-image" style={`background: ${colors[index % colors.length]};`}>
+              <svg
+                class="example-icon"
+                xmlns="http://www.w3.org/2000/svg"
+                width="64"
+                height="64"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="example-content">
+              <span class="example-org">{example.organization}</span>
+              <span class="example-title">{example.title}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .examples-section {
+    padding: var(--ds-size-10) var(--ds-size-4);
+    background-color: var(--ds-color-neutral-background-default);
+  }
+
+  .examples-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .examples-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--ds-size-8);
+    flex-wrap: wrap;
+    gap: var(--ds-size-4);
+  }
+
+  .examples-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-2);
+  }
+
+  :global(.examples-heading) {
+    margin: 0;
+  }
+
+  :global(.examples-intro) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    max-width: 500px;
+  }
+
+  :global(.examples-link) {
+    font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-medium);
+    white-space: nowrap;
+  }
+
+  .examples-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: var(--ds-size-4);
+  }
+
+  @media (min-width: 640px) {
+    .examples-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .examples-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  :global(.example-card) {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    border-radius: var(--ds-border-radius-lg);
+    overflow: hidden;
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  :global(.example-card:hover) {
+    border-color: var(--ds-color-accent-border-default);
+    transform: translateY(-4px);
+    box-shadow: var(--ds-shadow-lg);
+  }
+
+  .example-image {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.4s ease;
+  }
+
+  :global(.example-card:hover) .example-image {
+    transform: scale(1.02);
+  }
+
+  .example-icon {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .example-content {
+    padding: var(--ds-size-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-1);
+  }
+
+  .example-org {
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    color: var(--ds-color-accent-text-default);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .example-title {
+    font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-medium);
+    color: var(--ds-color-neutral-text-default);
+    line-height: 1.4;
+  }
+</style>

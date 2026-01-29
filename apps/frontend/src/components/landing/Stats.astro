@@ -11,10 +11,12 @@ const stats = [
 
 <section class="stats">
   <div class="stats-container">
-    <Heading level={2} size="large" className="stats-heading">KI Norge i tall</Heading>
+    <div class="stats-header">
+      <Heading level={2} size="large" className="stats-heading">KI Norge i tall</Heading>
+    </div>
     <div class="stats-grid">
-      {stats.map((stat) => (
-        <div class="stat-card">
+      {stats.map((stat, index) => (
+        <div class="stat-card" style={`--delay: ${index * 0.1}s`}>
           <span class="stat-value">{stat.value}</span>
           <span class="stat-label">{stat.label}</span>
           <span class="stat-description">{stat.description}</span>
@@ -26,8 +28,8 @@ const stats = [
 
 <style>
   .stats {
-    padding: var(--ds-size-10) var(--ds-size-4);
-    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-12) var(--ds-size-4);
+    background-color: var(--ds-color-neutral-background-default);
   }
 
   .stats-container {
@@ -35,25 +37,44 @@ const stats = [
     margin: 0 auto;
   }
 
-  .stats-heading :global(h2) {
+  .stats-header {
     text-align: center;
-    margin: 0 0 var(--ds-size-8);
+    margin-bottom: var(--ds-size-10);
+  }
+
+  :global(.stats-heading) {
+    margin: 0;
   }
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--ds-size-6);
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--ds-size-4);
+  }
+
+  @media (min-width: 768px) {
+    .stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--ds-size-6);
+    }
   }
 
   .stat-card {
     text-align: center;
-    padding: var(--ds-size-6);
-    background-color: var(--ds-color-neutral-background-default);
+    padding: var(--ds-size-6) var(--ds-size-4);
+    background-color: var(--ds-color-neutral-surface-default);
     border-radius: var(--ds-border-radius-lg);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
     display: flex;
     flex-direction: column;
     gap: var(--ds-size-1);
+    transition: all 0.3s ease;
+  }
+
+  .stat-card:hover {
+    border-color: var(--ds-color-accent-border-default);
+    transform: translateY(-2px);
+    box-shadow: var(--ds-shadow-md);
   }
 
   .stat-value {
@@ -63,10 +84,17 @@ const stats = [
     line-height: 1;
   }
 
+  @media (min-width: 768px) {
+    .stat-value {
+      font-size: 3.5rem;
+    }
+  }
+
   .stat-label {
-    font-size: var(--ds-font-size-2);
+    font-size: var(--ds-font-size-1);
     font-weight: var(--ds-font-weight-semibold);
     color: var(--ds-color-neutral-text-default);
+    margin-top: var(--ds-size-2);
   }
 
   .stat-description {

@@ -16,21 +16,27 @@ try {
 }
 
 const title = page?.tittel || 'Om oss';
-const seoDescription = page?.seoBeskrivelse || '';
+const seoDescription = page?.seoBeskrivelse || 'Lar mer om KI Norge og vart arbeid med kunstig intelligens i offentlig sektor.';
 ---
 
 <Layout title={title} description={seoDescription}>
-  <div class="page-container">
+  <section class="page-hero">
+    <div class="hero-container">
+      <span class="page-badge">Om KI Norge</span>
+      <Heading level={1} size="2xlarge" className="page-title">{title}</Heading>
+      <Paragraph size="large" className="page-lead">
+        Et samarbeid mellom Nkom, Datatilsynet og Digdir for a fremme ansvarlig bruk av kunstig intelligens i offentlig sektor.
+      </Paragraph>
+    </div>
+  </section>
+
+  <div class="page-content">
     {page?.innhold ? (
-      <>
-        <header class="page-header">
-          <Heading level={1} size="2xlarge">{page.tittel}</Heading>
-        </header>
-        <BlocksRenderer blocks={page.innhold} class="page-content" />
-      </>
+      <BlocksRenderer blocks={page.innhold} className="content-blocks" />
     ) : (
       <div class="not-found">
-        <Heading level={1} size="2xlarge">Siden er ikke tilgjengelig</Heading>
+        <span class="material-symbols-outlined empty-icon">info</span>
+        <Heading level={2} size="medium">Siden er ikke tilgjengelig</Heading>
         <Paragraph>
           Denne siden er ikke publisert ennå. Vennligst prøv igjen senere.
         </Paragraph>
@@ -41,30 +47,97 @@ const seoDescription = page?.seoBeskrivelse || '';
 </Layout>
 
 <style>
-  .page-container {
+  .page-hero {
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-neutral-background-default) 0%,
+      var(--ds-color-accent-surface-default) 100%
+    );
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .hero-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
+    text-align: center;
   }
 
-  .page-header {
-    margin-bottom: var(--ds-size-6);
+  .page-badge {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
   }
 
-  .page-header :global(h1) {
+  :global(.page-title) {
+    margin: 0 0 var(--ds-size-4);
+  }
+
+  :global(.page-lead) {
     margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .page-content {
-    margin-bottom: var(--ds-size-8);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-10) var(--ds-size-4);
+  }
+
+  :global(.content-blocks) {
+    line-height: 1.7;
+  }
+
+  :global(.content-blocks h2) {
+    margin-top: var(--ds-size-10);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  :global(.content-blocks h3) {
+    margin-top: var(--ds-size-8);
+    margin-bottom: var(--ds-size-3);
+  }
+
+  :global(.content-blocks p) {
+    margin-bottom: var(--ds-size-4);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  :global(.content-blocks ul),
+  :global(.content-blocks ol) {
+    margin-bottom: var(--ds-size-4);
+    padding-left: var(--ds-size-6);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  :global(.content-blocks li) {
+    margin-bottom: var(--ds-size-2);
   }
 
   .not-found {
     text-align: center;
-    padding: var(--ds-size-12) var(--ds-size-4);
+    padding: var(--ds-size-12);
+    background-color: var(--ds-color-neutral-surface-default);
+    border-radius: var(--ds-border-radius-lg);
   }
 
-  .not-found :global(h1) {
+  .empty-icon {
+    font-size: 48px;
+    color: var(--ds-color-neutral-text-subtle);
+    opacity: 0.5;
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .not-found :global(h2) {
     margin: 0 0 var(--ds-size-4);
   }
 

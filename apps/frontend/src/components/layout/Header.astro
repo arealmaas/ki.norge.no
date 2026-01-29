@@ -1,5 +1,7 @@
 ---
-import { Link } from '@digdir/designsystemet-react';
+import { Link, Button } from '@digdir/designsystemet-react';
+import Logo from '../shared/Logo.astro';
+import DarkModeToggle from '../shared/DarkModeToggle.astro';
 
 const navItems = [
   { href: '/veiledning', label: 'Veiledning' },
@@ -7,7 +9,6 @@ const navItems = [
   { href: '/eksempler', label: 'Gode eksempler' },
   { href: '/artikler', label: 'Artikler' },
   { href: '/om-oss', label: 'Om oss' },
-  { href: '/kontakt', label: 'Kontakt' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -18,10 +19,11 @@ const currentPath = Astro.url.pathname;
     Hopp til hovedinnhold
   </Link>
   <div class="header-container">
-    <Link href="/" className="logo-link">
-      <span class="logo-text">KI Norge</span>
+    <Link href="/" className="logo-link" aria-label="KI Norge - Hjem">
+      <Logo />
     </Link>
-    <nav aria-label="Hovednavigasjon">
+
+    <nav class="nav-desktop" aria-label="Hovednavigasjon">
       <ul class="nav-list">
         {navItems.map((item) => (
           <li>
@@ -36,16 +38,112 @@ const currentPath = Astro.url.pathname;
         ))}
       </ul>
     </nav>
+
+    <div class="header-actions">
+      <DarkModeToggle />
+      <Button
+        asChild
+        variant="primary"
+        size="small"
+      >
+        <a href="/kontakt">Kontakt oss</a>
+      </Button>
+      <button
+        type="button"
+        class="mobile-menu-toggle"
+        aria-label="Apne meny"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        data-mobile-menu-toggle
+      >
+        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+        <svg class="close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
   </div>
+
+  <!-- Mobile Navigation -->
+  <nav id="mobile-nav" class="nav-mobile" aria-label="Mobilmeny" hidden>
+    <ul class="mobile-nav-list">
+      {navItems.map((item) => (
+        <li>
+          <Link
+            href={item.href}
+            className={`mobile-nav-link ${currentPath.startsWith(item.href) ? 'active' : ''}`}
+            aria-current={currentPath.startsWith(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </Link>
+        </li>
+      ))}
+      <li>
+        <Link href="/kontakt" className="mobile-nav-link">
+          Kontakt oss
+        </Link>
+      </li>
+    </ul>
+  </nav>
 </header>
+
+<script>
+  function initMobileMenu() {
+    const toggle = document.querySelector('[data-mobile-menu-toggle]');
+    const nav = document.getElementById('mobile-nav');
+
+    if (!toggle || !nav) return;
+
+    toggle.addEventListener('click', () => {
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!isExpanded));
+      toggle.setAttribute('aria-label', isExpanded ? 'Apne meny' : 'Lukk meny');
+      nav.hidden = isExpanded;
+
+      if (!isExpanded) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    });
+
+    // Close mobile menu on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !nav.hidden) {
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Apne meny');
+        nav.hidden = true;
+        document.body.style.overflow = '';
+      }
+    });
+  }
+
+  // Initialize on page load
+  initMobileMenu();
+
+  // Re-initialize after Astro page transitions
+  document.addEventListener('astro:after-swap', initMobileMenu);
+</script>
 
 <style>
   .header {
     background-color: var(--ds-color-neutral-surface-default);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.9);
     border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
     position: sticky;
     top: 0;
     z-index: 100;
+  }
+
+  :global(html.dark) .header {
+    background-color: rgba(26, 35, 50, 0.9);
   }
 
   .skip-link {
@@ -53,9 +151,10 @@ const currentPath = Astro.url.pathname;
     left: -9999px;
     z-index: 999;
     padding: var(--ds-size-2) var(--ds-size-4);
-    background-color: var(--ds-color-accent-surface-default);
-    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-accent-base-default);
+    color: white;
     text-decoration: none;
+    border-radius: var(--ds-border-radius-md);
   }
 
   .skip-link:focus {
@@ -73,31 +172,42 @@ const currentPath = Astro.url.pathname;
     gap: var(--ds-size-6);
   }
 
-  .logo-link {
+  :global(.logo-link) {
     text-decoration: none;
     color: var(--ds-color-neutral-text-default);
+    display: flex;
+    align-items: center;
   }
 
-  .logo-text {
-    font-size: var(--ds-font-size-6);
-    font-weight: var(--ds-font-weight-semibold);
+  .nav-desktop {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .nav-desktop {
+      display: block;
+      flex: 1;
+    }
   }
 
   .nav-list {
     display: flex;
-    gap: var(--ds-size-4);
+    gap: var(--ds-size-1);
     list-style: none;
     margin: 0;
     padding: 0;
+    justify-content: center;
   }
 
   :global(.nav-link) {
     text-decoration: none;
     color: var(--ds-color-neutral-text-default);
     font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-medium);
     padding: var(--ds-size-2) var(--ds-size-3);
     border-radius: var(--ds-border-radius-md);
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
+    white-space: nowrap;
   }
 
   :global(.nav-link:hover) {
@@ -109,15 +219,107 @@ const currentPath = Astro.url.pathname;
     color: var(--ds-color-accent-text-default);
   }
 
-  @media (max-width: 768px) {
-    .header-container {
-      flex-direction: column;
-      gap: var(--ds-size-3);
-    }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-size-3);
+  }
 
-    .nav-list {
-      flex-wrap: wrap;
-      justify-content: center;
+  .header-actions :global(a[href="/kontakt"]) {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .header-actions :global(a[href="/kontakt"]) {
+      display: inline-flex;
     }
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-md);
+    cursor: pointer;
+    color: var(--ds-color-neutral-text-default);
+    transition: all 0.2s ease;
+  }
+
+  .mobile-menu-toggle:hover {
+    background-color: var(--ds-color-neutral-surface-hover);
+  }
+
+  .mobile-menu-toggle:focus-visible {
+    outline: 2px solid var(--ds-color-accent-border-default);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-menu-toggle {
+      display: none;
+    }
+  }
+
+  .close-icon {
+    display: none;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .menu-icon {
+    display: none;
+  }
+
+  .mobile-menu-toggle[aria-expanded="true"] .close-icon {
+    display: block;
+  }
+
+  /* Mobile Navigation */
+  .nav-mobile {
+    position: fixed;
+    top: 65px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-4);
+    overflow-y: auto;
+    z-index: 99;
+  }
+
+  .nav-mobile[hidden] {
+    display: none;
+  }
+
+  .mobile-nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-1);
+  }
+
+  :global(.mobile-nav-link) {
+    display: block;
+    text-decoration: none;
+    color: var(--ds-color-neutral-text-default);
+    font-size: var(--ds-font-size-3);
+    font-weight: var(--ds-font-weight-medium);
+    padding: var(--ds-size-4);
+    border-radius: var(--ds-border-radius-md);
+    transition: all 0.2s ease;
+  }
+
+  :global(.mobile-nav-link:hover) {
+    background-color: var(--ds-color-neutral-surface-hover);
+  }
+
+  :global(.mobile-nav-link.active) {
+    background-color: var(--ds-color-accent-surface-default);
+    color: var(--ds-color-accent-text-default);
   }
 </style>

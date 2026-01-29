@@ -1,7 +1,7 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
-import { Heading, Paragraph, Link, Details } from '@digdir/designsystemet-react';
+import { Heading, Paragraph, Link, Details, Button } from '@digdir/designsystemet-react';
 import { getFAQs, type FAQ } from '../lib/strapi';
 
 // Fetch FAQs from Strapi
@@ -15,72 +15,125 @@ try {
 ---
 
 <Layout title="Vanlige sporsmal (FAQ)" description="Svar pa vanlige sporsmal om KI Norge, den regulatoriske sandkassen og kunstig intelligens i offentlig sektor.">
-  <div class="page-container">
-    <header class="page-header">
-      <Heading level={1} size="2xlarge">Vanlige sporsmal</Heading>
-      <Paragraph class="lead" size="large">
+  <section class="page-hero">
+    <div class="hero-container">
+      <span class="page-badge">Hjelp</span>
+      <Heading level={1} size="2xlarge" className="page-title">Vanlige sporsmal</Heading>
+      <Paragraph size="large" className="page-lead">
         Her finner du svar pa de vanligste sporsmalene om KI Norge og vare tjenester.
       </Paragraph>
-    </header>
+    </div>
+  </section>
 
+  <div class="page-content">
     <div class="faq-list">
       {faqs.length > 0 ? (
         faqs.map((faq, index) => (
-          <Details client:load class="faq-item">
+          <Details client:load className="faq-item">
             <Details.Summary>
-              <span class="faq-number">{index + 1}</span>
+              <span class="faq-number">{String(index + 1).padStart(2, '0')}</span>
               <span class="faq-text">{faq.sporsmal}</span>
             </Details.Summary>
             <Details.Content>
-              <BlocksRenderer blocks={faq.svar} />
+              <div class="faq-answer">
+                <BlocksRenderer blocks={faq.svar} />
+              </div>
             </Details.Content>
           </Details>
         ))
       ) : (
-        <Paragraph>Ingen ofte stilte sporsmal funnet.</Paragraph>
+        <div class="empty-state">
+          <span class="material-symbols-outlined empty-icon">help</span>
+          <Paragraph>Ingen ofte stilte sporsmal funnet.</Paragraph>
+        </div>
       )}
     </div>
 
-    <section class="contact-section">
-      <Heading level={2} size="medium">Fant du ikke svar pa sporsmalet ditt?</Heading>
-      <Paragraph>
-        Ta gjerne <Link href="/kontakt">kontakt med oss</Link> sa hjelper vi deg.
+    <section class="contact-cta">
+      <div class="cta-icon-wrapper">
+        <span class="material-symbols-outlined cta-icon">support_agent</span>
+      </div>
+      <Heading level={2} size="medium" className="cta-title">Fant du ikke svar pa sporsmalet ditt?</Heading>
+      <Paragraph className="cta-description">
+        Vi er her for a hjelpe deg. Ta kontakt med oss sa svarer vi sa raskt vi kan.
       </Paragraph>
+      <Button asChild variant="primary" size="medium">
+        <a href="/kontakt">Kontakt oss</a>
+      </Button>
     </section>
   </div>
 </Layout>
 
 <style>
-  .page-container {
+  .page-hero {
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-neutral-background-default) 0%,
+      var(--ds-color-accent-surface-default) 100%
+    );
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .hero-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
+    text-align: center;
   }
 
-  .page-header {
-    margin-bottom: var(--ds-size-8);
+  .page-badge {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
   }
 
-  .page-header :global(h1) {
+  :global(.page-title) {
     margin: 0 0 var(--ds-size-4);
   }
 
-  .lead {
-    color: var(--ds-color-neutral-text-subtle);
+  :global(.page-lead) {
     margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .page-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-10) var(--ds-size-4);
   }
 
   .faq-list {
-    margin-bottom: var(--ds-size-10);
+    margin-bottom: var(--ds-size-12);
     display: flex;
     flex-direction: column;
     gap: var(--ds-size-3);
   }
 
-  .faq-item :global(summary) {
+  :global(.faq-item) {
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    transition: border-color 0.2s ease;
+  }
+
+  :global(.faq-item:hover) {
+    border-color: var(--ds-color-accent-border-default);
+  }
+
+  :global(.faq-item summary) {
     display: flex;
     align-items: center;
-    gap: var(--ds-size-3);
+    gap: var(--ds-size-4);
+    padding: var(--ds-size-5);
     cursor: pointer;
   }
 
@@ -88,37 +141,85 @@ try {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    min-width: 32px;
+    height: 32px;
     background-color: var(--ds-color-accent-surface-default);
     color: var(--ds-color-accent-text-default);
-    border-radius: var(--ds-border-radius-full);
+    border-radius: var(--ds-border-radius-md);
     font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
+    font-weight: var(--ds-font-weight-bold);
     flex-shrink: 0;
   }
 
   .faq-text {
     flex: 1;
+    font-weight: var(--ds-font-weight-medium);
+    color: var(--ds-color-neutral-text-default);
   }
 
   .faq-answer {
+    padding: 0 var(--ds-size-5) var(--ds-size-5);
+    padding-left: calc(var(--ds-size-5) + 32px + var(--ds-size-4));
     color: var(--ds-color-neutral-text-subtle);
-    margin: 0;
   }
 
-  .contact-section {
-    padding: var(--ds-size-6);
-    background-color: var(--ds-color-accent-surface-default);
+  .empty-state {
+    text-align: center;
+    padding: var(--ds-size-12);
+    background-color: var(--ds-color-neutral-surface-default);
+    border-radius: var(--ds-border-radius-lg);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    color: var(--ds-color-neutral-text-subtle);
+    opacity: 0.5;
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .contact-cta {
+    padding: var(--ds-size-10);
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-accent-surface-default) 0%,
+      var(--ds-color-neutral-background-default) 50%,
+      var(--ds-color-accent-surface-default) 100%
+    );
     border-radius: var(--ds-border-radius-lg);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-3);
   }
 
-  .contact-section :global(h2) {
-    margin: 0 0 var(--ds-size-2);
+  .cta-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ds-color-accent-base-default);
+    border-radius: var(--ds-border-radius-full);
   }
 
-  .contact-section :global(p) {
+  .cta-icon {
+    font-size: 32px;
+    color: white;
+  }
+
+  :global(.cta-title) {
     margin: 0;
+  }
+
+  :global(.cta-description) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    max-width: 400px;
+  }
+
+  .contact-cta :global(a) {
+    text-decoration: none;
+    margin-top: var(--ds-size-2);
   }
 </style>

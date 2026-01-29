@@ -1,0 +1,104 @@
+---
+import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
+---
+
+<section class="guidance-cta">
+  <div class="guidance-container">
+    <div class="guidance-icon-wrapper">
+      <span class="material-symbols-outlined guidance-icon">menu_book</span>
+    </div>
+
+    <div class="guidance-content">
+      <Heading level={2} size="large" className="guidance-title">
+        Trenger du veiledning for KI-prosjekter?
+      </Heading>
+      <Paragraph size="medium" className="guidance-description">
+        Vi har samlet ressurser, sjekklister og beste praksis for a hjelpe deg med a ta i bruk kunstig intelligens pa en ansvarlig mate.
+      </Paragraph>
+    </div>
+
+    <div class="guidance-actions">
+      <Button
+        asChild
+        variant="primary"
+        size="large"
+      >
+        <a href="/veiledning">Utforsk veiledning</a>
+      </Button>
+      <Button
+        asChild
+        variant="secondary"
+        size="large"
+      >
+        <a href="/kontakt">Kontakt oss</a>
+      </Button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .guidance-cta {
+    padding: var(--ds-size-12) var(--ds-size-4);
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-accent-surface-default) 0%,
+      var(--ds-color-neutral-background-default) 50%,
+      var(--ds-color-accent-surface-default) 100%
+    );
+  }
+
+  .guidance-container {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--ds-size-6);
+  }
+
+  .guidance-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--ds-color-accent-base-default);
+    border-radius: var(--ds-border-radius-full);
+    box-shadow: var(--ds-shadow-lg);
+  }
+
+  .guidance-icon {
+    font-size: 40px;
+    color: white;
+  }
+
+  .guidance-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-3);
+  }
+
+  :global(.guidance-title) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-default);
+  }
+
+  :global(.guidance-description) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    line-height: 1.6;
+    max-width: 600px;
+  }
+
+  .guidance-actions {
+    display: flex;
+    gap: var(--ds-size-3);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .guidance-actions :global(a) {
+    text-decoration: none;
+  }
+</style>

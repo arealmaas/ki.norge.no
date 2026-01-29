@@ -1,0 +1,107 @@
+---
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props;
+---
+
+<button
+  type="button"
+  class:list={['dark-mode-toggle', className]}
+  aria-label="Bytt mellom lyst og morkt tema"
+  data-theme-toggle
+>
+  <span class="icon icon-light" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </span>
+  <span class="icon icon-dark" aria-hidden="true">
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </span>
+</button>
+
+<script>
+  function initDarkModeToggle() {
+    const toggles = document.querySelectorAll('[data-theme-toggle]');
+
+    toggles.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        const newTheme = isDark ? 'light' : 'dark';
+
+        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+        document.documentElement.setAttribute('data-ds-color-mode', newTheme);
+        localStorage.setItem('theme', newTheme);
+      });
+    });
+  }
+
+  // Initialize on page load
+  initDarkModeToggle();
+
+  // Re-initialize after Astro page transitions
+  document.addEventListener('astro:after-swap', initDarkModeToggle);
+</script>
+
+<style>
+  .dark-mode-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-md);
+    cursor: pointer;
+    color: var(--ds-color-neutral-text-default);
+    transition: all 0.2s ease;
+  }
+
+  .dark-mode-toggle:hover {
+    background-color: var(--ds-color-neutral-surface-hover);
+    border-color: var(--ds-color-neutral-border-default);
+  }
+
+  .dark-mode-toggle:focus-visible {
+    outline: 2px solid var(--ds-color-accent-border-default);
+    outline-offset: 2px;
+  }
+
+  .icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Light mode: show sun, hide moon */
+  .icon-light {
+    display: flex;
+  }
+
+  .icon-dark {
+    display: none;
+  }
+
+  /* Dark mode: show moon, hide sun */
+  :global(html.dark) .icon-light {
+    display: none;
+  }
+
+  :global(html.dark) .icon-dark {
+    display: flex;
+  }
+</style>

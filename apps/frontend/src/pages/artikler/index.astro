@@ -27,15 +27,17 @@ try {
 ---
 
 <Layout title="Artikler" description="Nyheter, analyser og veiledning om kunstig intelligens i offentlig sektor.">
-  <div class="page-container">
-    <header class="page-header">
-      <Heading level={1} size="2xlarge">Artikler</Heading>
-      <Paragraph size="large" class="lead">
-        Hold deg oppdatert pa nyheter, analyser og veiledning om kunstig intelligens
-        i norsk offentlig sektor.
+  <section class="page-hero">
+    <div class="hero-container">
+      <span class="page-badge">Artikler</span>
+      <Heading level={1} size="2xlarge" className="page-title">Siste nytt</Heading>
+      <Paragraph size="large" className="page-lead">
+        Hold deg oppdatert pa nyheter, analyser og veiledning om kunstig intelligens i norsk offentlig sektor.
       </Paragraph>
-    </header>
+    </div>
+  </section>
 
+  <div class="page-content">
     <div class="articles-grid">
       {articles.length > 0 ? (
         articles.map((article) => (
@@ -44,52 +46,106 @@ try {
             excerpt={getExcerpt(article.innhold)}
             slug={article.slug}
             publishedAt={article.publishedAt}
+            category="Nyhet"
           />
         ))
       ) : (
-        <Paragraph>Ingen artikler funnet.</Paragraph>
+        <div class="empty-state">
+          <span class="material-symbols-outlined empty-icon">article</span>
+          <Paragraph>Ingen artikler funnet.</Paragraph>
+        </div>
       )}
     </div>
 
-    <nav class="pagination">
-      <Button variant="secondary" size="small" disabled>Forrige</Button>
-      <Paragraph size="small" class="pagination-info">Side 1 av 1</Paragraph>
-      <Button variant="secondary" size="small" disabled>Neste</Button>
-    </nav>
+    {articles.length > 12 && (
+      <nav class="pagination">
+        <Button variant="secondary" size="small" disabled>Forrige</Button>
+        <Paragraph size="small" className="pagination-info">Side 1 av 1</Paragraph>
+        <Button variant="secondary" size="small" disabled>Neste</Button>
+      </nav>
+    )}
   </div>
 </Layout>
 
 <style>
-  .page-container {
-    max-width: 1000px;
+  .page-hero {
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-neutral-background-default) 0%,
+      var(--ds-color-accent-surface-default) 100%
+    );
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .hero-container {
+    max-width: 800px;
     margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
+    text-align: center;
   }
 
-  .page-header {
-    margin-bottom: var(--ds-size-6);
+  .page-badge {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
   }
 
-  .page-header :global(h1) {
+  :global(.page-title) {
     margin: 0 0 var(--ds-size-4);
   }
 
-  .lead {
+  :global(.page-lead) {
     margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
-  .filters {
-    display: flex;
-    gap: var(--ds-size-2);
-    margin-bottom: var(--ds-size-6);
-    flex-wrap: wrap;
+  .page-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--ds-size-10) var(--ds-size-4);
   }
 
   .articles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--ds-size-5);
-    margin-bottom: var(--ds-size-8);
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-6);
+    margin-bottom: var(--ds-size-10);
+  }
+
+  @media (min-width: 640px) {
+    .articles-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .articles-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: var(--ds-size-12);
+    background-color: var(--ds-color-neutral-surface-default);
+    border-radius: var(--ds-border-radius-lg);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    color: var(--ds-color-neutral-text-subtle);
+    opacity: 0.5;
+    margin-bottom: var(--ds-size-4);
   }
 
   .pagination {
@@ -99,7 +155,8 @@ try {
     gap: var(--ds-size-4);
   }
 
-  .pagination-info {
+  :global(.pagination-info) {
     margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
   }
 </style>

@@ -9,6 +9,7 @@ interface Props {
     slug: string;
     publishedAt: string;
     category?: string;
+    image?: string;
   }>;
 }
 
@@ -31,6 +32,7 @@ const hasArticles = articles.length > 0;
             slug={article.slug}
             publishedAt={article.publishedAt}
             category={article.category}
+            image={article.image}
           />
         ))}
       </div>
@@ -40,7 +42,7 @@ const hasArticles = articles.length > 0;
 
 <style>
   .news {
-    padding: var(--ds-size-10) var(--ds-size-4);
+    padding: var(--ds-size-12) var(--ds-size-4);
     background-color: var(--ds-color-neutral-surface-default);
   }
 
@@ -53,23 +55,35 @@ const hasArticles = articles.length > 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--ds-size-6);
+    margin-bottom: var(--ds-size-8);
     flex-wrap: wrap;
     gap: var(--ds-size-4);
   }
 
-  .news-heading :global(h2) {
+  :global(.news-heading) {
     margin: 0;
   }
 
-  .news-link :global(a) {
+  :global(.news-link) {
     font-size: var(--ds-font-size-1);
     font-weight: var(--ds-font-weight-medium);
   }
 
   .news-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 1fr;
     gap: var(--ds-size-6);
+  }
+
+  @media (min-width: 640px) {
+    .news-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .news-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 </style>

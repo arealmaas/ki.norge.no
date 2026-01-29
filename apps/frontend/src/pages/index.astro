@@ -1,12 +1,14 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import Hero from '../components/landing/Hero.astro';
-import Stats from '../components/landing/Stats.astro';
-import Pillars from '../components/landing/Pillars.astro';
-import Resources from '../components/landing/Resources.astro';
-import TargetAudiences from '../components/landing/TargetAudiences.astro';
 import News from '../components/landing/News.astro';
-import { getArtikler, getVeiledninger, getSide, type Artikkel, type Veiledning } from '../lib/strapi';
+import SandboxFeature from '../components/landing/SandboxFeature.astro';
+import ExamplesGrid from '../components/landing/ExamplesGrid.astro';
+import Pillars from '../components/landing/Pillars.astro';
+import Stats from '../components/landing/Stats.astro';
+import TargetAudiences from '../components/landing/TargetAudiences.astro';
+import GuidanceCTA from '../components/landing/GuidanceCTA.astro';
+import { getArtikler, getVeiledninger, getEksempler, getSide, type Artikkel, type Veiledning, type Eksempel } from '../lib/strapi';
 
 // Fetch latest articles for News section
 let artikler: Artikkel[] = [];
@@ -26,21 +28,20 @@ const articles = artikler.map(a => ({
   category: 'Nyhet',
 }));
 
-// Fetch veiledninger for Resources section
-let veiledninger: Veiledning[] = [];
+// Fetch examples for ExamplesGrid section
+let eksempler: Eksempel[] = [];
 try {
-  const veiledningerRes = await getVeiledninger();
-  veiledninger = veiledningerRes.data || [];
+  const eksemplerRes = await getEksempler();
+  eksempler = (eksemplerRes.data || []).slice(0, 4);
 } catch (error) {
-  console.error('Failed to fetch veiledninger for homepage:', error);
+  console.error('Failed to fetch examples for homepage:', error);
 }
 
-// Transform veiledninger for Resources component
-const resources = veiledninger.slice(0, 4).map(v => ({
-  title: v.tittel,
-  description: v.innhold?.[0]?.children?.[0]?.text?.substring(0, 80) || '',
-  href: `/veiledning/${v.slug}`,
-  type: v.kategori?.navn || 'Veiledning',
+// Transform examples for ExamplesGrid component
+const examples = eksempler.map(e => ({
+  title: e.tittel,
+  organization: e.organisasjon || 'Offentlig sektor',
+  slug: e.slug,
 }));
 
 // Fetch homepage content from CMS (optional)
@@ -57,9 +58,11 @@ const seoDescription = forside?.seoBeskrivelse || 'KI Norge - Norges nasjonale s
 
 <Layout title={title} description={seoDescription}>
   <Hero />
-  <Stats />
-  <Pillars />
-  <Resources resources={resources} />
-  <TargetAudiences />
   <News articles={articles} />
+  <Pillars />
+  <SandboxFeature />
+  <ExamplesGrid examples={examples} />
+  <Stats />
+  <TargetAudiences />
+  <GuidanceCTA />
 </Layout>

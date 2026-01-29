@@ -4,27 +4,45 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 
 <section class="hero">
   <div class="hero-container">
-    <Heading level={1} size="2xlarge" className="hero-title">
-      Kunstig intelligens for Norge
-    </Heading>
-    <Paragraph size="large" className="hero-subtitle">
-      Sammen bygger vi et trygt og innovativt KI-landskap for norsk offentlig sektor
-    </Paragraph>
-    <div class="hero-actions">
-      <Button
-        asChild
-        variant="primary"
-        size="large"
-      >
-        <a href="/veiledning">Utforsk veiledning</a>
-      </Button>
-      <Button
-        asChild
-        variant="secondary"
-        size="large"
-      >
-        <a href="/sandkasse">Regulatorisk sandkasse</a>
-      </Button>
+    <div class="hero-content">
+      <span class="hero-badge">Nasjonal strategi</span>
+      <Heading level={1} size="2xlarge" className="hero-title">
+        Kunstig intelligens for Norge
+      </Heading>
+      <Paragraph size="large" className="hero-subtitle">
+        Sammen bygger vi et trygt og innovativt KI-landskap for norsk offentlig sektor. Utforsk veiledning, regulatorisk sandkasse og gode eksempler.
+      </Paragraph>
+      <div class="hero-actions">
+        <Button
+          asChild
+          variant="primary"
+          size="large"
+        >
+          <a href="/veiledning">Utforsk veiledning</a>
+        </Button>
+        <Button
+          asChild
+          variant="secondary"
+          size="large"
+        >
+          <a href="/sandkasse">Regulatorisk sandkasse</a>
+        </Button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-illustration" aria-hidden="true">
+        <div class="illustration-grid">
+          <div class="grid-item item-1"></div>
+          <div class="grid-item item-2"></div>
+          <div class="grid-item item-3"></div>
+          <div class="grid-item item-4"></div>
+        </div>
+        <div class="floating-shapes">
+          <div class="shape shape-1"></div>
+          <div class="shape shape-2"></div>
+          <div class="shape shape-3"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -33,38 +51,196 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
   .hero {
     background: linear-gradient(
       135deg,
-      var(--ds-color-accent-surface-default) 0%,
+      var(--ds-color-neutral-background-default) 0%,
+      var(--ds-color-accent-surface-default) 50%,
       var(--ds-color-neutral-background-default) 100%
     );
-    padding: var(--ds-size-12) var(--ds-size-4);
-    text-align: center;
+    padding: var(--ds-size-10) var(--ds-size-4);
+    overflow: hidden;
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      padding: var(--ds-size-14) var(--ds-size-4);
+    }
   }
 
   .hero-container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-8);
+    align-items: center;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-container {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--ds-size-12);
+    }
+  }
+
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-4);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-self: flex-start;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-accent-surface-default);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
   }
 
   :global(.hero-title) {
-    margin: 0 0 var(--ds-size-4);
+    margin: 0;
     color: var(--ds-color-neutral-text-default);
     line-height: 1.1;
+    font-weight: var(--ds-font-weight-bold);
   }
 
   :global(.hero-subtitle) {
     color: var(--ds-color-neutral-text-subtle);
-    margin: 0 0 var(--ds-size-8);
-    line-height: 1.5;
+    margin: 0;
+    line-height: 1.6;
+    max-width: 540px;
   }
 
   .hero-actions {
     display: flex;
-    gap: var(--ds-size-4);
-    justify-content: center;
+    gap: var(--ds-size-3);
     flex-wrap: wrap;
+    margin-top: var(--ds-size-2);
   }
 
   .hero-actions :global(a) {
     text-decoration: none;
+  }
+
+  /* Hero Visual / Illustration */
+  .hero-visual {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
+  .hero-illustration {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1;
+  }
+
+  .illustration-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: var(--ds-size-4);
+    padding: var(--ds-size-6);
+  }
+
+  .grid-item {
+    background: var(--ds-color-neutral-surface-default);
+    border-radius: var(--ds-border-radius-lg);
+    box-shadow: var(--ds-shadow-md);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .grid-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 0%, var(--ds-color-accent-surface-default) 100%);
+    opacity: 0.5;
+  }
+
+  .item-1 {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .item-2 {
+    animation: float 6s ease-in-out infinite 1.5s;
+  }
+
+  .item-3 {
+    animation: float 6s ease-in-out infinite 3s;
+  }
+
+  .item-4 {
+    animation: float 6s ease-in-out infinite 4.5s;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  .floating-shapes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .shape {
+    position: absolute;
+    border-radius: var(--ds-border-radius-full);
+    background: var(--ds-color-accent-base-default);
+    opacity: 0.2;
+  }
+
+  .shape-1 {
+    width: 120px;
+    height: 120px;
+    top: -20px;
+    right: -20px;
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  .shape-2 {
+    width: 80px;
+    height: 80px;
+    bottom: 20%;
+    left: -10px;
+    animation: pulse 4s ease-in-out infinite 1s;
+  }
+
+  .shape-3 {
+    width: 60px;
+    height: 60px;
+    bottom: -10px;
+    right: 30%;
+    animation: pulse 4s ease-in-out infinite 2s;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.2;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.3;
+    }
   }
 </style>

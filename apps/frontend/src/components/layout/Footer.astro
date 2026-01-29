@@ -1,67 +1,103 @@
 ---
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+import Logo from '../shared/Logo.astro';
 
 const partners = [
-  { name: 'Nkom', url: 'https://www.nkom.no' },
-  { name: 'Datatilsynet', url: 'https://www.datatilsynet.no' },
-  { name: 'Digdir', url: 'https://www.digdir.no' },
+  { name: 'Nkom', url: 'https://www.nkom.no', logo: '/images/partners/nkom.svg' },
+  { name: 'Datatilsynet', url: 'https://www.datatilsynet.no', logo: '/images/partners/datatilsynet.svg' },
+  { name: 'Digdir', url: 'https://www.digdir.no', logo: '/images/partners/digdir.svg' },
+];
+
+const quickLinks = [
+  { href: '/veiledning', label: 'Veiledning' },
+  { href: '/sandkasse', label: 'Regulatorisk sandkasse' },
+  { href: '/eksempler', label: 'Gode eksempler' },
+  { href: '/artikler', label: 'Artikler' },
+];
+
+const aboutLinks = [
+  { href: '/om-oss', label: 'Om KI Norge' },
+  { href: '/kontakt', label: 'Kontakt oss' },
+  { href: '/faq', label: 'Ofte stilte sporsmal' },
+  { href: '/personvern', label: 'Personvern' },
+  { href: '/tilgjengelighet', label: 'Tilgjengelighet' },
 ];
 ---
 
 <footer class="footer">
-  <div class="footer-container">
-    <div class="footer-section">
-      <Heading level={2} size="xsmall" className="footer-heading">
-        KI Norge
-      </Heading>
-      <Paragraph size="small" className="footer-text">
-        Norges nasjonale strategi for kunstig intelligens.
-        Et samarbeid mellom Nkom, Datatilsynet og Digdir.
-      </Paragraph>
-    </div>
+  <div class="footer-main">
+    <div class="footer-container">
+      <!-- Brand Column -->
+      <div class="footer-brand">
+        <Link href="/" className="footer-logo-link">
+          <Logo />
+        </Link>
+        <Paragraph size="small" className="footer-description">
+          Norges nasjonale strategi for kunstig intelligens. Et samarbeid mellom Nkom, Datatilsynet og Digdir.
+        </Paragraph>
+      </div>
 
-    <div class="footer-section">
-      <Heading level={2} size="xsmall" className="footer-heading">
-        Samarbeidspartnere
-      </Heading>
-      <ul class="partner-list">
-        {partners.map((partner) => (
-          <li>
-            <Link
-              href={partner.url}
-              className="partner-link"
-            >
-              {partner.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+      <!-- Quick Links Column -->
+      <div class="footer-section">
+        <Heading level={2} size="xsmall" className="footer-heading">
+          Ressurser
+        </Heading>
+        <ul class="footer-list">
+          {quickLinks.map((link) => (
+            <li>
+              <Link href={link.href} className="footer-link">
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
 
-    <div class="footer-section">
-      <Heading level={2} size="xsmall" className="footer-heading">
-        Kontakt
-      </Heading>
-      <Paragraph size="small" className="footer-text">
-        <Link href="/kontakt" className="footer-link">Kontakt oss</Link><br />
-        <Link href="/faq" className="footer-link">Vanlige sporsmal (FAQ)</Link>
-      </Paragraph>
-    </div>
-
-    <div class="footer-section">
-      <Heading level={2} size="xsmall" className="footer-heading">
-        Lenker
-      </Heading>
-      <ul class="link-list">
-        <li><Link href="/om-oss" className="footer-link">Om oss</Link></li>
-        <li><Link href="/personvern" className="footer-link">Personvern</Link></li>
-        <li><Link href="/tilgjengelighet" className="footer-link">Tilgjengelighet</Link></li>
-      </ul>
+      <!-- About Column -->
+      <div class="footer-section">
+        <Heading level={2} size="xsmall" className="footer-heading">
+          Om oss
+        </Heading>
+        <ul class="footer-list">
+          {aboutLinks.map((link) => (
+            <li>
+              <Link href={link.href} className="footer-link">
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   </div>
 
+  <!-- Partners Section -->
+  <div class="footer-partners">
+    <div class="footer-container">
+      <span class="partners-label">Et samarbeid mellom:</span>
+      <div class="partners-logos">
+        {partners.map((partner) => (
+          <a
+            href={partner.url}
+            class="partner-logo-link"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Besok ${partner.name}`}
+          >
+            <span class="partner-name">{partner.name}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- Copyright -->
   <div class="footer-bottom">
-    <Paragraph size="small">&copy; {new Date().getFullYear()} KI Norge. Alle rettigheter reservert.</Paragraph>
+    <div class="footer-container">
+      <Paragraph size="small" className="copyright">
+        &copy; {new Date().getFullYear()} KI Norge. Alle rettigheter reservert.
+      </Paragraph>
+    </div>
   </div>
 </footer>
 
@@ -75,59 +111,140 @@ const partners = [
   .footer-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
+    padding: 0 var(--ds-size-4);
+  }
+
+  .footer-main {
+    padding: var(--ds-size-10) 0;
+  }
+
+  .footer-main .footer-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--ds-size-6);
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-8);
+  }
+
+  @media (min-width: 768px) {
+    .footer-main .footer-container {
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: var(--ds-size-10);
+    }
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-4);
+  }
+
+  :global(.footer-logo-link) {
+    display: inline-flex;
+    color: var(--ds-color-neutral-text-default);
+  }
+
+  :global(.footer-description) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 320px;
   }
 
   .footer-section {
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-2);
+    gap: var(--ds-size-3);
   }
 
   :global(.footer-heading) {
     margin: 0;
     color: var(--ds-color-neutral-text-default);
+    font-weight: var(--ds-font-weight-semibold);
   }
 
-  :global(.footer-text) {
-    color: var(--ds-color-neutral-text-subtle);
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .partner-list,
-  .link-list {
+  .footer-list {
     list-style: none;
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-1);
+    gap: var(--ds-size-2);
   }
 
-  :global(.partner-link),
   :global(.footer-link) {
-    color: var(--ds-color-accent-text-default);
+    color: var(--ds-color-neutral-text-subtle);
     text-decoration: none;
-    font-size: var(--ds-font-size-0);
+    font-size: var(--ds-font-size-1);
+    transition: color 0.2s ease;
   }
 
-  :global(.partner-link:hover),
   :global(.footer-link:hover) {
-    text-decoration: underline;
+    color: var(--ds-color-accent-text-default);
   }
 
+  /* Partners Section */
+  .footer-partners {
+    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+    padding: var(--ds-size-6) 0;
+  }
+
+  .footer-partners .footer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-4);
+  }
+
+  @media (min-width: 640px) {
+    .footer-partners .footer-container {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+  .partners-label {
+    font-size: var(--ds-font-size-0);
+    color: var(--ds-color-neutral-text-subtle);
+    white-space: nowrap;
+  }
+
+  .partners-logos {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-size-6);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .partner-logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--ds-color-neutral-text-subtle);
+    font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-medium);
+    transition: color 0.2s ease;
+    opacity: 0.7;
+  }
+
+  .partner-logo-link:hover {
+    color: var(--ds-color-neutral-text-default);
+    opacity: 1;
+  }
+
+  /* Copyright */
   .footer-bottom {
     border-top: 1px solid var(--ds-color-neutral-border-subtle);
-    padding: var(--ds-size-4);
-    text-align: center;
+    padding: var(--ds-size-4) 0;
   }
 
-  :global(.footer-bottom p) {
+  .footer-bottom .footer-container {
+    display: flex;
+    justify-content: center;
+  }
+
+  :global(.copyright) {
     margin: 0;
     color: var(--ds-color-neutral-text-subtle);
+    text-align: center;
   }
 </style>
