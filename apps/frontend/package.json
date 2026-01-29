@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "dependencies": {
+    "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/react": "^4.4.2",
     "@digdir/designsystemet-css": "^1.11.0",
     "@digdir/designsystemet-react": "^1.11.0",
@@ -14,7 +15,6 @@
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
-    "@astrojs/node": "^9.5.2",
     "@playwright/test": "^1.49.0",
     "@types/node": "^22.10.7"
   }

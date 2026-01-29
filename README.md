@@ -31,9 +31,9 @@ Portal for kunstig intelligens i norsk offentlig sektor.
 - **pnpm-workspace.yaml** - CMS workspace configuration
 
 ### Hosting
-- **Self-hosted** - No vendor lock-in
-- **Static export** - Frontend builds to static HTML
-- **Strapi server** - Needs Node.js hosting (Docker, VM, etc.)
+- **Frontend** - Cloudflare Workers/Pages
+- **CMS** - Azure Web App (Node.js)
+- **Database** - Azure PostgreSQL (production)
 
 ## Project Structure
 
