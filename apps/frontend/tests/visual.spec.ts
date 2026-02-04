@@ -22,14 +22,14 @@ test.describe('Visual regression tests', () => {
     test('header component', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      const header = page.locator('header');
+      const header = page.locator('header.header');
       await expect(header).toHaveScreenshot('header.png');
     });
 
     test('footer component', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      const footer = page.locator('footer');
+      const footer = page.locator('footer.footer');
       await expect(footer).toHaveScreenshot('footer.png');
     });
   });
@@ -92,7 +92,7 @@ test.describe('Visual regression tests', () => {
     test('header in dark mode', async ({ page }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
-      const header = page.locator('header');
+      const header = page.locator('header.header');
       await expect(header).toHaveScreenshot('header-dark.png');
     });
   });
@@ -121,7 +121,7 @@ test.describe('Responsive layouts', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    const header = page.locator('header');
+    const header = page.locator('header.header');
     await expect(header).toHaveScreenshot('header-mobile.png');
   });
 });

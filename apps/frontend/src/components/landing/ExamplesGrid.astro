@@ -100,10 +100,14 @@ const placeholderImages = [
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #136dec;
+    color: #0d5fc2; /* Darker blue for WCAG AA contrast */
     font-size: 0.875rem;
     font-weight: 600;
     text-decoration: none;
+  }
+
+  :global(html.dark .examples-link) {
+    color: #5da3f7;
   }
 
   :global(.examples-link:hover) {
@@ -175,11 +179,15 @@ const placeholderImages = [
   }
 
   .example-org {
-    color: #136dec;
+    color: #0d5fc2; /* Darker blue for WCAG AA contrast */
     font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  :global(html.dark) .example-org {
+    color: #5da3f7; /* Lighter blue for dark mode */
   }
 
   .example-title {

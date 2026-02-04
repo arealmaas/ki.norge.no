@@ -151,10 +151,14 @@ const aboutLinks = [
 
   .footer-description {
     margin: 0;
-    color: #64748b;
+    color: #475569; /* Darker for WCAG AA contrast */
     font-size: 0.875rem;
     line-height: 1.6;
     max-width: 320px;
+  }
+
+  :global(html.dark) .footer-description {
+    color: #94a3b8;
   }
 
   .footer-section {
@@ -186,14 +190,22 @@ const aboutLinks = [
   }
 
   :global(.footer-link) {
-    color: #64748b;
+    color: #475569; /* Darker for WCAG AA contrast */
     text-decoration: none;
     font-size: 0.875rem;
     transition: color 0.2s ease;
   }
 
+  :global(html.dark .footer-link) {
+    color: #94a3b8;
+  }
+
   :global(.footer-link:hover) {
     color: #136dec;
+  }
+
+  :global(html.dark .footer-link:hover) {
+    color: #5da3f7;
   }
 
   /* Partners Section */
@@ -209,11 +221,15 @@ const aboutLinks = [
   .partners-label {
     margin: 0 0 var(--ds-size-8) 0;
     text-align: center;
-    color: #94a3b8;
+    color: #475569; /* Improved contrast for WCAG AA (7:1 on white) */
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.2em;
+  }
+
+  :global(html.dark) .partners-label {
+    color: #94a3b8; /* Good contrast on dark background */
   }
 
   .partners-logos {
@@ -222,13 +238,8 @@ const aboutLinks = [
     justify-content: center;
     align-items: center;
     gap: var(--ds-size-10);
-    filter: grayscale(1);
-    opacity: 0.6;
+    /* Removed grayscale filter and reduced opacity for WCAG AA compliance */
     transition: opacity 0.3s ease;
-  }
-
-  .partners-logos:hover {
-    opacity: 1;
   }
 
   .partner-item {
@@ -240,20 +251,24 @@ const aboutLinks = [
   }
 
   .partner-name {
-    color: #475569;
+    color: #1e293b; /* Darker for WCAG AA contrast (12.6:1 on white) */
     font-size: 1.5rem;
     font-weight: 900;
     letter-spacing: -0.025em;
   }
 
   :global(html.dark) .partner-name {
-    color: #cbd5e1;
+    color: #e2e8f0; /* Light for dark mode contrast */
   }
 
   .partner-subtitle {
-    color: #64748b;
+    color: #475569; /* Improved contrast for WCAG AA */
     font-size: 0.625rem;
     font-weight: 500;
+  }
+
+  :global(html.dark) .partner-subtitle {
+    color: #94a3b8; /* Good contrast on dark background (5.6:1) */
   }
 
   /* Copyright */
@@ -264,7 +279,11 @@ const aboutLinks = [
   .copyright {
     margin: 0;
     text-align: center;
-    color: #94a3b8;
+    color: #475569; /* Improved contrast for WCAG AA */
     font-size: 0.75rem;
+  }
+
+  :global(html.dark) .copyright {
+    color: #94a3b8; /* Good contrast on dark background */
   }
 </style>

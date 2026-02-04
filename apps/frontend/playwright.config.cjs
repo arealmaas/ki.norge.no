@@ -1,6 +1,6 @@
-import { defineConfig, devices } from '@playwright/test';
+const { defineConfig, devices } = require('@playwright/test');
 
-export default defineConfig({
+module.exports = defineConfig({
   testDir: './tests',
   timeout: 30_000,
   expect: {
@@ -20,7 +20,6 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    // Desktop browsers - light mode
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
@@ -33,8 +32,6 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-
-    // Dark mode testing
     {
       name: 'chromium-dark',
       use: {
@@ -42,8 +39,6 @@ export default defineConfig({
         colorScheme: 'dark',
       },
     },
-
-    // Mobile viewports
     {
       name: 'mobile-chrome',
       use: { ...devices['Pixel 5'] },
@@ -53,8 +48,6 @@ export default defineConfig({
       use: { ...devices['iPhone 12'] },
     },
   ],
-
-  // Run local dev server before starting the tests
   webServer: process.env.CI
     ? undefined
     : {

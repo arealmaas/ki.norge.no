@@ -7,12 +7,13 @@
     "npm:@digdir/designsystemet-css@^1.11.0": "1.11.0",
     "npm:@digdir/designsystemet-react@^1.11.0": "1.11.0_react@19.2.3_react-dom@19.2.3__react@19.2.3",
     "npm:@navikt/aksel-icons@^8.0.1": "8.0.1",
-    "npm:@playwright/test@^1.49.0": "1.58.0",
+    "npm:@playwright/test@*": "1.44.0",
+    "npm:@playwright/test@1.44.0": "1.44.0",
     "npm:@types/node@^22.10.7": "22.19.7",
     "npm:astro@*": "5.16.12_@types+node@22.19.7_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_zod@3.25.76",
     "npm:astro@^5.16.12": "5.16.12_@types+node@22.19.7_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_zod@3.25.76",
     "npm:clsx@^2.1.1": "2.1.1",
-    "npm:playwright@*": "1.58.0",
+    "npm:playwright@*": "1.44.0",
     "npm:react-dom@^19.2.3": "19.2.3_react@19.2.3",
     "npm:react@^19.2.3": "19.2.3",
     "npm:tailwind-merge@^3.4.0": "3.4.0"
@@ -99,7 +100,7 @@
       "integrity": "sha512-70vBT/Ylqpm65RQz2iCG2o0JJCEG/WCNyefTr2xcOcr1CoSee60gNQYUMZZ7YukoKkFLv26I/jjlsvwwp532oQ==",
       "dependencies": [
         "axe-core",
-        "playwright-core"
+        "playwright-core@1.58.0"
       ]
     },
     "@babel/code-frame@7.28.6": {
@@ -805,8 +806,8 @@
     "@oslojs/encoding@1.1.0": {
       "integrity": "sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ=="
     },
-    "@playwright/test@1.58.0": {
-      "integrity": "sha512-fWza+Lpbj6SkQKCrU6si4iu+fD2dD3gxNHFhUPxsfXBPhnv3rRSQVd0NtBUT9Z/RhF/boCBcuUaMUSTRTopjZg==",
+    "@playwright/test@1.44.0": {
+      "integrity": "sha512-rNX5lbNidamSUorBhB4XZ9SQTjAqfe5M+p37Z8ic0jPFBMo5iCtQz1kRWkEMg+rYOKSlVycpQmpqjSFq7LXOfg==",
       "dependencies": [
         "playwright"
       ],
@@ -2355,14 +2356,18 @@
     "picomatch@4.0.3": {
       "integrity": "sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q=="
     },
+    "playwright-core@1.44.0": {
+      "integrity": "sha512-ZTbkNpFfYcGWohvTTl+xewITm7EOuqIqex0c7dNZ+aXsbrLj0qI8XlGKfPpipjm0Wny/4Lt4CJsWJk1stVS5qQ==",
+      "bin": true
+    },
     "playwright-core@1.58.0": {
       "integrity": "sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==",
       "bin": true
     },
-    "playwright@1.58.0": {
-      "integrity": "sha512-2SVA0sbPktiIY/MCOPX8e86ehA/e+tDNq+e5Y8qjKYti2Z/JG7xnronT/TXTIkKbYGWlCbuucZ6dziEgkoEjQQ==",
+    "playwright@1.44.0": {
+      "integrity": "sha512-F9b3GUCLQ3Nffrfb6dunPOkE5Mh68tR7zN32L4jCk4FjQamgesGay7/dAAe1WaMEGV04DkdJfcJzjoCKygUaRQ==",
       "dependencies": [
-        "playwright-core"
+        "playwright-core@1.44.0"
       ],
       "optionalDependencies": [
         "fsevents@2.3.2"
@@ -3073,7 +3078,7 @@
         "npm:@digdir/designsystemet-css@^1.11.0",
         "npm:@digdir/designsystemet-react@^1.11.0",
         "npm:@navikt/aksel-icons@^8.0.1",
-        "npm:@playwright/test@^1.49.0",
+        "npm:@playwright/test@1.44.0",
         "npm:@types/node@^22.10.7",
         "npm:astro@^5.16.12",
         "npm:clsx@^2.1.1",

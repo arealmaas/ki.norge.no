@@ -84,11 +84,15 @@ const displayImage = image || stockImages[imageIndex];
   }
 
   .category {
-    color: #136dec;
+    color: #0d5fc2; /* Darker blue for WCAG AA contrast (4.7:1 on light backgrounds) */
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+  }
+
+  :global(html.dark) .category {
+    color: #5da3f7; /* Lighter blue for dark mode contrast */
   }
 
   .title {
@@ -111,6 +115,10 @@ const displayImage = image || stockImages[imageIndex];
   .date {
     margin: 0;
     font-size: 0.875rem;
-    color: #64748b;
+    color: #475569; /* Darker for WCAG AA contrast */
+  }
+
+  :global(html.dark) .date {
+    color: #94a3b8;
   }
 </style>

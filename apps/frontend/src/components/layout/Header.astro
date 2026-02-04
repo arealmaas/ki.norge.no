@@ -227,6 +227,9 @@ const currentPath = Astro.url.pathname;
 
   .header-actions :global(a[href="/logg-inn"]) {
     display: none;
+    /* Ensure proper text color in all modes */
+    color: white !important;
+    text-decoration: none;
   }
 
   @media (min-width: 1024px) {

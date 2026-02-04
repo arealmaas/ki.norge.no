@@ -73,10 +73,14 @@ const hasArticles = articles.length > 0;
   }
 
   :global(.news-link) {
-    color: #136dec;
+    color: #0d5fc2; /* Darker blue for WCAG AA contrast */
     font-size: 0.875rem;
     font-weight: 600;
     text-decoration: none;
+  }
+
+  :global(html.dark .news-link) {
+    color: #5da3f7;
   }
 
   :global(.news-link:hover) {
