@@ -21,7 +21,7 @@ export default ({ env }) => ({
       async handler(uid, { documentId, locale, status }) {
         // Map Strapi content types to frontend paths
         const frontendUrl = env('FRONTEND_URL', 'http://localhost:4321');
-        const secret = env('PREVIEW_SECRET', 'preview-secret-change-me');
+        const secret = env('PREVIEW_SECRET', '');
 
         // Extract the content type name from uid (e.g., 'api::artikkel.artikkel' -> 'artikkel')
         const contentType = uid.split('.').pop();

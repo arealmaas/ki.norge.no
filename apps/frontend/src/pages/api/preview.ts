@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-const PREVIEW_SECRET = import.meta.env.PREVIEW_SECRET || 'preview-secret-change-me';
+const PREVIEW_SECRET = import.meta.env.PREVIEW_SECRET || '';
 
 // Map content types to their frontend paths
 const contentTypeRoutes: Record<string, (slug: string) => string> = {
