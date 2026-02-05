@@ -14,6 +14,7 @@
     "npm:astro@^5.16.12": "5.16.12_@types+node@22.19.7_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_zod@3.25.76",
     "npm:clsx@^2.1.1": "2.1.1",
     "npm:playwright@*": "1.44.0",
+    "npm:playwright@1.44.0": "1.44.0",
     "npm:react-dom@^19.2.3": "19.2.3_react@19.2.3",
     "npm:react@^19.2.3": "19.2.3",
     "npm:tailwind-merge@^3.4.0": "3.4.0"
