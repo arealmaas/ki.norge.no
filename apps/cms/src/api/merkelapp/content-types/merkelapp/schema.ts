@@ -10,6 +10,11 @@ export default {
   options: {
     draftAndPublish: false,
   },
+  pluginOptions: {
+    i18n: {
+      localized: true,
+    },
+  },
   attributes: {
     navn: {
       type: 'string',

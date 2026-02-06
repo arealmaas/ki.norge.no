@@ -10,6 +10,11 @@ export default {
   options: {
     draftAndPublish: true,
   },
+  pluginOptions: {
+    i18n: {
+      localized: true,
+    },
+  },
   attributes: {
     tittel: {
       type: 'string',

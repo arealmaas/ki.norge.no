@@ -58,15 +58,44 @@ export default {
 
     strapi.log.info("Public API permissions configured");
 
+    // Ensure Norwegian locale exists and is default
+    await ensureLocales(strapi);
+
     // Seed test content (only if no content exists)
     await seedTestContent(strapi);
   },
 };
 
+async function ensureLocales(strapi) {
+  const localeService = strapi.plugin("i18n").service("locales");
+  const existing = await localeService.find();
+  const codes = existing.map((l) => l.code);
+
+  // Create Norwegian locale if missing
+  if (!codes.includes("nb")) {
+    await localeService.create({ code: "nb", name: "Norsk bokmål (nb)" });
+    strapi.log.info("Created locale: nb");
+  }
+
+  // Set Norwegian as default
+  const currentDefault = await localeService.getDefaultLocale();
+  if (currentDefault !== "nb") {
+    await localeService.setDefaultLocale({ code: "nb" });
+    strapi.log.info("Set nb as default locale");
+  }
+
+  // Ensure English locale exists too
+  if (!codes.includes("en")) {
+    await localeService.create({ code: "en", name: "English (en)" });
+    strapi.log.info("Created locale: en");
+  }
+}
+
 async function seedTestContent(strapi) {
   // Check if we already have PUBLISHED content
   const existingArtikler = await strapi.documents("api::artikkel.artikkel").findMany({
     status: "published",
+    locale: "nb",
   });
   if (existingArtikler.length > 0) {
     strapi.log.info("Published content already exists, skipping seed");
@@ -82,6 +111,7 @@ async function seedTestContent(strapi) {
       slug: "kunstig-intelligens",
       beskrivelse: "Innhold relatert til kunstig intelligens",
     },
+    locale: "nb",
   });
 
   const tagOffentlig = await strapi.documents("api::merkelapp.merkelapp").create({
@@ -90,6 +120,7 @@ async function seedTestContent(strapi) {
       slug: "offentlig-sektor",
       beskrivelse: "Innhold for offentlig sektor",
     },
+    locale: "nb",
   });
 
   const tagVeiledning = await strapi.documents("api::merkelapp.merkelapp").create({
@@ -98,6 +129,7 @@ async function seedTestContent(strapi) {
       slug: "veiledning",
       beskrivelse: "Veiledninger og retningslinjer",
     },
+    locale: "nb",
   });
 
   // Create articles
@@ -130,6 +162,7 @@ async function seedTestContent(strapi) {
         },
       ],
       },
+    locale: "nb",
     status: "published",
   });
 
@@ -148,6 +181,7 @@ async function seedTestContent(strapi) {
         },
       ],
       },
+    locale: "nb",
     status: "published",
   });
 
@@ -171,6 +205,7 @@ async function seedTestContent(strapi) {
         },
       ],
       },
+    locale: "nb",
     status: "published",
   });
 
@@ -187,6 +222,7 @@ async function seedTestContent(strapi) {
       rekkefølge: 1,
       kategori: { connect: [{ documentId: tagKI.documentId }] },
     },
+    locale: "nb",
     status: "published",
   });
 
@@ -202,6 +238,7 @@ async function seedTestContent(strapi) {
       rekkefølge: 2,
       kategori: { connect: [{ documentId: tagKI.documentId }] },
     },
+    locale: "nb",
     status: "published",
   });
 
@@ -217,6 +254,7 @@ async function seedTestContent(strapi) {
       rekkefølge: 3,
       kategori: { connect: [{ documentId: tagOffentlig.documentId }] },
     },
+    locale: "nb",
     status: "published",
   });
 
@@ -245,6 +283,7 @@ async function seedTestContent(strapi) {
       resultater: "Redusert henvendelser med 15%, forbedret brukertilfredshet",
       merkelapper: { connect: [{ documentId: tagKI.documentId }, { documentId: tagOffentlig.documentId }] },
       },
+    locale: "nb",
     status: "published",
   });
 
@@ -263,6 +302,7 @@ async function seedTestContent(strapi) {
       resultater: "Pilotfase - foreløpige resultater viser 40% reduksjon i manuelt sorteringsarbeid",
       merkelapper: { connect: [{ documentId: tagKI.documentId }] },
       },
+    locale: "nb",
     status: "published",
   });
 
@@ -289,6 +329,7 @@ async function seedTestContent(strapi) {
       rekkefølge: 1,
       kategori: { connect: [{ documentId: tagVeiledning.documentId }] },
       },
+    locale: "nb",
     status: "published",
   });
 
@@ -316,6 +357,7 @@ async function seedTestContent(strapi) {
       seoTittel: "Om KI Norge - Kunstig intelligens i offentlig sektor",
       seoBeskrivelse: "Les om KI Norge og vår satsing på ansvarlig bruk av kunstig intelligens i offentlig sektor.",
       },
+    locale: "nb",
     status: "published",
   });
 

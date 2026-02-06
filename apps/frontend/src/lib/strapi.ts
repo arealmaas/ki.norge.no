@@ -4,6 +4,7 @@ const API_TOKEN = import.meta.env.STRAPI_API_TOKEN;
 // Preview mode options
 export interface FetchOptions {
   preview?: boolean;
+  locale?: string;
 }
 
 // Strapi v5 response format
@@ -155,11 +156,13 @@ async function fetchAPI<T>(endpoint: string, options: FetchOptions = {}): Promis
     headers['Authorization'] = `Bearer ${API_TOKEN}`;
   }
 
-  // Add preview status if in preview mode
+  // Build URL with locale and preview params
   let url = `${STRAPI_URL}/api${endpoint}`;
+  const locale = options.locale || 'nb';
+  const separator = endpoint.includes('?') ? '&' : '?';
+  url += `${separator}locale=${locale}`;
   if (options.preview) {
-    const separator = endpoint.includes('?') ? '&' : '?';
-    url += `${separator}status=draft`;
+    url += `&status=draft`;
   }
 
   try {

@@ -430,6 +430,50 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiArbeidsflytLoggArbeidsflytLogg
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'arbeidsflyt_loggs';
+  info: {
+    description: 'Logg over arbeidsflyt-handlinger';
+    displayName: 'Arbeidsflyt-logg';
+    pluralName: 'arbeidsflyt-loggs';
+    singularName: 'arbeidsflyt-logg';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dokumentId: Schema.Attribute.String & Schema.Attribute.Required;
+    handling: Schema.Attribute.Enumeration<
+      [
+        'sendt_til_godkjenning',
+        'godkjent',
+        'avvist',
+        'publisert',
+        'avpublisert',
+      ]
+    > &
+      Schema.Attribute.Required;
+    innholdstype: Schema.Attribute.String & Schema.Attribute.Required;
+    kommentar: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::arbeidsflyt-logg.arbeidsflyt-logg'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    tidspunkt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    utfortAv: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface ApiArtikkelArtikkel extends Struct.CollectionTypeSchema {
   collectionName: 'artikkels';
   info: {
@@ -441,17 +485,21 @@ export interface ApiArtikkelArtikkel extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     innhold: Schema.Attribute.Blocks;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::artikkel.artikkel'
-    > &
-      Schema.Attribute.Private;
+    >;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'tittel'> & Schema.Attribute.Required;
     tittel: Schema.Attribute.String & Schema.Attribute.Required;
@@ -472,18 +520,22 @@ export interface ApiEksempelEksempel extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     beskrivelse: Schema.Attribute.Blocks;
     bilde: Schema.Attribute.Media<'images'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::eksempel.eksempel'
-    > &
-      Schema.Attribute.Private;
+    >;
     merkelapper: Schema.Attribute.Relation<
       'manyToMany',
       'api::merkelapp.merkelapp'
@@ -515,6 +567,11 @@ export interface ApiFaqFaq extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -523,9 +580,8 @@ export interface ApiFaqFaq extends Struct.CollectionTypeSchema {
       'manyToOne',
       'api::merkelapp.merkelapp'
     >;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::faq.faq'> &
-      Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::faq.faq'>;
     publishedAt: Schema.Attribute.DateTime;
     rekkefølge: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     sporsmal: Schema.Attribute.String & Schema.Attribute.Required;
@@ -547,6 +603,11 @@ export interface ApiMerkelappMerkelapp extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: false;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     beskrivelse: Schema.Attribute.Text;
     createdAt: Schema.Attribute.DateTime;
@@ -557,12 +618,11 @@ export interface ApiMerkelappMerkelapp extends Struct.CollectionTypeSchema {
       'api::eksempel.eksempel'
     >;
     faqs: Schema.Attribute.Relation<'oneToMany', 'api::faq.faq'>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::merkelapp.merkelapp'
-    > &
-      Schema.Attribute.Private;
+    >;
     navn: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'navn'> & Schema.Attribute.Required;
@@ -573,6 +633,44 @@ export interface ApiMerkelappMerkelapp extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::veiledning.veiledning'
     >;
+  };
+}
+
+export interface ApiPlanlagtPubliseringPlanlagtPublisering
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'planlagt_publiserings';
+  info: {
+    description: 'Planlagte publiseringer';
+    displayName: 'Planlagt publisering';
+    pluralName: 'planlagt-publiserings';
+    singularName: 'planlagt-publisering';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dokumentId: Schema.Attribute.String & Schema.Attribute.Required;
+    innholdstype: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::planlagt-publisering.planlagt-publisering'
+    > &
+      Schema.Attribute.Private;
+    opprettetAv: Schema.Attribute.String & Schema.Attribute.Required;
+    publiserTid: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<
+      ['venter', 'publisert', 'kansellert']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'venter'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
   };
 }
 
@@ -587,14 +685,18 @@ export interface ApiSideSide extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     innhold: Schema.Attribute.Blocks;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::side.side'> &
-      Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::side.side'>;
     publishedAt: Schema.Attribute.DateTime;
     seoBeskrivelse: Schema.Attribute.Text;
     seoTittel: Schema.Attribute.String;
@@ -604,6 +706,44 @@ export interface ApiSideSide extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.DefaultTo<'standard'>;
     tittel: Schema.Attribute.String & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiVarslingVarsling extends Struct.CollectionTypeSchema {
+  collectionName: 'varslinger';
+  info: {
+    description: 'Varsler for arbeidsflyt-hendelser';
+    displayName: 'Varsling';
+    pluralName: 'varslinger';
+    singularName: 'varsling';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dokumentId: Schema.Attribute.String;
+    innholdstype: Schema.Attribute.String;
+    lest: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::varsling.varsling'
+    > &
+      Schema.Attribute.Private;
+    melding: Schema.Attribute.Text & Schema.Attribute.Required;
+    mottaker: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    tidspunkt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    type: Schema.Attribute.Enumeration<
+      ['sendt_til_godkjenning', 'godkjent', 'avvist', 'publisert', 'planlagt']
+    > &
+      Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -621,6 +761,11 @@ export interface ApiVeiledningVeiledning extends Struct.CollectionTypeSchema {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -631,12 +776,11 @@ export interface ApiVeiledningVeiledning extends Struct.CollectionTypeSchema {
       'api::merkelapp.merkelapp'
     >;
     lenker: Schema.Attribute.JSON;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    locale: Schema.Attribute.String;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::veiledning.veiledning'
-    > &
-      Schema.Attribute.Private;
+    >;
     publishedAt: Schema.Attribute.DateTime;
     rekkefølge: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
     slug: Schema.Attribute.UID<'tittel'> & Schema.Attribute.Required;
@@ -1157,11 +1301,14 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::arbeidsflyt-logg.arbeidsflyt-logg': ApiArbeidsflytLoggArbeidsflytLogg;
       'api::artikkel.artikkel': ApiArtikkelArtikkel;
       'api::eksempel.eksempel': ApiEksempelEksempel;
       'api::faq.faq': ApiFaqFaq;
       'api::merkelapp.merkelapp': ApiMerkelappMerkelapp;
+      'api::planlagt-publisering.planlagt-publisering': ApiPlanlagtPubliseringPlanlagtPublisering;
       'api::side.side': ApiSideSide;
+      'api::varsling.varsling': ApiVarslingVarsling;
       'api::veiledning.veiledning': ApiVeiledningVeiledning;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
