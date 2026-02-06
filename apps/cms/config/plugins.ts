@@ -6,4 +6,8 @@ export default ({ env }) => ({
       locales: ['nb', 'en'],
     },
   },
+  redaksjonelt: {
+    enabled: true,
+    resolve: './src/plugins/redaksjonelt',
+  },
 });

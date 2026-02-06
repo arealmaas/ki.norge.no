@@ -1,0 +1,20 @@
+{
+  "name": "redaksjonelt",
+  "version": "0.1.0",
+  "description": "Redaksjonelt dashboard for Strapi admin",
+  "strapi": {
+    "displayName": "Redaksjonelt",
+    "name": "redaksjonelt",
+    "description": "Redaksjonelt dashboard — oversikt over arbeidsflyt",
+    "kind": "plugin"
+  },
+  "exports": {
+    "./strapi-admin": {
+      "import": "./admin/src/index.ts"
+    },
+    "./strapi-server": {
+      "require": "./strapi-server.js"
+    }
+  },
+  "dependencies": {}
+}
