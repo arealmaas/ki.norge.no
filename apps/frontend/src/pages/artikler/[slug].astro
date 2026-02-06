@@ -4,7 +4,6 @@ import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import { getArtikler, getArtikkel, type Artikkel, type BlockNode } from '../../lib/strapi';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
-// Helper to extract text from blocks for excerpt
 function getExcerpt(blocks?: BlockNode[]): string {
   if (!blocks || blocks.length === 0) return '';
   const firstParagraph = blocks.find(b => b.type === 'paragraph');
@@ -14,6 +13,17 @@ function getExcerpt(blocks?: BlockNode[]): string {
     .map(c => c.text || '')
     .join('')
     .slice(0, 200);
+}
+
+function extractHeadings(blocks?: BlockNode[]): { text: string; id: string; level: number }[] {
+  if (!blocks) return [];
+  return blocks
+    .filter(b => b.type === 'heading' && (b.level === 2 || b.level === 3))
+    .map(b => {
+      const text = b.children?.map(c => c.text || '').join('') || '';
+      const id = text.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      return { text, id, level: b.level || 2 };
+    });
 }
 
 export async function getStaticPaths() {
@@ -36,103 +46,301 @@ const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', 
   month: 'long',
   day: 'numeric',
 });
+
+const headings = extractHeadings(article.innhold);
 ---
 
 <Layout title={article.tittel} description={getExcerpt(article.innhold)}>
-  <article class="page-container">
-    <nav class="breadcrumb">
-      <Link href="/artikler">Artikler</Link>
-      <span>/</span>
-      <span>{article.tittel}</span>
-    </nav>
+  <div class="article-page">
+    <div class="article-container">
+      <nav class="breadcrumb" aria-label="Brødsmuler">
+        <a href="/">Hjem</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <a href="/artikler">Artikler</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <span aria-current="page">{article.tittel}</span>
+      </nav>
 
-    <header class="article-header">
-      <Heading level={1} size="2xlarge">{article.tittel}</Heading>
-      <Paragraph size="large" class="lead">{getExcerpt(article.innhold)}</Paragraph>
-      <div class="meta">
-        <time datetime={article.publishedAt}>{formattedDate}</time>
+      <header class="article-header">
+        <Heading level={1} size="2xlarge" className="article-title">
+          {article.tittel}
+        </Heading>
+        <div class="article-meta">
+          <span class="meta-item">
+            <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
+            <time datetime={article.publishedAt}>{formattedDate}</time>
+          </span>
+        </div>
+      </header>
+
+      <div class="article-layout">
+        <article class="article-content">
+          <BlocksRenderer blocks={article.innhold} class="article-body" />
+        </article>
+
+        {headings.length > 0 && (
+          <aside class="article-sidebar">
+            <nav class="toc" aria-label="Innhold">
+              <div class="toc-title">Innhold</div>
+              <ul class="toc-list">
+                {headings.map(h => (
+                  <li class={h.level === 3 ? 'toc-sub' : ''}>
+                    <a href={`#${h.id}`}>{h.text}</a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        )}
       </div>
-    </header>
 
-    <BlocksRenderer blocks={article.innhold} class="article-content" />
-
-    <nav class="article-nav">
-      <Link href="/artikler" class="back-link">
-        Tilbake til artikler
-      </Link>
-    </nav>
-  </article>
+      <nav class="article-footer" aria-label="Navigasjon">
+        <a href="/artikler" class="back-link">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          Tilbake til artikler
+        </a>
+      </nav>
+    </div>
+  </div>
 </Layout>
 
 <style>
-  .page-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
+  .article-page {
+    padding: var(--ds-size-6) var(--ds-size-4);
   }
 
+  @media (min-width: 768px) {
+    .article-page {
+      padding: var(--ds-size-10) var(--ds-size-4);
+    }
+  }
+
+  .article-container {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  /* Breadcrumbs */
   .breadcrumb {
     display: flex;
-    gap: var(--ds-size-2);
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
     margin-bottom: var(--ds-size-6);
-    font-size: var(--ds-font-size-0);
-    color: var(--ds-color-neutral-text-subtle);
+    flex-wrap: wrap;
   }
 
-  .breadcrumb :global(a) {
-    color: var(--ds-color-accent-text-default);
+  html.dark .breadcrumb {
+    color: #94a3b8;
+  }
+
+  .breadcrumb a {
+    color: #136dec;
     text-decoration: none;
   }
 
-  .breadcrumb :global(a:hover) {
+  .breadcrumb a:hover {
     text-decoration: underline;
   }
 
+  html.dark .breadcrumb a {
+    color: #5ba0f5;
+  }
+
+  .breadcrumb-sep {
+    color: #cbd5e1;
+  }
+
+  html.dark .breadcrumb-sep {
+    color: #475569;
+  }
+
+  .breadcrumb [aria-current] {
+    color: #0d131b;
+    font-weight: 500;
+  }
+
+  html.dark .breadcrumb [aria-current] {
+    color: #f1f5f9;
+  }
+
+  /* Header */
   .article-header {
     margin-bottom: var(--ds-size-8);
+    max-width: 720px;
   }
 
-  .category-label {
-    display: inline-block;
-    padding: var(--ds-size-1) var(--ds-size-3);
-    background-color: var(--ds-color-accent-surface-default);
-    color: var(--ds-color-accent-text-default);
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-medium);
-    border-radius: var(--ds-border-radius-sm);
-    margin-bottom: var(--ds-size-3);
-  }
-
-  .article-header :global(h1) {
+  :global(.article-title) {
     margin: 0 0 var(--ds-size-4);
+    color: #0d131b;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    font-weight: 800;
   }
 
-  .lead {
-    margin: 0 0 var(--ds-size-4);
+  html.dark :global(.article-title) {
+    color: #f1f5f9;
   }
 
-  .meta {
-    font-size: var(--ds-font-size-0);
-    color: var(--ds-color-neutral-text-subtle);
+  .article-meta {
     display: flex;
     align-items: center;
-    gap: var(--ds-size-2);
+    gap: var(--ds-size-4);
+    flex-wrap: wrap;
   }
 
-  .separator {
-    color: var(--ds-color-neutral-border-default);
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+
+  html.dark .meta-item {
+    color: #94a3b8;
+  }
+
+  .meta-item .material-symbols-outlined {
+    font-size: 18px;
+    color: #94a3b8;
+  }
+
+  html.dark .meta-item .material-symbols-outlined {
+    color: #64748b;
+  }
+
+  /* Two-column layout */
+  .article-layout {
+    display: flex;
+    gap: var(--ds-size-10);
   }
 
   .article-content {
-    margin-bottom: var(--ds-size-8);
+    flex: 1;
+    min-width: 0;
+    max-width: 720px;
   }
 
-  .article-nav {
+  :global(.article-body) {
+    line-height: 1.7;
+  }
+
+  :global(.article-body h2),
+  :global(.article-body h3) {
+    scroll-margin-top: 100px;
+  }
+
+  /* Sidebar / TOC */
+  .article-sidebar {
+    display: none;
+    width: 280px;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .article-sidebar {
+      display: block;
+    }
+  }
+
+  .toc {
+    position: sticky;
+    top: 100px;
+    padding: var(--ds-size-5);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+  }
+
+  html.dark .toc {
+    background: #1a2332;
+    border-color: #334155;
+  }
+
+  .toc-title {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: var(--ds-size-3);
+  }
+
+  html.dark .toc-title {
+    color: #94a3b8;
+  }
+
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc-list li {
+    margin-bottom: 0.25rem;
+  }
+
+  .toc-list li.toc-sub {
+    padding-left: var(--ds-size-4);
+  }
+
+  .toc-list a {
+    display: block;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.875rem;
+    color: #334155;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    line-height: 1.4;
+  }
+
+  html.dark .toc-list a {
+    color: #cbd5e1;
+  }
+
+  .toc-list a:hover {
+    background: #f1f5f9;
+    color: #136dec;
+  }
+
+  html.dark .toc-list a:hover {
+    background: #243042;
+    color: #5ba0f5;
+  }
+
+  /* Footer navigation */
+  .article-footer {
+    margin-top: var(--ds-size-10);
     padding-top: var(--ds-size-6);
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+    border-top: 1px solid #e2e8f0;
+  }
+
+  html.dark .article-footer {
+    border-color: #334155;
   }
 
   .back-link {
-    font-size: var(--ds-font-size-1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #136dec;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .back-link:hover {
+    text-decoration: underline;
+  }
+
+  html.dark .back-link {
+    color: #5ba0f5;
+  }
+
+  .back-link .material-symbols-outlined {
+    font-size: 20px;
   }
 </style>

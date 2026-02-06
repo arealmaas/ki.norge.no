@@ -66,10 +66,13 @@ function renderListItems(children?: BlockChild[]): string {
 
         case 'heading':
           const level = block.level || 2;
+          const headingText = block.children?.map(c => c.text || '').join('') || '';
+          const headingId = headingText.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
           return (
             <Heading
               level={level as 1 | 2 | 3 | 4 | 5 | 6}
               size={level === 1 ? 'xlarge' : level === 2 ? 'large' : level === 3 ? 'medium' : 'small'}
+              id={headingId}
             >
               <Fragment set:html={renderChildren(block.children)} />
             </Heading>
