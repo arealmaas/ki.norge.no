@@ -1,168 +1,95 @@
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Models;
-using Umbraco.Cms.Core.PropertyEditors;
-using Umbraco.Cms.Core.Serialization;
 using Umbraco.Cms.Core.Services;
 using Umbraco.Cms.Core.Strings;
-using Umbraco.Cms.Infrastructure.Migrations;
-using Umbraco.Cms.Infrastructure.Scoping;
 
 namespace KiNorge.Cms.Composers;
 
 /// <summary>
-/// Creates the document types and element types for the KI Norge CMS.
-/// Runs as a migration so types are created once on first boot.
+/// Creates document types for KI Norge CMS on first boot.
+/// Uses RichText for content fields; BlockList can be configured
+/// via the backoffice once element types are registered.
 /// </summary>
 public class ContentTypeComposer : ComponentComposer<ContentTypeComponent>
 {
 }
 
-public class ContentTypeComponent : IComponent
+public class ContentTypeComponent : IAsyncComponent
 {
     private readonly IContentTypeService _contentTypeService;
     private readonly IDataTypeService _dataTypeService;
     private readonly IShortStringHelper _shortStringHelper;
-    private readonly IConfigurationEditorJsonSerializer _serializer;
+    private readonly IRuntimeState _runtimeState;
+
+    // Data types (resolved at init time)
+    private IDataType _textStringDt = null!;
+    private IDataType _textAreaDt = null!;
+    private IDataType _richTextDt = null!;
+    private IDataType _numericDt = null!;
+    private IDataType _mediaPickerDt = null!;
+    private IDataType _contentPickerDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
         IDataTypeService dataTypeService,
         IShortStringHelper shortStringHelper,
-        IConfigurationEditorJsonSerializer serializer)
+        IRuntimeState runtimeState)
     {
         _contentTypeService = contentTypeService;
         _dataTypeService = dataTypeService;
         _shortStringHelper = shortStringHelper;
-        _serializer = serializer;
+        _runtimeState = runtimeState;
     }
 
-    public void Initialize()
+    public Task InitializeAsync(bool isRestarting, CancellationToken cancellationToken)
     {
-        // Only create types if they don't already exist
-        if (_contentTypeService.Get("artikkel") != null) return;
+        if (_runtimeState.Level < RuntimeLevel.Run) return Task.CompletedTask;
+        if (_contentTypeService.Get("artikkel") != null) return Task.CompletedTask;
 
-        CreateElementTypes();
-        CreateDocumentTypes();
-        CreateContainerStructure();
+        try
+        {
+            ResolveDataTypes();
+            CreateDocumentTypes();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ContentTypeComposer: {ex.Message}");
+        }
+        return Task.CompletedTask;
     }
 
-    public void Terminate() { }
+    public Task TerminateAsync(bool isRestarting, CancellationToken cancellationToken) => Task.CompletedTask;
 
-    // ── Element Types (for Block List) ──────────────────────────────
-
-    private void CreateElementTypes()
+    private void ResolveDataTypes()
     {
-        // Tekst block
-        var tekst = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "tekst",
-            Name = "Tekst",
-            Description = "Generell tekst-blokk med rik-tekst redigering",
-            Icon = "icon-edit",
-            IsElement = true,
-        };
-        tekst.AddPropertyGroup("innhold", "Innhold");
-        tekst.AddPropertyType(new PropertyType(_shortStringHelper, "innhold", ValueStorageType.Ntext)
-        {
-            Alias = "innhold",
-            Name = "Innhold",
-            Description = "Rik-tekst innhold",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TinyMce,
-            Mandatory = false,
-        }, "innhold");
-        _contentTypeService.Save(tekst);
-
-        // Advarsel block
-        var advarsel = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "advarsel",
-            Name = "Advarsel",
-            Description = "Varselboks med type (info/advarsel/viktig/suksess)",
-            Icon = "icon-alert",
-            IsElement = true,
-        };
-        advarsel.AddPropertyGroup("innhold", "Innhold");
-        advarsel.AddPropertyType(new PropertyType(_shortStringHelper, "tittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "tittel",
-            Name = "Tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = false,
-        }, "innhold");
-        advarsel.AddPropertyType(new PropertyType(_shortStringHelper, "innhold", ValueStorageType.Ntext)
-        {
-            Alias = "innhold",
-            Name = "Innhold",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TinyMce,
-            Mandatory = false,
-        }, "innhold");
-        advarsel.AddPropertyType(new PropertyType(_shortStringHelper, "type", ValueStorageType.Nvarchar)
-        {
-            Alias = "type",
-            Name = "Type",
-            Description = "Velg type varsel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.DropDownListFlexible,
-            Mandatory = false,
-        }, "innhold");
-        _contentTypeService.Save(advarsel);
-
-        // Lenkeliste block
-        var lenkeliste = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "lenkeliste",
-            Name = "Lenkeliste",
-            Description = "Liste med lenker",
-            Icon = "icon-link",
-            IsElement = true,
-        };
-        lenkeliste.AddPropertyGroup("innhold", "Innhold");
-        lenkeliste.AddPropertyType(new PropertyType(_shortStringHelper, "tittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "tittel",
-            Name = "Tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = false,
-        }, "innhold");
-        // lenker stored as repeatable text fields (JSON in textarea for simplicity)
-        lenkeliste.AddPropertyType(new PropertyType(_shortStringHelper, "lenker", ValueStorageType.Ntext)
-        {
-            Alias = "lenker",
-            Name = "Lenker",
-            Description = "JSON array: [{\"tekst\": \"...\", \"url\": \"...\", \"ekstern\": true}]",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextArea,
-            Mandatory = false,
-        }, "innhold");
-        _contentTypeService.Save(lenkeliste);
-
-        // FAQ-Innhold block
-        var faqInnhold = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "faqInnhold",
-            Name = "FAQ-Innhold",
-            Description = "Spørsmål og svar blokk",
-            Icon = "icon-help-alt",
-            IsElement = true,
-        };
-        faqInnhold.AddPropertyGroup("innhold", "Innhold");
-        faqInnhold.AddPropertyType(new PropertyType(_shortStringHelper, "sporsmal", ValueStorageType.Nvarchar)
-        {
-            Alias = "sporsmal",
-            Name = "Spørsmål",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-        }, "innhold");
-        faqInnhold.AddPropertyType(new PropertyType(_shortStringHelper, "svar", ValueStorageType.Ntext)
-        {
-            Alias = "svar",
-            Name = "Svar",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TinyMce,
-            Mandatory = false,
-        }, "innhold");
-        _contentTypeService.Save(faqInnhold);
+        _textStringDt = FindDataType(Constants.PropertyEditors.Aliases.TextBox);
+        _textAreaDt = FindDataType(Constants.PropertyEditors.Aliases.TextArea);
+        _richTextDt = FindDataType(Constants.PropertyEditors.Aliases.RichText);
+        _numericDt = FindDataType(Constants.PropertyEditors.Aliases.Integer);
+        _mediaPickerDt = FindDataType(Constants.PropertyEditors.Aliases.MediaPicker3);
+        _contentPickerDt = FindDataType(Constants.PropertyEditors.Aliases.ContentPicker);
     }
 
-    // ── Document Types ──────────────────────────────────────────────
+    private IDataType FindDataType(string editorAlias)
+    {
+        var dts = _dataTypeService.GetByEditorAlias(editorAlias);
+        var dt = dts.FirstOrDefault();
+        if (dt == null) throw new InvalidOperationException($"No DataType found for editor {editorAlias}");
+        return dt;
+    }
+
+    private PropertyType Prop(string alias, string name, IDataType dataType,
+        bool mandatory = false, string? description = null)
+    {
+        return new PropertyType(_shortStringHelper, dataType)
+        {
+            Alias = alias,
+            Name = name,
+            Description = description,
+            Mandatory = mandatory,
+        };
+    }
 
     private void CreateDocumentTypes()
     {
@@ -182,32 +109,12 @@ public class ContentTypeComponent : IComponent
             Name = "Merkelapp",
             Description = "Merkelapp/tag for kategorisering",
             Icon = "icon-tag",
-            AllowedAsRoot = false,
-            Variations = ContentVariation.Culture,
+            AllowedAsRoot = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "navn", ValueStorageType.Nvarchar)
-        {
-            Alias = "navn",
-            Name = "Navn",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-            Variations = ContentVariation.Culture,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "slug", ValueStorageType.Nvarchar)
-        {
-            Alias = "slug",
-            Name = "Slug",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "beskrivelse", ValueStorageType.Ntext)
-        {
-            Alias = "beskrivelse",
-            Name = "Beskrivelse",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextArea,
-            Mandatory = false,
-        }, "innhold");
+        ct.AddPropertyType(Prop("navn", "Navn", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textAreaDt), "innhold");
         _contentTypeService.Save(ct);
     }
 
@@ -219,33 +126,12 @@ public class ContentTypeComponent : IComponent
             Name = "Artikkel",
             Description = "Artikler og nyheter",
             Icon = "icon-newspaper-alt",
-            AllowedAsRoot = false,
-            Variations = ContentVariation.Culture,
+            AllowedAsRoot = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "tittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "tittel",
-            Name = "Tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-            Variations = ContentVariation.Culture,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "slug", ValueStorageType.Nvarchar)
-        {
-            Alias = "slug",
-            Name = "Slug",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "innhold", ValueStorageType.Ntext)
-        {
-            Alias = "innhold",
-            Name = "Innhold",
-            Description = "Hovedinnhold (Block List)",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.BlockList,
-            Mandatory = false,
-        }, "innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, description: "Hovedinnhold"), "innhold");
         _contentTypeService.Save(ct);
     }
 
@@ -257,56 +143,17 @@ public class ContentTypeComponent : IComponent
             Name = "Side",
             Description = "Generelle sider",
             Icon = "icon-document",
-            AllowedAsRoot = false,
-            Variations = ContentVariation.Culture,
+            AllowedAsRoot = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "tittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "tittel",
-            Name = "Tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-            Variations = ContentVariation.Culture,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "slug", ValueStorageType.Nvarchar)
-        {
-            Alias = "slug",
-            Name = "Slug",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "innhold", ValueStorageType.Ntext)
-        {
-            Alias = "innhold",
-            Name = "Innhold",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.BlockList,
-            Mandatory = false,
-        }, "innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "template", ValueStorageType.Nvarchar)
-        {
-            Alias = "template",
-            Name = "Mal",
-            Description = "Velg sidemal: standard, bred, landingsside",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.DropDownListFlexible,
-            Mandatory = false,
-        }, "seo");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "seoTittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "seoTittel",
-            Name = "SEO-tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = false,
-        }, "seo");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "seoBeskrivelse", ValueStorageType.Ntext)
-        {
-            Alias = "seoBeskrivelse",
-            Name = "SEO-beskrivelse",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextArea,
-            Mandatory = false,
-        }, "seo");
+        ct.AddPropertyType(Prop("template", "Mal", _textStringDt, description: "standard, bred, landingsside"), "seo");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt), "seo");
         _contentTypeService.Save(ct);
     }
 
@@ -318,76 +165,17 @@ public class ContentTypeComponent : IComponent
             Name = "Eksempel",
             Description = "Gode eksempler / caser",
             Icon = "icon-science",
-            AllowedAsRoot = false,
-            Variations = ContentVariation.Culture,
+            AllowedAsRoot = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "tittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "tittel",
-            Name = "Tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-            Variations = ContentVariation.Culture,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "slug", ValueStorageType.Nvarchar)
-        {
-            Alias = "slug",
-            Name = "Slug",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "organisasjon", ValueStorageType.Nvarchar)
-        {
-            Alias = "organisasjon",
-            Name = "Organisasjon",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "beskrivelse", ValueStorageType.Ntext)
-        {
-            Alias = "beskrivelse",
-            Name = "Beskrivelse",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.BlockList,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "verktoy", ValueStorageType.Ntext)
-        {
-            Alias = "verktoy",
-            Name = "Verktøy",
-            Description = "JSON array med verktøynavn",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextArea,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "resultater", ValueStorageType.Ntext)
-        {
-            Alias = "resultater",
-            Name = "Resultater",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextArea,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "status", ValueStorageType.Nvarchar)
-        {
-            Alias = "status",
-            Name = "Status",
-            Description = "i_utvikling, pilot, i_drift, avsluttet",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.DropDownListFlexible,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "bilde", ValueStorageType.Nvarchar)
-        {
-            Alias = "bilde",
-            Name = "Bilde",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.MediaPicker3,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "merkelapper", ValueStorageType.Ntext)
-        {
-            Alias = "merkelapper",
-            Name = "Merkelapper",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.MultiNodeTreePicker,
-            Mandatory = false,
-        }, "innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("organisasjon", "Organisasjon", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _richTextDt), "innhold");
+        ct.AddPropertyType(Prop("verktoy", "Verktøy", _textAreaDt, description: "JSON array med verktøynavn"), "innhold");
+        ct.AddPropertyType(Prop("resultater", "Resultater", _textAreaDt), "innhold");
+        ct.AddPropertyType(Prop("status", "Status", _textStringDt, description: "i_utvikling, pilot, i_drift, avsluttet"), "innhold");
+        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
         _contentTypeService.Save(ct);
     }
 
@@ -399,55 +187,14 @@ public class ContentTypeComponent : IComponent
             Name = "Veiledning",
             Description = "Veiledningsressurser",
             Icon = "icon-book-alt",
-            AllowedAsRoot = false,
-            Variations = ContentVariation.Culture,
+            AllowedAsRoot = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "tittel", ValueStorageType.Nvarchar)
-        {
-            Alias = "tittel",
-            Name = "Tittel",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-            Variations = ContentVariation.Culture,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "slug", ValueStorageType.Nvarchar)
-        {
-            Alias = "slug",
-            Name = "Slug",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "innhold", ValueStorageType.Ntext)
-        {
-            Alias = "innhold",
-            Name = "Innhold",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.BlockList,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "kategori", ValueStorageType.Nvarchar)
-        {
-            Alias = "kategori",
-            Name = "Kategori",
-            Description = "Velg merkelapp-kategori",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.ContentPicker,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "lenker", ValueStorageType.Ntext)
-        {
-            Alias = "lenker",
-            Name = "Lenker",
-            Description = "JSON: [{\"tekst\": \"...\", \"url\": \"...\", \"ekstern\": true}]",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.BlockList,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "rekkefolge", ValueStorageType.Integer)
-        {
-            Alias = "rekkefolge",
-            Name = "Rekkefølge",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.Integer,
-            Mandatory = false,
-        }, "innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt), "innhold");
+        ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt, description: "Velg merkelapp-kategori"), "innhold");
+        ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
         _contentTypeService.Save(ct);
     }
 
@@ -459,49 +206,13 @@ public class ContentTypeComponent : IComponent
             Name = "FAQ",
             Description = "Ofte stilte spørsmål",
             Icon = "icon-help-alt",
-            AllowedAsRoot = false,
-            Variations = ContentVariation.Culture,
+            AllowedAsRoot = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "sporsmal", ValueStorageType.Nvarchar)
-        {
-            Alias = "sporsmal",
-            Name = "Spørsmål",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.TextBox,
-            Mandatory = true,
-            Variations = ContentVariation.Culture,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "svar", ValueStorageType.Ntext)
-        {
-            Alias = "svar",
-            Name = "Svar",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.BlockList,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "kategori", ValueStorageType.Nvarchar)
-        {
-            Alias = "kategori",
-            Name = "Kategori",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.ContentPicker,
-            Mandatory = false,
-        }, "innhold");
-        ct.AddPropertyType(new PropertyType(_shortStringHelper, "rekkefolge", ValueStorageType.Integer)
-        {
-            Alias = "rekkefolge",
-            Name = "Rekkefølge",
-            PropertyEditorAlias = Constants.PropertyEditors.Aliases.Integer,
-            Mandatory = false,
-        }, "innhold");
+        ct.AddPropertyType(Prop("sporsmal", "Spørsmål", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("svar", "Svar", _richTextDt), "innhold");
+        ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt), "innhold");
+        ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
         _contentTypeService.Save(ct);
-    }
-
-    // ── Content Tree Structure ──────────────────────────────────────
-
-    private void CreateContainerStructure()
-    {
-        // Container types are created by Umbraco when using list view containers.
-        // The content tree containers (Artikler/, Sider/, etc.) will be created
-        // in the backoffice on first run, or via a separate content seed migration.
-        // This keeps the composer focused on type definitions only.
     }
 }
