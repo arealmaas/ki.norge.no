@@ -8,8 +8,7 @@ namespace KiNorge.Cms.Composers;
 
 /// <summary>
 /// Creates document types for KI Norge CMS on first boot.
-/// Uses RichText for content fields; BlockList can be configured
-/// via the backoffice once element types are registered.
+/// Creates both content types and container types (folders with list views).
 /// </summary>
 public class ContentTypeComposer : ComponentComposer<ContentTypeComponent>
 {
@@ -93,15 +92,40 @@ public class ContentTypeComponent : IAsyncComponent
 
     private void CreateDocumentTypes()
     {
-        CreateMerkelapp();
-        CreateArtikkel();
-        CreateSide();
-        CreateEksempel();
-        CreateVeiledning();
-        CreateFAQ();
+        // Create child document types first (need their IDs for allowed children)
+        var merkelapp = CreateMerkelapp();
+        var artikkel = CreateArtikkel();
+        var side = CreateSide();
+        var eksempel = CreateEksempel();
+        var veiledning = CreateVeiledning();
+        var faq = CreateFAQ();
+
+        // Create container types (folders with list views)
+        CreateContainer("artikler", "Artikler", "icon-newspaper-alt", artikkel);
+        CreateContainer("sider", "Sider", "icon-document", side);
+        CreateContainer("eksempler", "Eksempler", "icon-science", eksempel);
+        CreateContainer("veiledninger", "Veiledninger", "icon-book-alt", veiledning);
+        CreateContainer("faqSamling", "FAQ", "icon-help-alt", faq);
+        CreateContainer("merkelapper", "Merkelapper", "icon-tags", merkelapp);
     }
 
-    private void CreateMerkelapp()
+    private void CreateContainer(string alias, string name, string icon, IContentType childType)
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = alias,
+            Name = name,
+            Icon = icon,
+            AllowedAsRoot = true,
+        };
+        ct.AllowedContentTypes = new[]
+        {
+            new ContentTypeSort(childType.Key, 0, childType.Alias)
+        };
+        _contentTypeService.Save(ct);
+    }
+
+    private IContentType CreateMerkelapp()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
@@ -109,16 +133,17 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "Merkelapp",
             Description = "Merkelapp/tag for kategorisering",
             Icon = "icon-tag",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("navn", "Navn", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textAreaDt), "innhold");
         _contentTypeService.Save(ct);
+        return ct;
     }
 
-    private void CreateArtikkel()
+    private IContentType CreateArtikkel()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
@@ -126,16 +151,17 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "Artikkel",
             Description = "Artikler og nyheter",
             Icon = "icon-newspaper-alt",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, description: "Hovedinnhold"), "innhold");
         _contentTypeService.Save(ct);
+        return ct;
     }
 
-    private void CreateSide()
+    private IContentType CreateSide()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
@@ -143,7 +169,7 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "Side",
             Description = "Generelle sider",
             Icon = "icon-document",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
@@ -155,9 +181,10 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt), "seo");
         ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt), "seo");
         _contentTypeService.Save(ct);
+        return ct;
     }
 
-    private void CreateEksempel()
+    private IContentType CreateEksempel()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
@@ -165,7 +192,7 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "Eksempel",
             Description = "Gode eksempler / caser",
             Icon = "icon-science",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
@@ -177,9 +204,10 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("status", "Status", _textStringDt, description: "i_utvikling, pilot, i_drift, avsluttet"), "innhold");
         ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
         _contentTypeService.Save(ct);
+        return ct;
     }
 
-    private void CreateVeiledning()
+    private IContentType CreateVeiledning()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
@@ -187,7 +215,7 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "Veiledning",
             Description = "Veiledningsressurser",
             Icon = "icon-book-alt",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
@@ -196,9 +224,10 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt, description: "Velg merkelapp-kategori"), "innhold");
         ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
         _contentTypeService.Save(ct);
+        return ct;
     }
 
-    private void CreateFAQ()
+    private IContentType CreateFAQ()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
@@ -206,7 +235,7 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "FAQ",
             Description = "Ofte stilte spørsmål",
             Icon = "icon-help-alt",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("sporsmal", "Spørsmål", _textStringDt, mandatory: true), "innhold");
@@ -214,5 +243,6 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt), "innhold");
         ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
         _contentTypeService.Save(ct);
+        return ct;
     }
 }

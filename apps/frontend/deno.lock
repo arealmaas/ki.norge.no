@@ -3,7 +3,7 @@
   "specifiers": {
     "npm:@astrojs/cloudflare@^12.6.12": "12.6.12_astro@5.16.12__@types+node@22.19.7__vite@6.4.1___@types+node@22.19.7___picomatch@4.0.3__zod@3.25.76_@types+node@22.19.7_@cloudflare+workers-types@4.20260129.0",
     "npm:@astrojs/react@^4.4.2": "4.4.2_@types+react@19.2.9_@types+react-dom@19.2.3__@types+react@19.2.9_react@19.2.3_react-dom@19.2.3__react@19.2.3_vite@6.4.1__@types+node@22.19.7__picomatch@4.0.3_@types+node@22.19.7",
-    "npm:@axe-core/playwright@^4.10.0": "4.11.0_playwright-core@1.58.0",
+    "npm:@axe-core/playwright@^4.10.0": "4.11.0_playwright-core@1.44.0",
     "npm:@digdir/designsystemet-css@^1.11.0": "1.11.0",
     "npm:@digdir/designsystemet-react@^1.11.0": "1.11.0_react@19.2.3_react-dom@19.2.3__react@19.2.3",
     "npm:@navikt/aksel-icons@^8.0.1": "8.0.1",
@@ -97,11 +97,11 @@
     "@astrojs/underscore-redirects@1.0.0": {
       "integrity": "sha512-qZxHwVnmb5FXuvRsaIGaqWgnftjCuMY+GSbaVZdBmE4j8AfgPqKPxYp8SUERyJcjpKCEmO4wD6ybuGH8A2kVRQ=="
     },
-    "@axe-core/playwright@4.11.0_playwright-core@1.58.0": {
+    "@axe-core/playwright@4.11.0_playwright-core@1.44.0": {
       "integrity": "sha512-70vBT/Ylqpm65RQz2iCG2o0JJCEG/WCNyefTr2xcOcr1CoSee60gNQYUMZZ7YukoKkFLv26I/jjlsvwwp532oQ==",
       "dependencies": [
         "axe-core",
-        "playwright-core@1.58.0"
+        "playwright-core"
       ]
     },
     "@babel/code-frame@7.28.6": {
@@ -2361,14 +2361,10 @@
       "integrity": "sha512-ZTbkNpFfYcGWohvTTl+xewITm7EOuqIqex0c7dNZ+aXsbrLj0qI8XlGKfPpipjm0Wny/4Lt4CJsWJk1stVS5qQ==",
       "bin": true
     },
-    "playwright-core@1.58.0": {
-      "integrity": "sha512-aaoB1RWrdNi3//rOeKuMiS65UCcgOVljU46At6eFcOFPFHWtd2weHRRow6z/n+Lec0Lvu0k9ZPKJSjPugikirw==",
-      "bin": true
-    },
     "playwright@1.44.0": {
       "integrity": "sha512-F9b3GUCLQ3Nffrfb6dunPOkE5Mh68tR7zN32L4jCk4FjQamgesGay7/dAAe1WaMEGV04DkdJfcJzjoCKygUaRQ==",
       "dependencies": [
-        "playwright-core@1.44.0"
+        "playwright-core"
       ],
       "optionalDependencies": [
         "fsevents@2.3.2"
