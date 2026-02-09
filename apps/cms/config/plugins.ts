@@ -9,5 +9,13 @@ export default ({ env }) => ({
   redaksjonelt: {
     enabled: true,
     resolve: './src/plugins/redaksjonelt',
+    config: {
+      contentTypes: [
+        'api::artikkel.artikkel',
+        'api::eksempel.eksempel',
+        'api::veiledning.veiledning',
+        'api::side.side',
+      ],
+    },
   },
 });

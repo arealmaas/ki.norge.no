@@ -1,6 +1,8 @@
-export default {
+'use strict';
+
+module.exports = {
   kind: 'collectionType',
-  collectionName: 'arbeidsflyt_loggs',
+  collectionName: 'redaksjonelt_arbeidsflyt_logg',
   info: {
     singularName: 'arbeidsflyt-logg',
     pluralName: 'arbeidsflyt-loggs',

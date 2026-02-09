@@ -16,7 +16,7 @@ const NotificationBanner = ({ uleste }: NotificationBannerProps) => {
       action={
         <LinkButton
           tag={NavLink}
-          to="/content-manager/collection-types/api::varsling.varsling"
+          to="/content-manager/collection-types/plugin::redaksjonelt.varsling"
           variant="ghost"
           size="S"
         >

@@ -43,7 +43,7 @@ const OversiktPage = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await get<{ data: OversiktData }>('/api/arbeidsflyt/oversikt');
+      const response = await get<{ data: OversiktData }>('/api/redaksjonelt/oversikt');
       setData(response.data.data);
       setError(null);
     } catch (err) {

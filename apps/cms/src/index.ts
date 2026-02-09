@@ -1,48 +1,6 @@
-import { errors } from '@strapi/utils';
-
-// Flag to bypass workflow check during seeding
-let seeding = false;
-
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * Adds document service middleware to enforce editorial workflow.
-   */
   register({ strapi }) {
-    strapi.documents.use(async (ctx, next) => {
-      if (ctx.action === 'publish' && !seeding) {
-        const editorialTypes = [
-          'api::artikkel.artikkel',
-          'api::eksempel.eksempel',
-          'api::veiledning.veiledning',
-          'api::side.side',
-        ];
-
-        if (editorialTypes.includes(ctx.uid)) {
-          const dokumentId = ctx.params?.documentId;
-          if (dokumentId) {
-            // Check if latest workflow entry is "godkjent"
-            const entries = await strapi.db
-              .query('api::arbeidsflyt-logg.arbeidsflyt-logg')
-              .findMany({
-                where: { dokumentId },
-                orderBy: { tidspunkt: 'desc' },
-                limit: 1,
-              });
-
-            const latest = entries[0];
-            if (!latest || latest.handling !== 'godkjent') {
-              throw new errors.ApplicationError(
-                'Innhold må godkjennes før publisering'
-              );
-            }
-          }
-        }
-      }
-      return next();
-    });
+    // Publish-gate middleware is now handled by the redaksjonelt plugin
   },
 
   /**
@@ -102,9 +60,10 @@ export default {
     await ensureLocales(strapi);
 
     // Seed test content (only if no content exists)
-    seeding = true;
+    const workflow = strapi.plugin('redaksjonelt')?.service('workflow');
+    if (workflow) workflow.setSeedMode(true);
     await seedTestContent(strapi);
-    seeding = false;
+    if (workflow) workflow.setSeedMode(false);
   },
 };
 
@@ -149,10 +108,14 @@ async function seedTestContent(strapi) {
   const now = new Date();
   const seedUser = "seed@kinorge.no";
 
+  const LOGG_UID = "plugin::redaksjonelt.arbeidsflyt-logg";
+  const PLANLAGT_UID = "plugin::redaksjonelt.planlagt-publisering";
+  const VARSLING_UID = "plugin::redaksjonelt.varsling";
+
   // Helper: create a workflow log entry
   async function logWorkflow(dokumentId: string, innholdstype: string, handling: string, kommentar?: string, minutesAgo = 0) {
     const tidspunkt = new Date(now.getTime() - minutesAgo * 60000).toISOString();
-    await strapi.documents("api::arbeidsflyt-logg.arbeidsflyt-logg").create({
+    await strapi.documents(LOGG_UID).create({
       data: { innholdstype, dokumentId, handling, utfortAv: seedUser, tidspunkt, ...(kommentar ? { kommentar } : {}) },
     });
   }
@@ -319,7 +282,7 @@ async function seedTestContent(strapi) {
   await logWorkflow(art8.documentId, CT, "godkjent", "Publiseres planlagt neste uke.", 10);
   // Schedule for 7 days from now
   const publishDate = new Date(now.getTime() + 7 * 24 * 60 * 60000);
-  await strapi.documents("api::planlagt-publisering.planlagt-publisering").create({
+  await strapi.documents(PLANLAGT_UID).create({
     data: {
       innholdstype: CT,
       dokumentId: art8.documentId,
@@ -330,7 +293,7 @@ async function seedTestContent(strapi) {
   });
 
   // ── Notifications for the workflow actions ─────────────────────
-  await strapi.documents("api::varsling.varsling").create({
+  await strapi.documents(VARSLING_UID).create({
     data: {
       mottaker: seedUser,
       type: "sendt_til_godkjenning",
@@ -341,7 +304,7 @@ async function seedTestContent(strapi) {
       tidspunkt: new Date(now.getTime() - 10 * 60000).toISOString(),
     },
   });
-  await strapi.documents("api::varsling.varsling").create({
+  await strapi.documents(VARSLING_UID).create({
     data: {
       mottaker: seedUser,
       type: "godkjent",
@@ -352,7 +315,7 @@ async function seedTestContent(strapi) {
       tidspunkt: new Date(now.getTime() - 15 * 60000).toISOString(),
     },
   });
-  await strapi.documents("api::varsling.varsling").create({
+  await strapi.documents(VARSLING_UID).create({
     data: {
       mottaker: seedUser,
       type: "avvist",
@@ -363,7 +326,7 @@ async function seedTestContent(strapi) {
       tidspunkt: new Date(now.getTime() - 20 * 60000).toISOString(),
     },
   });
-  await strapi.documents("api::varsling.varsling").create({
+  await strapi.documents(VARSLING_UID).create({
     data: {
       mottaker: seedUser,
       type: "planlagt",

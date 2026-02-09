@@ -1,6 +1,8 @@
-export default {
+'use strict';
+
+module.exports = {
   kind: 'collectionType',
-  collectionName: 'planlagt_publiserings',
+  collectionName: 'redaksjonelt_planlagt_publisering',
   info: {
     singularName: 'planlagt-publisering',
     pluralName: 'planlagt-publiserings',

@@ -1,6 +1,8 @@
-export default {
+'use strict';
+
+module.exports = {
   kind: 'collectionType',
-  collectionName: 'varslinger',
+  collectionName: 'redaksjonelt_varslinger',
   info: {
     singularName: 'varsling',
     pluralName: 'varslinger',

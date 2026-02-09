@@ -430,50 +430,6 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiArbeidsflytLoggArbeidsflytLogg
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'arbeidsflyt_loggs';
-  info: {
-    description: 'Logg over arbeidsflyt-handlinger';
-    displayName: 'Arbeidsflyt-logg';
-    pluralName: 'arbeidsflyt-loggs';
-    singularName: 'arbeidsflyt-logg';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    dokumentId: Schema.Attribute.String & Schema.Attribute.Required;
-    handling: Schema.Attribute.Enumeration<
-      [
-        'sendt_til_godkjenning',
-        'godkjent',
-        'avvist',
-        'publisert',
-        'avpublisert',
-      ]
-    > &
-      Schema.Attribute.Required;
-    innholdstype: Schema.Attribute.String & Schema.Attribute.Required;
-    kommentar: Schema.Attribute.Text;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::arbeidsflyt-logg.arbeidsflyt-logg'
-    > &
-      Schema.Attribute.Private;
-    publishedAt: Schema.Attribute.DateTime;
-    tidspunkt: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    utfortAv: Schema.Attribute.String & Schema.Attribute.Required;
-  };
-}
-
 export interface ApiArtikkelArtikkel extends Struct.CollectionTypeSchema {
   collectionName: 'artikkels';
   info: {
@@ -636,44 +592,6 @@ export interface ApiMerkelappMerkelapp extends Struct.CollectionTypeSchema {
   };
 }
 
-export interface ApiPlanlagtPubliseringPlanlagtPublisering
-  extends Struct.CollectionTypeSchema {
-  collectionName: 'planlagt_publiserings';
-  info: {
-    description: 'Planlagte publiseringer';
-    displayName: 'Planlagt publisering';
-    pluralName: 'planlagt-publiserings';
-    singularName: 'planlagt-publisering';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    dokumentId: Schema.Attribute.String & Schema.Attribute.Required;
-    innholdstype: Schema.Attribute.String & Schema.Attribute.Required;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::planlagt-publisering.planlagt-publisering'
-    > &
-      Schema.Attribute.Private;
-    opprettetAv: Schema.Attribute.String & Schema.Attribute.Required;
-    publiserTid: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    publishedAt: Schema.Attribute.DateTime;
-    status: Schema.Attribute.Enumeration<
-      ['venter', 'publisert', 'kansellert']
-    > &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<'venter'>;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
 export interface ApiSideSide extends Struct.CollectionTypeSchema {
   collectionName: 'sides';
   info: {
@@ -706,44 +624,6 @@ export interface ApiSideSide extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.DefaultTo<'standard'>;
     tittel: Schema.Attribute.String & Schema.Attribute.Required;
-    updatedAt: Schema.Attribute.DateTime;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiVarslingVarsling extends Struct.CollectionTypeSchema {
-  collectionName: 'varslinger';
-  info: {
-    description: 'Varsler for arbeidsflyt-hendelser';
-    displayName: 'Varsling';
-    pluralName: 'varslinger';
-    singularName: 'varsling';
-  };
-  options: {
-    draftAndPublish: false;
-  };
-  attributes: {
-    createdAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    dokumentId: Schema.Attribute.String;
-    innholdstype: Schema.Attribute.String;
-    lest: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::varsling.varsling'
-    > &
-      Schema.Attribute.Private;
-    melding: Schema.Attribute.Text & Schema.Attribute.Required;
-    mottaker: Schema.Attribute.String & Schema.Attribute.Required;
-    publishedAt: Schema.Attribute.DateTime;
-    tidspunkt: Schema.Attribute.DateTime & Schema.Attribute.Required;
-    type: Schema.Attribute.Enumeration<
-      ['sendt_til_godkjenning', 'godkjent', 'avvist', 'publisert', 'planlagt']
-    > &
-      Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -924,6 +804,127 @@ export interface PluginI18NLocale extends Struct.CollectionTypeSchema {
         number
       >;
     publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface PluginRedaksjoneltArbeidsflytLogg
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'redaksjonelt_arbeidsflyt_logg';
+  info: {
+    description: 'Logg over arbeidsflyt-handlinger';
+    displayName: 'Arbeidsflyt-logg';
+    pluralName: 'arbeidsflyt-loggs';
+    singularName: 'arbeidsflyt-logg';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dokumentId: Schema.Attribute.String & Schema.Attribute.Required;
+    handling: Schema.Attribute.Enumeration<
+      [
+        'sendt_til_godkjenning',
+        'godkjent',
+        'avvist',
+        'publisert',
+        'avpublisert',
+      ]
+    > &
+      Schema.Attribute.Required;
+    innholdstype: Schema.Attribute.String & Schema.Attribute.Required;
+    kommentar: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::redaksjonelt.arbeidsflyt-logg'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    tidspunkt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    utfortAv: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
+export interface PluginRedaksjoneltPlanlagtPublisering
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'redaksjonelt_planlagt_publisering';
+  info: {
+    description: 'Planlagte publiseringer';
+    displayName: 'Planlagt publisering';
+    pluralName: 'planlagt-publiserings';
+    singularName: 'planlagt-publisering';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dokumentId: Schema.Attribute.String & Schema.Attribute.Required;
+    innholdstype: Schema.Attribute.String & Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::redaksjonelt.planlagt-publisering'
+    > &
+      Schema.Attribute.Private;
+    opprettetAv: Schema.Attribute.String & Schema.Attribute.Required;
+    publiserTid: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    status: Schema.Attribute.Enumeration<
+      ['venter', 'publisert', 'kansellert']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'venter'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface PluginRedaksjoneltVarsling
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'redaksjonelt_varslinger';
+  info: {
+    description: 'Varsler for arbeidsflyt-hendelser';
+    displayName: 'Varsling';
+    pluralName: 'varslinger';
+    singularName: 'varsling';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    dokumentId: Schema.Attribute.String;
+    innholdstype: Schema.Attribute.String;
+    lest: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::redaksjonelt.varsling'
+    > &
+      Schema.Attribute.Private;
+    melding: Schema.Attribute.Text & Schema.Attribute.Required;
+    mottaker: Schema.Attribute.String & Schema.Attribute.Required;
+    publishedAt: Schema.Attribute.DateTime;
+    tidspunkt: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    type: Schema.Attribute.Enumeration<
+      ['sendt_til_godkjenning', 'godkjent', 'avvist', 'publisert', 'planlagt']
+    > &
+      Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1301,18 +1302,18 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
-      'api::arbeidsflyt-logg.arbeidsflyt-logg': ApiArbeidsflytLoggArbeidsflytLogg;
       'api::artikkel.artikkel': ApiArtikkelArtikkel;
       'api::eksempel.eksempel': ApiEksempelEksempel;
       'api::faq.faq': ApiFaqFaq;
       'api::merkelapp.merkelapp': ApiMerkelappMerkelapp;
-      'api::planlagt-publisering.planlagt-publisering': ApiPlanlagtPubliseringPlanlagtPublisering;
       'api::side.side': ApiSideSide;
-      'api::varsling.varsling': ApiVarslingVarsling;
       'api::veiledning.veiledning': ApiVeiledningVeiledning;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;
+      'plugin::redaksjonelt.arbeidsflyt-logg': PluginRedaksjoneltArbeidsflytLogg;
+      'plugin::redaksjonelt.planlagt-publisering': PluginRedaksjoneltPlanlagtPublisering;
+      'plugin::redaksjonelt.varsling': PluginRedaksjoneltVarsling;
       'plugin::review-workflows.workflow': PluginReviewWorkflowsWorkflow;
       'plugin::review-workflows.workflow-stage': PluginReviewWorkflowsWorkflowStage;
       'plugin::upload.file': PluginUploadFile;

@@ -1,8 +1,10 @@
+'use strict';
+
 /**
  * Verify admin JWT token from Authorization header using Strapi's session manager.
  * Sets ctx.state.user with the admin user if valid.
  */
-export default async (policyContext, config, { strapi }) => {
+module.exports = async (policyContext, config, { strapi }) => {
   const { authorization } = policyContext.request.header;
   if (!authorization) {
     return false;

@@ -90,11 +90,11 @@ test.describe('Auth guards', () => {
     request,
   }) => {
     const endpoints = [
-      { method: 'POST' as const, url: `${CMS}/api/arbeidsflyt/send-til-godkjenning` },
-      { method: 'POST' as const, url: `${CMS}/api/arbeidsflyt/godkjenn` },
-      { method: 'POST' as const, url: `${CMS}/api/arbeidsflyt/avvis` },
-      { method: 'GET' as const, url: `${CMS}/api/arbeidsflyt/mine-oppgaver` },
-      { method: 'GET' as const, url: `${CMS}/api/arbeidsflyt/logg/fake-id` },
+      { method: 'POST' as const, url: `${CMS}/api/redaksjonelt/send-til-godkjenning` },
+      { method: 'POST' as const, url: `${CMS}/api/redaksjonelt/godkjenn` },
+      { method: 'POST' as const, url: `${CMS}/api/redaksjonelt/avvis` },
+      { method: 'GET' as const, url: `${CMS}/api/redaksjonelt/mine-oppgaver` },
+      { method: 'GET' as const, url: `${CMS}/api/redaksjonelt/logg/fake-id` },
     ];
 
     for (const ep of endpoints) {
@@ -110,8 +110,8 @@ test.describe('Auth guards', () => {
     request,
   }) => {
     const endpoints = [
-      { method: 'GET' as const, url: `${CMS}/api/varslinger/mine` },
-      { method: 'GET' as const, url: `${CMS}/api/varslinger/uleste` },
+      { method: 'GET' as const, url: `${CMS}/api/redaksjonelt/varslinger/mine` },
+      { method: 'GET' as const, url: `${CMS}/api/redaksjonelt/varslinger/uleste` },
     ];
 
     for (const ep of endpoints) {
@@ -124,7 +124,7 @@ test.describe('Auth guards', () => {
     request,
   }) => {
     const headers = auth('not-a-valid-jwt-token');
-    const res = await request.get(`${CMS}/api/arbeidsflyt/mine-oppgaver`, {
+    const res = await request.get(`${CMS}/api/redaksjonelt/mine-oppgaver`, {
       headers,
     });
     expect(res.status()).toBe(403);
@@ -163,7 +163,7 @@ test.describe('Workflow: submit → approve → publish', () => {
 
   test('submit for approval', async ({ request }) => {
     const res = await request.post(
-      `${CMS}/api/arbeidsflyt/send-til-godkjenning`,
+      `${CMS}/api/redaksjonelt/send-til-godkjenning`,
       {
         headers: auth(token),
         data: { innholdstype: CT, dokumentId: docId },
@@ -185,7 +185,7 @@ test.describe('Workflow: submit → approve → publish', () => {
   });
 
   test('approve the article', async ({ request }) => {
-    const res = await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    const res = await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId, kommentar: 'Ser bra ut!' },
     });
@@ -206,7 +206,7 @@ test.describe('Workflow: submit → approve → publish', () => {
 
   test('workflow log shows complete history', async ({ request }) => {
     const res = await request.get(
-      `${CMS}/api/arbeidsflyt/logg/${docId}`,
+      `${CMS}/api/redaksjonelt/logg/${docId}`,
       { headers: auth(token) }
     );
     expect(res.status()).toBe(200);
@@ -238,7 +238,7 @@ test.describe('Workflow: submit → reject', () => {
 
   test('submit for approval', async ({ request }) => {
     const res = await request.post(
-      `${CMS}/api/arbeidsflyt/send-til-godkjenning`,
+      `${CMS}/api/redaksjonelt/send-til-godkjenning`,
       {
         headers: auth(token),
         data: { innholdstype: CT, dokumentId: docId },
@@ -248,7 +248,7 @@ test.describe('Workflow: submit → reject', () => {
   });
 
   test('reject requires a comment', async ({ request }) => {
-    const res = await request.post(`${CMS}/api/arbeidsflyt/avvis`, {
+    const res = await request.post(`${CMS}/api/redaksjonelt/avvis`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
@@ -258,7 +258,7 @@ test.describe('Workflow: submit → reject', () => {
   });
 
   test('reject with comment succeeds', async ({ request }) => {
-    const res = await request.post(`${CMS}/api/arbeidsflyt/avvis`, {
+    const res = await request.post(`${CMS}/api/redaksjonelt/avvis`, {
       headers: auth(token),
       data: {
         innholdstype: CT,
@@ -284,7 +284,7 @@ test.describe('Workflow: submit → reject', () => {
 
   test('can re-submit after rejection', async ({ request }) => {
     const res = await request.post(
-      `${CMS}/api/arbeidsflyt/send-til-godkjenning`,
+      `${CMS}/api/redaksjonelt/send-til-godkjenning`,
       {
         headers: auth(token),
         data: { innholdstype: CT, dokumentId: docId },
@@ -297,7 +297,7 @@ test.describe('Workflow: submit → reject', () => {
 
   test('approve after re-submit and publish succeeds', async ({ request }) => {
     // Approve
-    const approveRes = await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    const approveRes = await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
@@ -323,7 +323,7 @@ test.describe('Workflow: validation', () => {
 
   test('submit requires innholdstype and dokumentId', async ({ request }) => {
     const res = await request.post(
-      `${CMS}/api/arbeidsflyt/send-til-godkjenning`,
+      `${CMS}/api/redaksjonelt/send-til-godkjenning`,
       {
         headers: auth(token),
         data: {},
@@ -334,7 +334,7 @@ test.describe('Workflow: validation', () => {
 
   test('submit rejects unsupported content types', async ({ request }) => {
     const res = await request.post(
-      `${CMS}/api/arbeidsflyt/send-til-godkjenning`,
+      `${CMS}/api/redaksjonelt/send-til-godkjenning`,
       {
         headers: auth(token),
         data: { innholdstype: 'api::faq.faq', dokumentId: 'fake-id' },
@@ -347,7 +347,7 @@ test.describe('Workflow: validation', () => {
 
   test('submit rejects non-existent document', async ({ request }) => {
     const res = await request.post(
-      `${CMS}/api/arbeidsflyt/send-til-godkjenning`,
+      `${CMS}/api/redaksjonelt/send-til-godkjenning`,
       {
         headers: auth(token),
         data: { innholdstype: CT, dokumentId: 'does-not-exist-12345' },
@@ -365,7 +365,7 @@ test.describe('Workflow: validation', () => {
       'test-not-submitted',
       'Test: Not Submitted'
     );
-    const res = await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    const res = await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
@@ -381,7 +381,7 @@ test.describe('Workflow: validation', () => {
       'test-not-submitted-reject',
       'Test: Not Submitted Reject'
     );
-    const res = await request.post(`${CMS}/api/arbeidsflyt/avvis`, {
+    const res = await request.post(`${CMS}/api/redaksjonelt/avvis`, {
       headers: auth(token),
       data: {
         innholdstype: CT,
@@ -412,13 +412,13 @@ test.describe('Workflow: mine-oppgaver', () => {
       'test-oppgaver',
       'Test: Oppgaver List'
     );
-    await request.post(`${CMS}/api/arbeidsflyt/send-til-godkjenning`, {
+    await request.post(`${CMS}/api/redaksjonelt/send-til-godkjenning`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
 
     // Check mine-oppgaver
-    const res = await request.get(`${CMS}/api/arbeidsflyt/mine-oppgaver`, {
+    const res = await request.get(`${CMS}/api/redaksjonelt/mine-oppgaver`, {
       headers: auth(token),
     });
     expect(res.status()).toBe(200);
@@ -437,17 +437,17 @@ test.describe('Workflow: mine-oppgaver', () => {
       'test-oppgaver-approved',
       'Test: Oppgaver Approved'
     );
-    await request.post(`${CMS}/api/arbeidsflyt/send-til-godkjenning`, {
+    await request.post(`${CMS}/api/redaksjonelt/send-til-godkjenning`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
-    await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
 
     // Check mine-oppgaver — should NOT contain this docId
-    const res = await request.get(`${CMS}/api/arbeidsflyt/mine-oppgaver`, {
+    const res = await request.get(`${CMS}/api/redaksjonelt/mine-oppgaver`, {
       headers: auth(token),
     });
     const body = await res.json();
@@ -466,7 +466,7 @@ test.describe('Notifications', () => {
   });
 
   test('uleste count endpoint works', async ({ request }) => {
-    const res = await request.get(`${CMS}/api/varslinger/uleste`, {
+    const res = await request.get(`${CMS}/api/redaksjonelt/varslinger/uleste`, {
       headers: auth(token),
     });
     expect(res.status()).toBe(200);
@@ -475,7 +475,7 @@ test.describe('Notifications', () => {
   });
 
   test('mine varslinger endpoint works', async ({ request }) => {
-    const res = await request.get(`${CMS}/api/varslinger/mine`, {
+    const res = await request.get(`${CMS}/api/redaksjonelt/varslinger/mine`, {
       headers: auth(token),
     });
     expect(res.status()).toBe(200);
@@ -485,7 +485,7 @@ test.describe('Notifications', () => {
 
   test('workflow actions create notifications', async ({ request }) => {
     // Get initial notification count
-    const beforeRes = await request.get(`${CMS}/api/varslinger/mine`, {
+    const beforeRes = await request.get(`${CMS}/api/redaksjonelt/varslinger/mine`, {
       headers: auth(token),
     });
     const beforeCount = (await beforeRes.json()).data.length;
@@ -497,7 +497,7 @@ test.describe('Notifications', () => {
       'test-notif',
       'Test: Notification Article'
     );
-    await request.post(`${CMS}/api/arbeidsflyt/send-til-godkjenning`, {
+    await request.post(`${CMS}/api/redaksjonelt/send-til-godkjenning`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
@@ -506,12 +506,12 @@ test.describe('Notifications', () => {
     // Note: sendt_til_godkjenning notifies OTHER admins, not the submitter.
     // Since there's only one admin, no new notification is created for submit.
     // But approve/reject will create one for the submitter.
-    await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
 
-    const afterRes = await request.get(`${CMS}/api/varslinger/mine`, {
+    const afterRes = await request.get(`${CMS}/api/redaksjonelt/varslinger/mine`, {
       headers: auth(token),
     });
     const afterCount = (await afterRes.json()).data.length;
@@ -522,7 +522,7 @@ test.describe('Notifications', () => {
 
   test('mark notification as read', async ({ request }) => {
     // Get an unread notification
-    const listRes = await request.get(`${CMS}/api/varslinger/mine`, {
+    const listRes = await request.get(`${CMS}/api/redaksjonelt/varslinger/mine`, {
       headers: auth(token),
     });
     const notifications = (await listRes.json()).data;
@@ -534,7 +534,7 @@ test.describe('Notifications', () => {
     }
 
     const markRes = await request.put(
-      `${CMS}/api/varslinger/${unread.documentId}/lest`,
+      `${CMS}/api/redaksjonelt/varslinger/${unread.documentId}/lest`,
       { headers: auth(token) }
     );
     expect(markRes.status()).toBe(200);
@@ -562,11 +562,11 @@ test.describe('Scheduled publishing', () => {
       'test-scheduled',
       'Test: Scheduled Publish'
     );
-    await request.post(`${CMS}/api/arbeidsflyt/send-til-godkjenning`, {
+    await request.post(`${CMS}/api/redaksjonelt/send-til-godkjenning`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
-    await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
@@ -574,7 +574,7 @@ test.describe('Scheduled publishing', () => {
     // Schedule for 1 hour from now
     const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const res = await request.post(
-      `${CMS}/api/planlagt-publisering/planlegg`,
+      `${CMS}/api/redaksjonelt/planlegg`,
       {
         headers: auth(token),
         data: { innholdstype: CT, dokumentId: docId, publiserTid: future },
@@ -588,7 +588,7 @@ test.describe('Scheduled publishing', () => {
 
   test('kommende endpoint lists scheduled publishes', async ({ request }) => {
     const res = await request.get(
-      `${CMS}/api/planlagt-publisering/kommende`,
+      `${CMS}/api/redaksjonelt/kommende`,
       { headers: auth(token) }
     );
     expect(res.status()).toBe(200);
@@ -608,17 +608,17 @@ test.describe('Scheduled publishing', () => {
       'test-cancel-schedule',
       'Test: Cancel Scheduled'
     );
-    await request.post(`${CMS}/api/arbeidsflyt/send-til-godkjenning`, {
+    await request.post(`${CMS}/api/redaksjonelt/send-til-godkjenning`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
-    await request.post(`${CMS}/api/arbeidsflyt/godkjenn`, {
+    await request.post(`${CMS}/api/redaksjonelt/godkjenn`, {
       headers: auth(token),
       data: { innholdstype: CT, dokumentId: docId },
     });
     const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     const schedRes = await request.post(
-      `${CMS}/api/planlagt-publisering/planlegg`,
+      `${CMS}/api/redaksjonelt/planlegg`,
       {
         headers: auth(token),
         data: { innholdstype: CT, dokumentId: docId, publiserTid: future },
@@ -628,7 +628,7 @@ test.describe('Scheduled publishing', () => {
 
     // Cancel
     const cancelRes = await request.put(
-      `${CMS}/api/planlagt-publisering/${schedId}/kanseller`,
+      `${CMS}/api/redaksjonelt/planlagt/${schedId}/kanseller`,
       { headers: auth(token) }
     );
     expect(cancelRes.status()).toBe(200);
