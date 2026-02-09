@@ -15,5 +15,9 @@ wwwroot/media/
 *.sqlite.db-shm
 *.sqlite.db-wal
 
+## Auto-generated schemas
+umbraco-package-schema.json
+appsettings-schema.*.json
+
 ## User secrets
 appsettings.*.local.json
