@@ -1,7 +1,7 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
-import { getEksempler, type Eksempel, type BlockNode } from '../../lib/strapi';
+import { getEksempler, type Eksempel, type BlockNode } from '../../lib/umbraco';
 
 // Helper to extract text from blocks for description
 function getDescription(blocks?: BlockNode[]): string {
@@ -23,7 +23,7 @@ const statusLabels: Record<string, string> = {
   avsluttet: 'Avsluttet',
 };
 
-// Fetch examples from Strapi
+// Fetch examples from Umbraco
 let cases: Eksempel[] = [];
 try {
   const response = await getEksempler();

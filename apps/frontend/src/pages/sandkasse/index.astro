@@ -2,12 +2,12 @@
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Button, Link } from '@digdir/designsystemet-react';
-import { getSide } from '../../lib/strapi';
+import { getSide } from '../../lib/umbraco';
 
 // Check for preview mode
 const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
 
-// Fetch page content from Strapi
+// Fetch page content from Umbraco
 let page = null;
 try {
   page = await getSide('sandkasse', { preview: isPreview });

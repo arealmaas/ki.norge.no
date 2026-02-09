@@ -1,0 +1,18 @@
+## .NET build output
+bin/
+obj/
+
+## Umbraco
+umbraco/Data/
+umbraco/Logs/
+umbraco/mediacache/
+App_Data/
+wwwroot/media/
+
+## SQLite database
+*.sqlite.db
+*.sqlite.db-shm
+*.sqlite.db-wal
+
+## User secrets
+appsettings.*.local.json

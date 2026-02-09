@@ -2,9 +2,9 @@
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
-import { getSide } from '../lib/strapi';
+import { getSide } from '../lib/umbraco';
 
-// Fetch page content from Strapi
+// Fetch page content from Umbraco
 let page = null;
 try {
   page = await getSide('kontakt');

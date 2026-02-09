@@ -2,9 +2,9 @@
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Link, Details, Button } from '@digdir/designsystemet-react';
-import { getFAQs, type FAQ } from '../lib/strapi';
+import { getFAQs, type FAQ } from '../lib/umbraco';
 
-// Fetch FAQs from Strapi
+// Fetch FAQs from Umbraco
 let faqs: FAQ[] = [];
 try {
   const response = await getFAQs();

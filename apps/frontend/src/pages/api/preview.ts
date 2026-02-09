@@ -1,6 +1,8 @@
 import type { APIRoute } from 'astro';
 
 const PREVIEW_SECRET = import.meta.env.PREVIEW_SECRET || '';
+const UMBRACO_URL = import.meta.env.UMBRACO_URL || 'http://localhost:5000';
+const UMBRACO_API_KEY = import.meta.env.UMBRACO_API_KEY || '';
 
 // Map content types to their frontend paths
 const contentTypeRoutes: Record<string, (slug: string) => string> = {
@@ -14,68 +16,55 @@ const contentTypeRoutes: Record<string, (slug: string) => string> = {
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const secret = url.searchParams.get('secret');
   const type = url.searchParams.get('type');
-  const documentId = url.searchParams.get('documentId');
-  const status = url.searchParams.get('status') || 'draft';
+  const id = url.searchParams.get('id') || url.searchParams.get('documentId');
 
   // Validate secret
   if (secret !== PREVIEW_SECRET) {
     return new Response('Invalid preview secret', { status: 401 });
   }
 
-  if (!type || !documentId) {
-    return new Response('Missing type or documentId', { status: 400 });
+  if (!type || !id) {
+    return new Response('Missing type or id', { status: 400 });
   }
 
   // Set preview cookie (expires in 1 hour)
-  cookies.set('preview', JSON.stringify({ enabled: true, documentId, status }), {
+  cookies.set('preview', JSON.stringify({ enabled: true, id }), {
     path: '/',
     maxAge: 60 * 60, // 1 hour
     httpOnly: true,
     sameSite: 'lax',
   });
 
-  // Fetch the content to get the slug for redirect
-  const strapiUrl = import.meta.env.STRAPI_URL || 'http://localhost:1337';
-
   try {
-    // Fetch the document to get its slug
-    const contentTypeMap: Record<string, string> = {
-      artikkel: 'artikkels',
-      side: 'sides',
-      eksempel: 'eksempels',
-      veiledning: 'veilednings',
-      faq: 'faqs',
+    // Fetch the content from Umbraco Delivery API to get the slug
+    const headers: HeadersInit = {
+      'Accept': 'application/json',
+      'Accept-Language': 'nb-NO',
     };
 
-    const apiEndpoint = contentTypeMap[type];
-    if (!apiEndpoint) {
-      return new Response(`Unknown content type: ${type}`, { status: 400 });
+    if (UMBRACO_API_KEY) {
+      headers['Api-Key'] = UMBRACO_API_KEY;
     }
 
-    // Use status=draft to get draft content
+    // Fetch by ID with preview mode
     const response = await fetch(
-      `${strapiUrl}/api/${apiEndpoint}?filters[documentId][$eq]=${documentId}&status=${status}&populate=*`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+      `${UMBRACO_URL}/umbraco/delivery/api/v2/content/item/${id}?preview=true`,
+      { headers }
     );
 
     if (!response.ok) {
-      console.error('Strapi fetch failed:', response.status, await response.text());
-      return new Response('Failed to fetch content from Strapi', { status: 500 });
+      console.error('Umbraco fetch failed:', response.status, await response.text());
+      return new Response('Failed to fetch content from Umbraco', { status: 500 });
     }
 
-    const data = await response.json();
-    const content = data.data?.[0];
+    const content = await response.json();
 
     if (!content) {
       return new Response('Content not found', { status: 404 });
     }
 
-    // Get the slug and build redirect URL
-    const slug = content.slug || content.documentId;
+    // Get the slug from properties and build redirect URL
+    const slug = content.properties?.slug || content.route?.path?.split('/').pop() || id;
     const routeBuilder = contentTypeRoutes[type];
 
     if (!routeBuilder) {
@@ -92,7 +81,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   }
 };
 
-// Also handle POST for when Strapi sends a POST request
+// Also handle POST for webhook-style requests
 export const POST: APIRoute = async (context) => {
   return GET(context);
 };

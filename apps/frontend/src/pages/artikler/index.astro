@@ -2,7 +2,7 @@
 import Layout from '../../components/layout/Layout.astro';
 import ArticleCard from '../../components/shared/ArticleCard.astro';
 import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
-import { getArtikler, type Artikkel, type BlockNode } from '../../lib/strapi';
+import { getArtikler, type Artikkel, type BlockNode } from '../../lib/umbraco';
 
 // Helper to extract text from blocks for excerpt
 function getExcerpt(blocks?: BlockNode[]): string {
@@ -16,7 +16,7 @@ function getExcerpt(blocks?: BlockNode[]): string {
     .slice(0, 200) + '...';
 }
 
-// Fetch articles from Strapi
+// Fetch articles from Umbraco
 let articles: Artikkel[] = [];
 try {
   const response = await getArtikler();

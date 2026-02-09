@@ -1,9 +1,9 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
-import { getVeiledninger, type Veiledning } from '../../lib/strapi';
+import { getVeiledninger, type Veiledning } from '../../lib/umbraco';
 
-// Fetch veiledninger from Strapi
+// Fetch veiledninger from Umbraco
 let veiledninger: Veiledning[] = [];
 try {
   const veiledningerRes = await getVeiledninger();

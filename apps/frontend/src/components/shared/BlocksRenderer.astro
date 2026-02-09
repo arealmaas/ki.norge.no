@@ -1,20 +1,85 @@
 ---
 /**
- * BlocksRenderer - Renders Strapi v5 blocks to HTML using Designsystemet components
+ * BlocksRenderer - Renders Umbraco Block List blocks to HTML using Designsystemet components
  *
- * Supports: paragraphs, headings (h1-h6), lists (ordered/unordered), quotes, code, images, links
+ * Umbraco blocks come as: { contentType: "tekst", content: { innhold: "<p>HTML</p>" } }
+ * Supports block types: tekst, advarsel, lenkeliste, faqInnhold
+ * Also supports legacy Strapi v5 block format for backward compatibility during migration.
  */
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
-import type { BlockNode, BlockChild } from '../../lib/strapi';
+import type { UmbracoBlock, BlockNode, BlockChild } from '../../lib/umbraco';
 
 interface Props {
-  blocks?: BlockNode[];
+  blocks?: UmbracoBlock[] | BlockNode[];
   class?: string;
 }
 
 const { blocks, class: className } = Astro.props;
 
-// Helper to render text with formatting
+// Detect if we're dealing with Umbraco blocks or legacy Strapi blocks
+function isUmbracoBlock(block: any): block is UmbracoBlock {
+  return block && typeof block === 'object' && 'contentType' in block && 'content' in block;
+}
+
+function isLegacyBlock(block: any): block is BlockNode {
+  return block && typeof block === 'object' && 'type' in block && !('contentType' in block);
+}
+
+// ── Umbraco block rendering ─────────────────────────────────────
+
+function renderUmbracoBlock(block: UmbracoBlock): string {
+  const content = block.content || {};
+
+  switch (block.contentType) {
+    case 'tekst': {
+      // Rich text editor output — already HTML
+      const html = content.innhold as string || '';
+      return html;
+    }
+
+    case 'advarsel': {
+      const tittel = content.tittel as string || '';
+      const innhold = content.innhold as string || '';
+      const type = (content.type as string || 'info').toLowerCase();
+      const typeClass = `advarsel--${type}`;
+      return `<div class="advarsel ${typeClass}">${tittel ? `<strong class="advarsel-tittel">${tittel}</strong>` : ''}${innhold}</div>`;
+    }
+
+    case 'lenkeliste': {
+      const tittel = content.tittel as string || '';
+      const lenker = content.lenker;
+      let links: { tekst: string; url: string; ekstern?: boolean }[] = [];
+
+      if (typeof lenker === 'string') {
+        try { links = JSON.parse(lenker); } catch { /* ignore */ }
+      } else if (Array.isArray(lenker)) {
+        links = lenker.map((l: any) => ({
+          tekst: l.content?.tekst || l.tekst || '',
+          url: l.content?.url || l.url || '',
+          ekstern: l.content?.ekstern || l.ekstern || false,
+        }));
+      }
+
+      const linksHtml = links.map(l =>
+        `<li><a href="${l.url}"${l.ekstern ? ' target="_blank" rel="noopener noreferrer"' : ''}>${l.tekst}${l.ekstern ? ' ↗' : ''}</a></li>`
+      ).join('');
+
+      return `${tittel ? `<h3>${tittel}</h3>` : ''}<ul class="ds-list">${linksHtml}</ul>`;
+    }
+
+    case 'faqInnhold': {
+      const sporsmal = content.sporsmal as string || '';
+      const svar = content.svar as string || '';
+      return `<div class="faq-block"><h3 class="faq-block-q">${sporsmal}</h3><div class="faq-block-a">${svar}</div></div>`;
+    }
+
+    default:
+      return '';
+  }
+}
+
+// ── Legacy Strapi block rendering (kept during migration) ───────
+
 function renderTextChild(child: BlockChild): string {
   if (!child.text) return '';
 
@@ -29,7 +94,6 @@ function renderTextChild(child: BlockChild): string {
   return text;
 }
 
-// Helper to render children (text nodes, links, etc.)
 function renderChildren(children?: BlockChild[]): string {
   if (!children) return '';
 
@@ -42,7 +106,6 @@ function renderChildren(children?: BlockChild[]): string {
   }).join('');
 }
 
-// Helper to render list items
 function renderListItems(children?: BlockChild[]): string {
   if (!children) return '';
 
@@ -51,80 +114,53 @@ function renderListItems(children?: BlockChild[]): string {
     return `<li>${content}</li>`;
   }).join('');
 }
+
+function renderLegacyBlock(block: BlockNode): string {
+  switch (block.type) {
+    case 'paragraph':
+      return `<p>${renderChildren(block.children)}</p>`;
+
+    case 'heading': {
+      const level = block.level || 2;
+      const headingText = block.children?.map(c => c.text || '').join('') || '';
+      const headingId = headingText.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      return `<h${level} id="${headingId}">${renderChildren(block.children)}</h${level}>`;
+    }
+
+    case 'list':
+      if (block.format === 'ordered') {
+        return `<ol class="ds-list">${renderListItems(block.children)}</ol>`;
+      }
+      return `<ul class="ds-list">${renderListItems(block.children)}</ul>`;
+
+    case 'quote':
+      return `<blockquote class="ds-blockquote">${renderChildren(block.children)}</blockquote>`;
+
+    case 'code':
+      return `<pre class="ds-code"><code>${renderChildren(block.children)}</code></pre>`;
+
+    case 'image':
+      if (block.image?.url) {
+        return `<figure class="ds-figure"><img src="${block.image.url}" alt="${block.image.alternativeText || ''}" loading="lazy" /></figure>`;
+      }
+      return '';
+
+    default:
+      return '';
+  }
+}
 ---
 
 {blocks && blocks.length > 0 && (
   <div class={className}>
     {blocks.map((block) => {
-      switch (block.type) {
-        case 'paragraph':
-          return (
-            <Paragraph size="medium">
-              <Fragment set:html={renderChildren(block.children)} />
-            </Paragraph>
-          );
-
-        case 'heading':
-          const level = block.level || 2;
-          const headingText = block.children?.map(c => c.text || '').join('') || '';
-          const headingId = headingText.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
-          return (
-            <Heading
-              level={level as 1 | 2 | 3 | 4 | 5 | 6}
-              size={level === 1 ? 'xlarge' : level === 2 ? 'large' : level === 3 ? 'medium' : 'small'}
-              id={headingId}
-            >
-              <Fragment set:html={renderChildren(block.children)} />
-            </Heading>
-          );
-
-        case 'list':
-          if (block.format === 'ordered') {
-            return (
-              <ol class="ds-list">
-                <Fragment set:html={renderListItems(block.children)} />
-              </ol>
-            );
-          }
-          return (
-            <ul class="ds-list">
-              <Fragment set:html={renderListItems(block.children)} />
-            </ul>
-          );
-
-        case 'quote':
-          return (
-            <blockquote class="ds-blockquote">
-              <Fragment set:html={renderChildren(block.children)} />
-            </blockquote>
-          );
-
-        case 'code':
-          return (
-            <pre class="ds-code">
-              <code>
-                <Fragment set:html={renderChildren(block.children)} />
-              </code>
-            </pre>
-          );
-
-        case 'image':
-          if (block.image?.url) {
-            return (
-              <figure class="ds-figure">
-                <img
-                  src={block.image.url}
-                  alt={block.image.alternativeText || ''}
-                  loading="lazy"
-                />
-              </figure>
-            );
-          }
-          return null;
-
-        default:
-          return null;
+      if (isUmbracoBlock(block)) {
+        return <Fragment set:html={renderUmbracoBlock(block)} />;
       }
+      if (isLegacyBlock(block)) {
+        return <Fragment set:html={renderLegacyBlock(block)} />;
+      }
+      return null;
     })}
   </div>
 )}
@@ -168,5 +204,55 @@ function renderListItems(children?: BlockChild[]): string {
     max-width: 100%;
     height: auto;
     border-radius: var(--ds-border-radius-md);
+  }
+
+  /* Umbraco advarsel (alert) block styles */
+  .advarsel {
+    margin: var(--ds-size-4) 0;
+    padding: var(--ds-size-4);
+    border-radius: var(--ds-border-radius-md);
+    border-left: 4px solid;
+  }
+
+  .advarsel--info {
+    border-color: var(--ds-color-info-border-default, #0073e6);
+    background-color: var(--ds-color-info-surface-default, #e6f2ff);
+  }
+
+  .advarsel--advarsel {
+    border-color: var(--ds-color-warning-border-default, #e6a700);
+    background-color: var(--ds-color-warning-surface-default, #fff8e6);
+  }
+
+  .advarsel--viktig {
+    border-color: var(--ds-color-danger-border-default, #d32f2f);
+    background-color: var(--ds-color-danger-surface-default, #fde8e8);
+  }
+
+  .advarsel--suksess {
+    border-color: var(--ds-color-success-border-default, #1e7e34);
+    background-color: var(--ds-color-success-surface-default, #e6f5ea);
+  }
+
+  .advarsel-tittel {
+    display: block;
+    margin-bottom: var(--ds-size-2);
+  }
+
+  /* FAQ block styles */
+  .faq-block {
+    margin: var(--ds-size-4) 0;
+    padding: var(--ds-size-4);
+    background-color: var(--ds-color-neutral-surface-default);
+    border-radius: var(--ds-border-radius-md);
+  }
+
+  .faq-block-q {
+    margin: 0 0 var(--ds-size-2);
+    font-size: var(--ds-font-size-1);
+  }
+
+  .faq-block-a {
+    color: var(--ds-color-neutral-text-subtle);
   }
 </style>

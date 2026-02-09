@@ -1,7 +1,7 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
-import { getArtikler, getArtikkel, type Artikkel, type BlockNode } from '../../lib/strapi';
+import { getArtikler, getArtikkel, type Artikkel, type BlockNode } from '../../lib/umbraco';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 function getExcerpt(blocks?: BlockNode[]): string {
