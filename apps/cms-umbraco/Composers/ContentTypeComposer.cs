@@ -203,6 +203,7 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("resultater", "Resultater", _textAreaDt), "innhold");
         ct.AddPropertyType(Prop("status", "Status", _textStringDt, description: "i_utvikling, pilot, i_drift, avsluttet"), "innhold");
         ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
+        ct.AddPropertyType(Prop("merkelapper", "Merkelapper", _textAreaDt, description: "JSON array med merkelapp-slugs"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -222,6 +223,7 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt), "innhold");
         ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt, description: "Velg merkelapp-kategori"), "innhold");
+        ct.AddPropertyType(Prop("lenker", "Relaterte lenker", _textAreaDt, description: "JSON: [{\"tekst\": \"\", \"url\": \"\", \"ekstern\": false}]"), "innhold");
         ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
         _contentTypeService.Save(ct);
         return ct;

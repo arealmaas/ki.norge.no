@@ -1,40 +1,19 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
-import { getVeiledninger, getVeiledning, type Veiledning, type BlockNode } from '../../lib/umbraco';
+export const prerender = false;
+
+import { getVeiledning, getPlainText, type Veiledning } from '../../lib/umbraco';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
-// Helper to extract text from blocks for excerpt
-function getExcerpt(blocks?: BlockNode[]): string {
-  if (!blocks || blocks.length === 0) return '';
-  const firstParagraph = blocks.find(b => b.type === 'paragraph');
-  if (!firstParagraph?.children) return '';
-  return firstParagraph.children
-    .filter(c => c.type === 'text')
-    .map(c => c.text || '')
-    .join('')
-    .slice(0, 200);
-}
-
-export async function getStaticPaths() {
-  try {
-    const response = await getVeiledninger();
-    return response.data.map((veiledning) => ({
-      params: { slug: veiledning.slug },
-      props: { veiledning },
-    }));
-  } catch (error) {
-    console.error('Failed to fetch veiledninger for paths:', error);
-    return [];
-  }
-}
-
-const { veiledning } = Astro.props as { veiledning: Veiledning };
+const { slug } = Astro.params;
+const veiledning = await getVeiledning(slug!);
+if (!veiledning) return Astro.redirect('/veiledning');
 
 const kategori = veiledning.kategori?.navn || 'Veiledning';
 ---
 
-<Layout title={veiledning.tittel} description={getExcerpt(veiledning.innhold)}>
+<Layout title={veiledning.tittel} description={getPlainText(veiledning.innhold, 200)}>
   <article class="page-container">
     <nav class="breadcrumb">
       <Link href="/veiledning">Veiledning</Link>

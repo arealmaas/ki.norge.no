@@ -1,45 +1,14 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
-import { getArtikler, getArtikkel, type Artikkel, type BlockNode } from '../../lib/umbraco';
+export const prerender = false;
+
+import { getArtikkel, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
-function getExcerpt(blocks?: BlockNode[]): string {
-  if (!blocks || blocks.length === 0) return '';
-  const firstParagraph = blocks.find(b => b.type === 'paragraph');
-  if (!firstParagraph?.children) return '';
-  return firstParagraph.children
-    .filter(c => c.type === 'text')
-    .map(c => c.text || '')
-    .join('')
-    .slice(0, 200);
-}
-
-function extractHeadings(blocks?: BlockNode[]): { text: string; id: string; level: number }[] {
-  if (!blocks) return [];
-  return blocks
-    .filter(b => b.type === 'heading' && (b.level === 2 || b.level === 3))
-    .map(b => {
-      const text = b.children?.map(c => c.text || '').join('') || '';
-      const id = text.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      return { text, id, level: b.level || 2 };
-    });
-}
-
-export async function getStaticPaths() {
-  try {
-    const response = await getArtikler();
-    return response.data.map((article) => ({
-      params: { slug: article.slug },
-      props: { article },
-    }));
-  } catch (error) {
-    console.error('Failed to fetch articles for paths:', error);
-    return [];
-  }
-}
-
-const { article } = Astro.props as { article: Artikkel };
+const { slug } = Astro.params;
+const article = await getArtikkel(slug!);
+if (!article) return Astro.redirect('/artikler');
 
 const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', {
   year: 'numeric',
@@ -50,7 +19,7 @@ const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', 
 const headings = extractHeadings(article.innhold);
 ---
 
-<Layout title={article.tittel} description={getExcerpt(article.innhold)}>
+<Layout title={article.tittel} description={getPlainText(article.innhold, 200)}>
   <div class="article-page">
     <div class="article-container">
       <nav class="breadcrumb" aria-label="Brødsmuler">

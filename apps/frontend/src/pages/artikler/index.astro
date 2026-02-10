@@ -2,19 +2,7 @@
 import Layout from '../../components/layout/Layout.astro';
 import ArticleCard from '../../components/shared/ArticleCard.astro';
 import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
-import { getArtikler, type Artikkel, type BlockNode } from '../../lib/umbraco';
-
-// Helper to extract text from blocks for excerpt
-function getExcerpt(blocks?: BlockNode[]): string {
-  if (!blocks || blocks.length === 0) return '';
-  const firstParagraph = blocks.find(b => b.type === 'paragraph');
-  if (!firstParagraph?.children) return '';
-  return firstParagraph.children
-    .filter(c => c.type === 'text')
-    .map(c => c.text || '')
-    .join('')
-    .slice(0, 200) + '...';
-}
+import { getArtikler, getPlainText, type Artikkel } from '../../lib/umbraco';
 
 // Fetch articles from Umbraco
 let articles: Artikkel[] = [];
@@ -43,7 +31,7 @@ try {
         articles.map((article) => (
           <ArticleCard
             title={article.tittel}
-            excerpt={getExcerpt(article.innhold)}
+            excerpt={getPlainText(article.innhold, 200)}
             slug={article.slug}
             publishedAt={article.publishedAt}
             category="Nyhet"

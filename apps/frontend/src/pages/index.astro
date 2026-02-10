@@ -5,7 +5,7 @@ import News from '../components/landing/News.astro';
 import SandboxFeature from '../components/landing/SandboxFeature.astro';
 import ExamplesGrid from '../components/landing/ExamplesGrid.astro';
 import GuidanceCTA from '../components/landing/GuidanceCTA.astro';
-import { getArtikler, getEksempler, getSide, type Artikkel, type Eksempel } from '../lib/umbraco';
+import { getArtikler, getEksempler, getSide, getPlainText, type Artikkel, type Eksempel } from '../lib/umbraco';
 
 // Fetch latest articles for News section
 let artikler: Artikkel[] = [];
@@ -19,7 +19,7 @@ try {
 // Transform articles for News component
 const articles = artikler.map(a => ({
   title: a.tittel,
-  excerpt: a.innhold?.[0]?.children?.[0]?.text?.substring(0, 120) || '',
+  excerpt: getPlainText(a.innhold, 120),
   slug: a.slug,
   publishedAt: a.publishedAt,
   category: 'Nyhet',

@@ -49,13 +49,15 @@ public class ContentSeeder : IAsyncComponent
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
 
-            // Seed content under each folder
+            // Seed merkelapper FIRST so we can reference them from other content
+            var merkelappMap = SeedMerkelapper(merkelapperFolder.Id);
+
+            // Seed content under each folder (with merkelapp references)
             SeedArticles(artiklerFolder.Id);
             SeedPages(siderFolder.Id);
             SeedExamples(eksemplerFolder.Id);
-            SeedVeiledninger(veiledningerFolder.Id);
-            SeedFAQ(faqFolder.Id);
-            SeedMerkelapper(merkelapperFolder.Id);
+            SeedVeiledninger(veiledningerFolder.Id, merkelappMap);
+            SeedFAQ(faqFolder.Id, merkelappMap);
 
             Console.WriteLine("ContentSeeder: Seeded all content under folder structure");
         }
@@ -74,7 +76,7 @@ public class ContentSeeder : IAsyncComponent
             ?? throw new InvalidOperationException($"Container type '{contentTypeAlias}' not found");
         var folder = _contentService.Create(name, -1, ct.Alias);
         _contentService.Save(folder);
-        _contentService.Publish(folder, Array.Empty<string>());
+        _contentService.Publish(folder, new[] { "*" });
         return folder;
     }
 
@@ -88,7 +90,7 @@ public class ContentSeeder : IAsyncComponent
     private void SaveAndPublish(IContent content)
     {
         _contentService.Save(content);
-        _contentService.Publish(content, Array.Empty<string>());
+        _contentService.Publish(content, new[] { "*" });
     }
 
     // ── Artikler ──────────────────────────────────────────────
@@ -217,6 +219,7 @@ egne data, med strenge personvernregler og full sporbarhet.</p>");
         e1.SetValue("verktoy", "[\"Azure OpenAI\", \"LangChain\", \"Pinecone\"]");
         e1.SetValue("resultater", "40% reduksjon i henvendelser til servicekontoret. 85% av innbyggerne oppgir at de fikk svar på spørsmålet sitt.");
         e1.SetValue("status", "i_drift");
+        e1.SetValue("merkelapper", "[\"chatbot\", \"naturlig-sprak\", \"kommune\"]");
         SaveAndPublish(e1);
 
         var e2 = Create("eksempel", "Prediktivt vedlikehold av kommunale bygg", parentId);
@@ -231,6 +234,7 @@ akutte reparasjoner og forlenge levetiden på tekniske installasjoner.</p>");
         e2.SetValue("verktoy", "[\"Python\", \"scikit-learn\", \"Azure IoT Hub\"]");
         e2.SetValue("resultater", "25% reduksjon i vedlikeholdskostnader. 60% færre akutte reparasjoner.");
         e2.SetValue("status", "pilot");
+        e2.SetValue("merkelapper", "[\"maskinlaering\", \"automatisering\", \"kommune\"]");
         SaveAndPublish(e2);
 
         var e3 = Create("eksempel", "Automatisk klassifisering av henvendelser", parentId);
@@ -245,6 +249,7 @@ raskt kommer til rett saksbehandler.</p>");
         e3.SetValue("verktoy", "[\"Python\", \"spaCy\", \"Azure ML\"]");
         e3.SetValue("resultater", "40% reduksjon i svartid. 92% korrekt klassifisering.");
         e3.SetValue("status", "i_drift");
+        e3.SetValue("merkelapper", "[\"maskinlaering\", \"automatisering\", \"kommune\"]");
         SaveAndPublish(e3);
 
         var e4 = Create("eksempel", "KI-assistert oversettelse av offentlige dokumenter", parentId);
@@ -259,12 +264,13 @@ norsk, samisk, engelsk og de mest utbredte innvandrerspråkene.</p>");
         e4.SetValue("verktoy", "[\"Azure Translator\", \"GPT-4\", \"Custom glossary\"]");
         e4.SetValue("resultater", "70% raskere oversettelsesprosess. Tilgjengelig på 8 språk.");
         e4.SetValue("status", "i_utvikling");
+        e4.SetValue("merkelapper", "[\"naturlig-sprak\", \"automatisering\"]");
         SaveAndPublish(e4);
     }
 
     // ── Veiledninger ───────────────────────────────────────────
 
-    private void SeedVeiledninger(int parentId)
+    private void SeedVeiledninger(int parentId, Dictionary<string, IContent> merkelapper)
     {
         var v1 = Create("veiledning", "Kom i gang med KI i din virksomhet", parentId);
         v1.SetValue("tittel", "Kom i gang med KI i din virksomhet");
@@ -282,6 +288,8 @@ datakvalitet? Er organisasjonen klar for endring?</p>
 <h2>Steg 3: Velg riktig tilnærming</h2>
 <p>Vurder om dere skal kjøpe en ferdig løsning, tilpasse en eksisterende,
 eller utvikle noe helt nytt.</p>");
+        v1.SetValue("kategori", Udi(merkelapper["automatisering"]));
+        v1.SetValue("lenker", @"[{""tekst"": ""Digitaliseringsdirektoratets KI-guide"", ""url"": ""https://www.digdir.no/kunstig-intelligens"", ""ekstern"": true}, {""tekst"": ""Nasjonal KI-strategi"", ""url"": ""/artikler/ny-nasjonal-strategi-for-kunstig-intelligens"", ""ekstern"": false}]");
         v1.SetValue("rekkefolge", 1);
         SaveAndPublish(v1);
 
@@ -301,6 +309,8 @@ brukes på en etisk og ansvarlig måte i offentlig sektor.</p>
 <h2>Risikovurdering</h2>
 <p>Gjennomfør en grundig risikovurdering før KI-systemer settes i produksjon.
 Vurder risiko for feil, bias, personvernbrudd og sikkerhetssvakheter.</p>");
+        v2.SetValue("kategori", Udi(merkelapper["etikk"]));
+        v2.SetValue("lenker", @"[{""tekst"": ""EUs retningslinjer for pålitelig KI"", ""url"": ""https://digital-strategy.ec.europa.eu/en/library/ethics-guidelines-trustworthy-ai"", ""ekstern"": true}]");
         v2.SetValue("rekkefolge", 2);
         SaveAndPublish(v2);
 
@@ -320,13 +330,14 @@ er egnet for maskinlæring og andre KI-teknikker.</p>
 <h2>Beste praksis</h2>
 <p>Etabler rutiner for datavask, dokumentasjon og kvalitetskontroll
 tidlig i prosjektet. Bruk verktøy for automatisk dataprofilering.</p>");
+        v3.SetValue("kategori", Udi(merkelapper["maskinlaering"]));
         v3.SetValue("rekkefolge", 3);
         SaveAndPublish(v3);
     }
 
     // ── FAQ ────────────────────────────────────────────────────
 
-    private void SeedFAQ(int parentId)
+    private void SeedFAQ(int parentId, Dictionary<string, IContent> merkelapper)
     {
         var q1 = Create("faq", "Hva er kunstig intelligens?", parentId);
         q1.SetValue("sporsmal", "Hva er kunstig intelligens?");
@@ -335,6 +346,7 @@ kan utføre oppgaver som normalt krever menneskelig intelligens. Dette inkludere
 maskinlæring, naturlig språkbehandling, bildegjenkjenning og beslutningstaking.</p>
 <p>I offentlig sektor brukes KI typisk til å automatisere rutineoppgaver,
 forbedre innbyggertjenester og effektivisere saksbehandling.</p>");
+        q1.SetValue("kategori", Udi(merkelapper["maskinlaering"]));
         q1.SetValue("rekkefolge", 1);
         SaveAndPublish(q1);
 
@@ -345,6 +357,7 @@ ansvarlig KI-bruk. Dette innebærer grundig risikovurdering, ivaretakelse
 av personvern, og transparent bruk av teknologien.</p>
 <p>EUs AI Act setter tydelige krav til KI-systemer som brukes i offentlig
 sektor, spesielt for systemer med høy risiko.</p>");
+        q2.SetValue("kategori", Udi(merkelapper["personvern"]));
         q2.SetValue("rekkefolge", 2);
         SaveAndPublish(q2);
 
@@ -355,6 +368,7 @@ som kan forbedres med KI. Kartlegg datakvalitet og digital modenhet.
 Se vår <em>veiledning for å komme i gang</em> for en steg-for-steg-guide.</p>
 <p>Vi anbefaler å starte med små pilotprosjekter for å bygge kompetanse
 og erfaring før man skalerer opp.</p>");
+        q3.SetValue("kategori", Udi(merkelapper["automatisering"]));
         q3.SetValue("rekkefolge", 3);
         SaveAndPublish(q3);
 
@@ -365,6 +379,7 @@ Den klassifiserer KI-systemer etter risikonivå og stiller strengere krav
 jo høyere risikoen er.</p>
 <p>Ja, gjennom EØS-avtalen vil regelverket også gjelde i Norge. Norske
 virksomheter bør begynne å forberede seg allerede nå.</p>");
+        q4.SetValue("kategori", Udi(merkelapper["etikk"]));
         q4.SetValue("rekkefolge", 4);
         SaveAndPublish(q4);
 
@@ -376,13 +391,14 @@ betydning for enkeltpersoner.</p>
 <p>I praksis fungerer KI best som et verktøy som støtter saksbehandlere —
 for eksempel ved å sortere henvendelser, foreslå vedtak basert på
 tidligere praksis, eller kvalitetssikre dokumenter.</p>");
+        q5.SetValue("kategori", Udi(merkelapper["automatisering"]));
         q5.SetValue("rekkefolge", 5);
         SaveAndPublish(q5);
     }
 
     // ── Merkelapper ────────────────────────────────────────────
 
-    private void SeedMerkelapper(int parentId)
+    private Dictionary<string, IContent> SeedMerkelapper(int parentId)
     {
         var tags = new[]
         {
@@ -396,6 +412,7 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
             ("Etikk", "etikk", "Etiske problemstillinger rundt KI"),
         };
 
+        var map = new Dictionary<string, IContent>();
         foreach (var (navn, slug, beskrivelse) in tags)
         {
             var m = Create("merkelapp", navn, parentId);
@@ -403,6 +420,10 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
             m.SetValue("slug", slug);
             m.SetValue("beskrivelse", beskrivelse);
             SaveAndPublish(m);
+            map[slug] = m;
         }
+        return map;
     }
+
+    private string Udi(IContent content) => $"umb://document/{content.Key:N}";
 }

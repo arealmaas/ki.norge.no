@@ -152,7 +152,7 @@ function renderLegacyBlock(block: BlockNode): string {
 ---
 
 {blocks && blocks.length > 0 && (
-  <div class={className}>
+  <div class:list={['blocks-renderer', className]}>
     {blocks.map((block) => {
       if (isUmbracoBlock(block)) {
         return <Fragment set:html={renderUmbracoBlock(block)} />;
@@ -254,5 +254,72 @@ function renderLegacyBlock(block: BlockNode): string {
 
   .faq-block-a {
     color: var(--ds-color-neutral-text-subtle);
+  }
+
+  /* Styles for bare HTML elements from Umbraco RichText (set:html bypasses scoping) */
+  :global(.blocks-renderer ul),
+  :global(.blocks-renderer ol) {
+    margin: var(--ds-size-4) 0;
+    padding-left: var(--ds-size-6);
+  }
+
+  :global(.blocks-renderer li) {
+    margin-bottom: var(--ds-size-2);
+  }
+
+  :global(.blocks-renderer blockquote) {
+    margin: var(--ds-size-4) 0;
+    padding: var(--ds-size-4);
+    border-left: 4px solid var(--ds-color-accent-base-default);
+    background-color: var(--ds-color-neutral-background-subtle);
+    font-style: italic;
+  }
+
+  :global(.blocks-renderer pre) {
+    margin: var(--ds-size-4) 0;
+    padding: var(--ds-size-4);
+    background-color: var(--ds-color-neutral-background-subtle);
+    border-radius: var(--ds-border-radius-md);
+    overflow-x: auto;
+  }
+
+  :global(.blocks-renderer pre code) {
+    font-family: var(--ds-font-family-mono);
+    font-size: var(--ds-font-size-sm);
+  }
+
+  :global(.blocks-renderer img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--ds-border-radius-md);
+  }
+
+  :global(.blocks-renderer figure) {
+    margin: var(--ds-size-4) 0;
+  }
+
+  :global(.blocks-renderer h2) {
+    margin-top: var(--ds-size-10);
+    margin-bottom: var(--ds-size-4);
+    scroll-margin-top: 100px;
+  }
+
+  :global(.blocks-renderer h3) {
+    margin-top: var(--ds-size-8);
+    margin-bottom: var(--ds-size-3);
+    scroll-margin-top: 100px;
+  }
+
+  :global(.blocks-renderer p) {
+    margin-bottom: var(--ds-size-4);
+  }
+
+  :global(.blocks-renderer a) {
+    color: var(--ds-color-accent-text-default);
+    text-decoration: underline;
+  }
+
+  :global(.blocks-renderer a:hover) {
+    color: var(--ds-color-accent-text-hover);
   }
 </style>

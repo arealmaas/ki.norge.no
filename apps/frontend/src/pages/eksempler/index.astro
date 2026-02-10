@@ -1,19 +1,7 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
-import { getEksempler, type Eksempel, type BlockNode } from '../../lib/umbraco';
-
-// Helper to extract text from blocks for description
-function getDescription(blocks?: BlockNode[]): string {
-  if (!blocks || blocks.length === 0) return '';
-  const firstParagraph = blocks.find(b => b.type === 'paragraph');
-  if (!firstParagraph?.children) return '';
-  return firstParagraph.children
-    .filter(c => c.type === 'text')
-    .map(c => c.text || '')
-    .join('')
-    .slice(0, 200) + '...';
-}
+import { getEksempler, getPlainText, type Eksempel } from '../../lib/umbraco';
 
 // Status label mapping
 const statusLabels: Record<string, string> = {
@@ -49,7 +37,7 @@ try {
           <Link href={`/eksempler/${case_.slug}`} class="case-card">
             <span class="case-org">{case_.organisasjon}</span>
             <Heading level={2} size="medium" class="case-title">{case_.tittel}</Heading>
-            <Paragraph size="small" class="case-description">{getDescription(case_.beskrivelse)}</Paragraph>
+            <Paragraph size="small" class="case-description">{getPlainText(case_.beskrivelse, 200)}</Paragraph>
             <div class="case-meta">
               {case_.status && (
                 <span class="case-status">{statusLabels[case_.status] || case_.status}</span>

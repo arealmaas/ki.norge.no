@@ -1,7 +1,7 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
-import { getVeiledninger, type Veiledning } from '../../lib/umbraco';
+import { getVeiledninger, getPlainText, type Veiledning } from '../../lib/umbraco';
 
 // Fetch veiledninger from Umbraco
 let veiledninger: Veiledning[] = [];
@@ -27,7 +27,7 @@ const categories = Object.entries(groupedVeiledninger).map(([title, items]) => (
   title,
   items: items.map(v => ({
     title: v.tittel,
-    description: v.innhold?.[0]?.children?.[0]?.text?.substring(0, 80) || '',
+    description: getPlainText(v.innhold, 80),
     href: `/veiledning/${v.slug}`,
   })),
 }));
