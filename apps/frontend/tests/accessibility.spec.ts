@@ -35,7 +35,7 @@ test.describe('Accessibility tests (WCAG 2.1 AA)', () => {
 
   test('FAQ page has no critical accessibility violations', async ({ page }) => {
     await page.goto('/faq');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('load');
 
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
@@ -97,7 +97,7 @@ test.describe('Landmark and structure', () => {
 
     for (const url of pages) {
       await page.goto(url);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
 
       // Should have exactly one main landmark (app main, not dev tools)
       const main = page.locator('main#main-content');
