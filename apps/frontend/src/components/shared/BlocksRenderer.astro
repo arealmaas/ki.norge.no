@@ -4,30 +4,17 @@
  *
  * Umbraco blocks come as: { contentType: "tekst", content: { innhold: "<p>HTML</p>" } }
  * Supports block types: tekst, advarsel, lenkeliste, faqInnhold
- * Also supports legacy Strapi v5 block format for backward compatibility during migration.
  */
-import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
-import type { UmbracoBlock, BlockNode, BlockChild } from '../../lib/umbraco';
+import type { UmbracoBlock } from '../../lib/umbraco';
 
 interface Props {
-  blocks?: UmbracoBlock[] | BlockNode[];
+  blocks?: UmbracoBlock[];
   class?: string;
 }
 
 const { blocks, class: className } = Astro.props;
 
-// Detect if we're dealing with Umbraco blocks or legacy Strapi blocks
-function isUmbracoBlock(block: any): block is UmbracoBlock {
-  return block && typeof block === 'object' && 'contentType' in block && 'content' in block;
-}
-
-function isLegacyBlock(block: any): block is BlockNode {
-  return block && typeof block === 'object' && 'type' in block && !('contentType' in block);
-}
-
-// ── Umbraco block rendering ─────────────────────────────────────
-
-function renderUmbracoBlock(block: UmbracoBlock): string {
+function renderBlock(block: UmbracoBlock): string {
   const content = block.content || {};
 
   switch (block.contentType) {
@@ -77,135 +64,17 @@ function renderUmbracoBlock(block: UmbracoBlock): string {
       return '';
   }
 }
-
-// ── Legacy Strapi block rendering (kept during migration) ───────
-
-function renderTextChild(child: BlockChild): string {
-  if (!child.text) return '';
-
-  let text = child.text;
-
-  if (child.bold) text = `<strong>${text}</strong>`;
-  if (child.italic) text = `<em>${text}</em>`;
-  if (child.underline) text = `<u>${text}</u>`;
-  if (child.strikethrough) text = `<s>${text}</s>`;
-  if (child.code) text = `<code>${text}</code>`;
-
-  return text;
-}
-
-function renderChildren(children?: BlockChild[]): string {
-  if (!children) return '';
-
-  return children.map(child => {
-    if (child.type === 'link' && child.url) {
-      const linkText = child.children?.map(c => renderTextChild(c)).join('') || '';
-      return `<a href="${child.url}">${linkText}</a>`;
-    }
-    return renderTextChild(child);
-  }).join('');
-}
-
-function renderListItems(children?: BlockChild[]): string {
-  if (!children) return '';
-
-  return children.map(item => {
-    const content = item.children?.map(c => renderTextChild(c)).join('') || '';
-    return `<li>${content}</li>`;
-  }).join('');
-}
-
-function renderLegacyBlock(block: BlockNode): string {
-  switch (block.type) {
-    case 'paragraph':
-      return `<p>${renderChildren(block.children)}</p>`;
-
-    case 'heading': {
-      const level = block.level || 2;
-      const headingText = block.children?.map(c => c.text || '').join('') || '';
-      const headingId = headingText.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
-      return `<h${level} id="${headingId}">${renderChildren(block.children)}</h${level}>`;
-    }
-
-    case 'list':
-      if (block.format === 'ordered') {
-        return `<ol class="ds-list">${renderListItems(block.children)}</ol>`;
-      }
-      return `<ul class="ds-list">${renderListItems(block.children)}</ul>`;
-
-    case 'quote':
-      return `<blockquote class="ds-blockquote">${renderChildren(block.children)}</blockquote>`;
-
-    case 'code':
-      return `<pre class="ds-code"><code>${renderChildren(block.children)}</code></pre>`;
-
-    case 'image':
-      if (block.image?.url) {
-        return `<figure class="ds-figure"><img src="${block.image.url}" alt="${block.image.alternativeText || ''}" loading="lazy" /></figure>`;
-      }
-      return '';
-
-    default:
-      return '';
-  }
-}
 ---
 
 {blocks && blocks.length > 0 && (
   <div class:list={['blocks-renderer', className]}>
-    {blocks.map((block) => {
-      if (isUmbracoBlock(block)) {
-        return <Fragment set:html={renderUmbracoBlock(block)} />;
-      }
-      if (isLegacyBlock(block)) {
-        return <Fragment set:html={renderLegacyBlock(block)} />;
-      }
-      return null;
-    })}
+    {blocks.map((block) => (
+      <Fragment set:html={renderBlock(block)} />
+    ))}
   </div>
 )}
 
 <style>
-  .ds-list {
-    margin: var(--ds-size-4) 0;
-    padding-left: var(--ds-size-6);
-  }
-
-  .ds-list li {
-    margin-bottom: var(--ds-size-2);
-  }
-
-  .ds-blockquote {
-    margin: var(--ds-size-4) 0;
-    padding: var(--ds-size-4);
-    border-left: 4px solid var(--ds-color-accent-base-default);
-    background-color: var(--ds-color-neutral-background-subtle);
-    font-style: italic;
-  }
-
-  .ds-code {
-    margin: var(--ds-size-4) 0;
-    padding: var(--ds-size-4);
-    background-color: var(--ds-color-neutral-background-subtle);
-    border-radius: var(--ds-border-radius-md);
-    overflow-x: auto;
-  }
-
-  .ds-code code {
-    font-family: var(--ds-font-family-mono);
-    font-size: var(--ds-font-size-sm);
-  }
-
-  .ds-figure {
-    margin: var(--ds-size-4) 0;
-  }
-
-  .ds-figure img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--ds-border-radius-md);
-  }
-
   /* Umbraco advarsel (alert) block styles */
   .advarsel {
     margin: var(--ds-size-4) 0;

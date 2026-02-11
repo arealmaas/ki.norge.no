@@ -7,7 +7,8 @@ import { getArtikkel, getPlainText, extractHeadings, type Artikkel } from '../..
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 const { slug } = Astro.params;
-const article = await getArtikkel(slug!);
+const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
+const article = await getArtikkel(slug!, { preview: isPreview });
 if (!article) return Astro.redirect('/artikler');
 
 const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', {
@@ -20,6 +21,11 @@ const headings = extractHeadings(article.innhold);
 ---
 
 <Layout title={article.tittel} description={getPlainText(article.innhold, 200)}>
+  {isPreview && (
+    <div class="preview-banner">
+      Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>
+    </div>
+  )}
   <div class="article-page">
     <div class="article-container">
       <nav class="breadcrumb" aria-label="Brødsmuler">
@@ -74,6 +80,23 @@ const headings = extractHeadings(article.innhold);
 </Layout>
 
 <style>
+  .preview-banner {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #d97706;
+    color: #fff;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .preview-banner a {
+    color: #fff;
+    text-decoration: underline;
+    margin-left: 0.25rem;
+  }
+
   .article-page {
     padding: var(--ds-size-6) var(--ds-size-4);
   }

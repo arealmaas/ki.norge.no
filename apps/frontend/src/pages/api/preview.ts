@@ -14,6 +14,13 @@ const contentTypeRoutes: Record<string, (slug: string) => string> = {
 };
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
+  // Exit preview mode
+  if (url.searchParams.has('exit')) {
+    cookies.delete('preview', { path: '/' });
+    const returnTo = url.searchParams.get('returnTo') || '/';
+    return redirect(returnTo, 307);
+  }
+
   const secret = url.searchParams.get('secret');
   const type = url.searchParams.get('type');
   const id = url.searchParams.get('id') || url.searchParams.get('documentId');
@@ -27,33 +34,32 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     return new Response('Missing type or id', { status: 400 });
   }
 
+  if (!UMBRACO_API_KEY) {
+    return new Response('UMBRACO_API_KEY not configured — required for preview', { status: 500 });
+  }
+
   // Set preview cookie (expires in 1 hour)
   cookies.set('preview', JSON.stringify({ enabled: true, id }), {
     path: '/',
-    maxAge: 60 * 60, // 1 hour
+    maxAge: 60 * 60,
     httpOnly: true,
     sameSite: 'lax',
   });
 
   try {
     // Fetch the content from Umbraco Delivery API to get the slug
-    const headers: HeadersInit = {
-      'Accept': 'application/json',
-      'Accept-Language': 'nb-NO',
-    };
-
-    if (UMBRACO_API_KEY) {
-      headers['Api-Key'] = UMBRACO_API_KEY;
-    }
-
-    // Fetch by ID with preview mode
     const response = await fetch(
       `${UMBRACO_URL}/umbraco/delivery/api/v2/content/item/${id}?preview=true`,
-      { headers }
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Api-Key': UMBRACO_API_KEY,
+        },
+      }
     );
 
     if (!response.ok) {
-      console.error('Umbraco fetch failed:', response.status, await response.text());
+      console.error('Umbraco preview fetch failed:', response.status, await response.text());
       return new Response('Failed to fetch content from Umbraco', { status: 500 });
     }
 
@@ -72,8 +78,6 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     }
 
     const targetPath = routeBuilder(slug);
-
-    // Redirect to the preview page with preview query param
     return redirect(`${targetPath}?preview=true`, 307);
   } catch (error) {
     console.error('Preview error:', error);

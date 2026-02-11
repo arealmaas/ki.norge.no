@@ -32,33 +32,6 @@ export interface UmbracoBlock {
   content: Record<string, unknown>;
 }
 
-// Re-export compatible block types for BlocksRenderer
-// Umbraco blocks come as { contentType, content: { propertyAlias: value } }
-// The "tekst" element type has an "innhold" property with HTML string
-export interface BlockNode {
-  type: 'paragraph' | 'heading' | 'list' | 'quote' | 'code' | 'image' | 'link';
-  children?: BlockChild[];
-  level?: number;
-  format?: 'ordered' | 'unordered';
-  url?: string;
-  image?: {
-    url: string;
-    alternativeText?: string;
-  };
-}
-
-export interface BlockChild {
-  type: 'text' | 'link';
-  text?: string;
-  bold?: boolean;
-  italic?: boolean;
-  underline?: boolean;
-  strikethrough?: boolean;
-  code?: boolean;
-  url?: string;
-  children?: BlockChild[];
-}
-
 // Content types matching Umbraco document type schemas
 export interface Artikkel {
   id: string;
@@ -150,7 +123,6 @@ export interface UmbracoMedia {
   focalPoint?: { left: number; top: number };
 }
 
-// Strapi-compatible response wrapper so page code can use .data and .meta
 interface CompatResponse<T> {
   data: T[];
   meta: {
@@ -639,13 +611,10 @@ export async function getMerkelapp(slug: string, options: FetchOptions = {}) {
   return fetchBySlug<Merkelapp>('merkelapp', slug, options);
 }
 
-// Legacy compatibility — map old names to new ones
+// English aliases
 export const getArticles = getArtikler;
 export const getArticle = getArtikkel;
 export const getPages = getSider;
 export const getPage = getSide;
 export const getCases = getEksempler;
 export const getCase = getEksempel;
-
-// Re-export StrapiMedia as UmbracoMedia for backward compat
-export type StrapiMedia = UmbracoMedia;

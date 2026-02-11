@@ -7,13 +7,19 @@ import { getVeiledning, getPlainText, type Veiledning } from '../../lib/umbraco'
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 const { slug } = Astro.params;
-const veiledning = await getVeiledning(slug!);
+const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
+const veiledning = await getVeiledning(slug!, { preview: isPreview });
 if (!veiledning) return Astro.redirect('/veiledning');
 
 const kategori = veiledning.kategori?.navn || 'Veiledning';
 ---
 
 <Layout title={veiledning.tittel} description={getPlainText(veiledning.innhold, 200)}>
+  {isPreview && (
+    <div class="preview-banner">
+      Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>
+    </div>
+  )}
   <article class="page-container">
     <nav class="breadcrumb">
       <Link href="/veiledning">Veiledning</Link>
@@ -57,6 +63,23 @@ const kategori = veiledning.kategori?.navn || 'Veiledning';
 </Layout>
 
 <style>
+  .preview-banner {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #d97706;
+    color: #fff;
+    text-align: center;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .preview-banner a {
+    color: #fff;
+    text-decoration: underline;
+    margin-left: 0.25rem;
+  }
+
   .page-container {
     max-width: 800px;
     margin: 0 auto;
