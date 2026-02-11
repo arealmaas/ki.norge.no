@@ -611,6 +611,117 @@ export async function getMerkelapp(slug: string, options: FetchOptions = {}) {
   return fetchBySlug<Merkelapp>('merkelapp', slug, options);
 }
 
+// ── Search API ──────────────────────────────────────────────────
+
+export interface SearchResult {
+  id: string;
+  tittel: string;
+  slug: string;
+  contentType: string;
+  excerpt: string;
+  publishedAt: string;
+}
+
+export async function searchContent(query: string, options: FetchOptions = {}): Promise<CompatResponse<SearchResult>> {
+  if (!query.trim()) {
+    return { data: [], meta: { pagination: { page: 1, pageSize: 0, pageCount: 0, total: 0 } } };
+  }
+
+  const headers: HeadersInit = { 'Accept': 'application/json' };
+  if (options.preview && API_KEY) {
+    headers['Api-Key'] = API_KEY;
+  }
+
+  const params = new URLSearchParams();
+  params.set('search', query);
+  params.set('take', '50');
+  if (options.preview) {
+    params.set('preview', 'true');
+  }
+
+  const url = `${API_BASE}?${params.toString()}`;
+
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      throw new Error(`Umbraco search error: ${res.status} ${res.statusText}`);
+    }
+
+    const data: UmbracoResponse<SearchResult> = await res.json();
+
+    const results: SearchResult[] = data.items
+      .filter(item => ['artikkel', 'eksempel', 'veiledning', 'side', 'faq'].includes(item.contentType))
+      .map(item => {
+        const props = item.properties;
+        const tittel = (props.tittel as string) || (props.sporsmal as string) || item.name;
+        const slug = (props.slug as string) || '';
+
+        // Build excerpt from available text content
+        let excerpt = '';
+        if (props.innhold || props.beskrivelse || props.svar) {
+          const blocks = mapRichText(props.innhold || props.beskrivelse || props.svar);
+          excerpt = getPlainText(blocks, 200);
+        }
+
+        return {
+          id: item.id,
+          tittel,
+          slug,
+          contentType: item.contentType,
+          excerpt,
+          publishedAt: item.updateDate,
+        };
+      });
+
+    return {
+      data: results,
+      meta: {
+        pagination: {
+          page: 1,
+          pageSize: results.length,
+          pageCount: 1,
+          total: results.length,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Search failed, falling back to client-side filtering:', error);
+
+    // Fallback: fetch all content types and filter client-side
+    const allResults: SearchResult[] = [];
+    const lowerQuery = query.toLowerCase();
+
+    try {
+      const [artikler, eksempler, veiledninger] = await Promise.all([
+        fetchCollection<Artikkel>('artikkel', { take: 100 }),
+        fetchCollection<Eksempel>('eksempel', { take: 100 }),
+        fetchCollection<Veiledning>('veiledning', { take: 100 }),
+      ]);
+
+      for (const a of artikler.data) {
+        if (a.tittel.toLowerCase().includes(lowerQuery) || getPlainText(a.innhold, 500).toLowerCase().includes(lowerQuery)) {
+          allResults.push({ id: a.id, tittel: a.tittel, slug: a.slug, contentType: 'artikkel', excerpt: getPlainText(a.innhold, 200), publishedAt: a.publishedAt });
+        }
+      }
+      for (const e of eksempler.data) {
+        if (e.tittel.toLowerCase().includes(lowerQuery) || (e.organisasjon || '').toLowerCase().includes(lowerQuery) || getPlainText(e.beskrivelse, 500).toLowerCase().includes(lowerQuery)) {
+          allResults.push({ id: e.id, tittel: e.tittel, slug: e.slug, contentType: 'eksempel', excerpt: getPlainText(e.beskrivelse, 200), publishedAt: e.publishedAt });
+        }
+      }
+      for (const v of veiledninger.data) {
+        if (v.tittel.toLowerCase().includes(lowerQuery) || getPlainText(v.innhold, 500).toLowerCase().includes(lowerQuery)) {
+          allResults.push({ id: v.id, tittel: v.tittel, slug: v.slug, contentType: 'veiledning', excerpt: getPlainText(v.innhold, 200), publishedAt: v.publishedAt });
+        }
+      }
+    } catch { /* return empty if fallback also fails */ }
+
+    return {
+      data: allResults,
+      meta: { pagination: { page: 1, pageSize: allResults.length, pageCount: 1, total: allResults.length } },
+    };
+  }
+}
+
 // English aliases
 export const getArticles = getArtikler;
 export const getArticle = getArtikkel;

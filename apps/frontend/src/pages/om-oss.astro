@@ -1,7 +1,7 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
-import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
 import { getSide } from '../lib/umbraco';
 
 // Check for preview mode
@@ -16,37 +16,128 @@ try {
 }
 
 const title = page?.tittel || 'Om oss';
-const seoDescription = page?.seoBeskrivelse || 'Lar mer om KI Norge og vart arbeid med kunstig intelligens i offentlig sektor.';
+const seoDescription = page?.seoBeskrivelse || 'Lær mer om KI Norge og vårt arbeid med kunstig intelligens i offentlig sektor.';
+
+const partners = [
+  {
+    name: 'Nkom',
+    fullName: 'Nasjonal kommunikasjonsmyndighet',
+    description: 'Regulerer og overvåker elektronisk kommunikasjon i Norge.',
+    icon: 'cell_tower',
+  },
+  {
+    name: 'Datatilsynet',
+    fullName: 'Datatilsynet',
+    description: 'Beskytter personvern og ivaretar borgernes rettigheter i møte med ny teknologi.',
+    icon: 'shield',
+  },
+  {
+    name: 'Digdir',
+    fullName: 'Digitaliseringsdirektoratet',
+    description: 'Leder digitaliseringen av offentlig sektor og utvikler felles løsninger.',
+    icon: 'hub',
+  },
+];
+
+const offerings = [
+  {
+    icon: 'menu_book',
+    title: 'Veiledning',
+    description: 'Praktisk veiledning for ansvarlig bruk av KI i offentlig sektor.',
+    href: '/veiledning',
+  },
+  {
+    icon: 'science',
+    title: 'Sandkasse',
+    description: 'Regulatorisk sandkasse for utforskning av KI-løsninger.',
+    href: '/sandkasse',
+  },
+  {
+    icon: 'lightbulb',
+    title: 'Eksempler',
+    description: 'Gode eksempler på bruk av KI fra norsk offentlig sektor.',
+    href: '/eksempler',
+  },
+  {
+    icon: 'article',
+    title: 'Artikler',
+    description: 'Nyheter, analyser og veiledning om kunstig intelligens.',
+    href: '/artikler',
+  },
+];
 ---
 
 <Layout title={title} description={seoDescription}>
   <section class="page-hero">
     <div class="hero-container">
       <span class="page-badge">Om KI Norge</span>
-      <Heading level={1} size="2xlarge" className="page-title">{title}</Heading>
-      <Paragraph size="large" className="page-lead">
-        Et samarbeid mellom Nkom, Datatilsynet og Digdir for a fremme ansvarlig bruk av kunstig intelligens i offentlig sektor.
+      <Heading level={1} size="2xlarge" className="hero-title">{title}</Heading>
+      <Paragraph size="large" className="hero-lead">
+        Et samarbeid mellom Nkom, Datatilsynet og Digdir for å fremme ansvarlig bruk av kunstig intelligens i offentlig sektor.
       </Paragraph>
     </div>
   </section>
 
-  <div class="page-content">
-    {page?.innhold ? (
-      <BlocksRenderer blocks={page.innhold} className="content-blocks" />
-    ) : (
-      <div class="not-found">
-        <span class="material-symbols-outlined empty-icon">info</span>
-        <Heading level={2} size="medium">Siden er ikke tilgjengelig</Heading>
-        <Paragraph>
-          Denne siden er ikke publisert ennå. Vennligst prøv igjen senere.
-        </Paragraph>
-        <Link href="/">Gå til forsiden</Link>
+  <section class="partners-section">
+    <div class="section-container">
+      <Heading level={2} size="large" className="section-title">Våre partnere</Heading>
+      <div class="partners-grid">
+        {partners.map(partner => (
+          <div class="partner-card">
+            <div class="partner-icon-wrapper">
+              <span class="material-symbols-outlined partner-icon">{partner.icon}</span>
+            </div>
+            <Heading level={3} size="small" className="partner-name">{partner.name}</Heading>
+            <Paragraph size="xsmall" className="partner-fullname">{partner.fullName}</Paragraph>
+            <Paragraph size="small" className="partner-description">{partner.description}</Paragraph>
+          </div>
+        ))}
       </div>
-    )}
-  </div>
+    </div>
+  </section>
+
+  <section class="offerings-section">
+    <div class="section-container">
+      <Heading level={2} size="large" className="section-title">Hva vi tilbyr</Heading>
+      <div class="offerings-grid">
+        {offerings.map(offering => (
+          <a href={offering.href} class="offering-card card-hover">
+            <span class="material-symbols-outlined offering-icon">{offering.icon}</span>
+            <Heading level={3} size="small" className="offering-title">{offering.title}</Heading>
+            <Paragraph size="small" className="offering-description">{offering.description}</Paragraph>
+            <span class="offering-link">
+              Les mer <span class="material-symbols-outlined offering-arrow">arrow_forward</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {page?.innhold && (
+    <section class="cms-section">
+      <div class="cms-container">
+        <BlocksRenderer blocks={page.innhold} className="content-blocks" />
+      </div>
+    </section>
+  )}
+
+  <section class="contact-cta-section">
+    <div class="cta-container">
+      <span class="material-symbols-outlined cta-icon">mail</span>
+      <Heading level={2} size="medium" className="cta-title">Vil du vite mer?</Heading>
+      <Paragraph className="cta-description">
+        Ta kontakt med oss for spørsmål om KI Norge, samarbeid eller andre henvendelser.
+      </Paragraph>
+      <Button asChild variant="primary" size="medium">
+        <a href="/kontakt">Kontakt oss</a>
+      </Button>
+    </div>
+  </section>
 </Layout>
 
 <style>
+  /* Hero */
   .page-hero {
     background: linear-gradient(
       135deg,
@@ -75,11 +166,11 @@ const seoDescription = page?.seoBeskrivelse || 'Lar mer om KI Norge og vart arbe
     margin-bottom: var(--ds-size-4);
   }
 
-  :global(.page-title) {
+  :global(.hero-title) {
     margin: 0 0 var(--ds-size-4);
   }
 
-  :global(.page-lead) {
+  :global(.hero-lead) {
     margin: 0;
     color: var(--ds-color-neutral-text-subtle);
     max-width: 600px;
@@ -87,10 +178,130 @@ const seoDescription = page?.seoBeskrivelse || 'Lar mer om KI Norge og vart arbe
     margin-right: auto;
   }
 
-  .page-content {
+  /* Partners */
+  .partners-section {
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .section-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  :global(.section-title) {
+    margin: 0 0 var(--ds-size-8);
+    text-align: center;
+  }
+
+  .partners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--ds-size-5);
+  }
+
+  .partner-card {
+    padding: var(--ds-size-6);
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    text-align: center;
+  }
+
+  .partner-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background-color: var(--ds-color-accent-surface-default);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .partner-icon {
+    font-size: 28px;
+    color: var(--ds-color-accent-text-default);
+  }
+
+  :global(.partner-name) {
+    margin: 0 0 var(--ds-size-1);
+  }
+
+  :global(.partner-fullname) {
+    margin: 0 0 var(--ds-size-3);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  :global(.partner-description) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  /* Offerings */
+  .offerings-section {
+    padding: var(--ds-size-10) var(--ds-size-4) var(--ds-size-12);
+    background-color: var(--ds-color-neutral-surface-default);
+  }
+
+  .offerings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--ds-size-5);
+  }
+
+  .offering-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--ds-size-6);
+    background-color: var(--ds-color-neutral-background-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .offering-icon {
+    font-size: 32px;
+    color: var(--ds-color-accent-text-default);
+    margin-bottom: var(--ds-size-3);
+  }
+
+  :global(.offering-title) {
+    margin: 0 0 var(--ds-size-2);
+  }
+
+  :global(.offering-description) {
+    margin: 0 0 var(--ds-size-4);
+    color: var(--ds-color-neutral-text-subtle);
+    flex: 1;
+  }
+
+  .offering-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-size-1);
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    color: var(--ds-color-accent-text-default);
+  }
+
+  .offering-arrow {
+    font-size: 16px;
+    transition: transform 0.2s ease;
+  }
+
+  .offering-card:hover .offering-arrow {
+    transform: translateX(4px);
+  }
+
+  /* CMS content */
+  .cms-section {
+    padding: var(--ds-size-10) var(--ds-size-4);
+  }
+
+  .cms-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--ds-size-10) var(--ds-size-4);
   }
 
   :global(.content-blocks) {
@@ -123,26 +334,41 @@ const seoDescription = page?.seoBeskrivelse || 'Lar mer om KI Norge og vart arbe
     margin-bottom: var(--ds-size-2);
   }
 
-  .not-found {
-    text-align: center;
-    padding: var(--ds-size-12);
-    background-color: var(--ds-color-neutral-surface-default);
+  /* Contact CTA */
+  .contact-cta-section {
+    padding: 0 var(--ds-size-4) var(--ds-size-12);
+  }
+
+  .cta-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-10);
+    background-color: var(--ds-color-accent-surface-default);
     border-radius: var(--ds-border-radius-lg);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-3);
   }
 
-  .empty-icon {
-    font-size: 48px;
+  .cta-icon {
+    font-size: 40px;
+    color: var(--ds-color-accent-text-default);
+  }
+
+  :global(.cta-title) {
+    margin: 0;
+  }
+
+  :global(.cta-description) {
+    margin: 0;
     color: var(--ds-color-neutral-text-subtle);
-    opacity: 0.5;
-    margin-bottom: var(--ds-size-4);
+    max-width: 500px;
   }
 
-  .not-found :global(h2) {
-    margin: 0 0 var(--ds-size-4);
-  }
-
-  .not-found :global(p) {
-    margin: 0 0 var(--ds-size-6);
-    color: var(--ds-color-neutral-text-subtle);
+  .cta-container :global(a) {
+    text-decoration: none;
+    margin-top: var(--ds-size-2);
   }
 </style>

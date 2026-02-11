@@ -3,7 +3,7 @@ import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 export const prerender = false;
 
-import { getEksempel, getPlainText, type Eksempel } from '../../lib/umbraco';
+import { getEksempel, getEksempler, getPlainText, type Eksempel } from '../../lib/umbraco';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 // Status label mapping
@@ -18,6 +18,29 @@ const { slug } = Astro.params;
 const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
 const caseItem = await getEksempel(slug!, { preview: isPreview });
 if (!caseItem) return Astro.redirect('/eksempler');
+
+// Fetch related cases (same status or random, excluding current)
+let relatedCases: Eksempel[] = [];
+try {
+  const allCases = await getEksempler();
+  relatedCases = allCases.data
+    .filter(c => c.slug !== slug)
+    .slice(0, 3);
+} catch {
+  // Non-critical, ignore
+}
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('nb-NO', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return '';
+  }
+}
 ---
 
 <Layout title={caseItem.tittel} description={getPlainText(caseItem.beskrivelse, 200)}>
@@ -26,44 +49,111 @@ if (!caseItem) return Astro.redirect('/eksempler');
       Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>
     </div>
   )}
-  <article class="page-container">
-    <nav class="breadcrumb">
-      <Link href="/eksempler">Gode eksempler</Link>
-      <span>/</span>
-      <span>{caseItem.tittel}</span>
-    </nav>
 
-    <header class="article-header">
-      <span class="org-label">{caseItem.organisasjon}</span>
-      <Heading level={1} size="2xlarge">{caseItem.tittel}</Heading>
-      <Paragraph size="large" class="lead">{getPlainText(caseItem.beskrivelse, 200)}</Paragraph>
-    </header>
+  <article>
+    <section class="article-hero">
+      <div class="hero-container">
+        <nav class="breadcrumb">
+          <Link href="/eksempler">Gode eksempler</Link>
+          <span class="breadcrumb-sep">/</span>
+          <span>{caseItem.tittel}</span>
+        </nav>
 
-    <div class="meta-grid">
-      <div class="meta-item">
-        <dt>Organisasjon</dt>
-        <dd>{caseItem.organisasjon}</dd>
+        {caseItem.organisasjon && (
+          <span class="org-badge">{caseItem.organisasjon}</span>
+        )}
+        <Heading level={1} size="2xlarge" className="hero-title">{caseItem.tittel}</Heading>
+        <Paragraph size="large" className="hero-lead">{getPlainText(caseItem.beskrivelse, 200)}</Paragraph>
       </div>
-      {caseItem.status && (
-        <div class="meta-item">
-          <dt>Status</dt>
-          <dd>{statusLabels[caseItem.status] || caseItem.status}</dd>
+    </section>
+
+    <div class="content-container">
+      <div class="meta-grid">
+        {caseItem.organisasjon && (
+          <div class="meta-item">
+            <dt><span class="material-symbols-outlined meta-icon">business</span> Organisasjon</dt>
+            <dd>{caseItem.organisasjon}</dd>
+          </div>
+        )}
+        {caseItem.status && (
+          <div class="meta-item">
+            <dt><span class="material-symbols-outlined meta-icon">info</span> Status</dt>
+            <dd><span class={`status-badge status-badge--${caseItem.status}`}>{statusLabels[caseItem.status] || caseItem.status}</span></dd>
+          </div>
+        )}
+        {caseItem.verktoy && caseItem.verktoy.length > 0 && (
+          <div class="meta-item">
+            <dt><span class="material-symbols-outlined meta-icon">build</span> Verktøy</dt>
+            <dd class="tools-list">
+              {caseItem.verktoy.map(tool => (
+                <span class="tool-tag">{tool}</span>
+              ))}
+            </dd>
+          </div>
+        )}
+        {caseItem.publishedAt && (
+          <div class="meta-item">
+            <dt><span class="material-symbols-outlined meta-icon">calendar_today</span> Publisert</dt>
+            <dd>{formatDate(caseItem.publishedAt)}</dd>
+          </div>
+        )}
+      </div>
+
+      {caseItem.resultater && (
+        <div class="results-highlight">
+          <span class="material-symbols-outlined results-icon">emoji_events</span>
+          <div>
+            <Heading level={2} size="xsmall" className="results-label">Resultater</Heading>
+            <Paragraph className="results-text">{caseItem.resultater}</Paragraph>
+          </div>
         </div>
       )}
-      {caseItem.resultater && (
-        <div class="meta-item">
-          <dt>Resultater</dt>
-          <dd>{caseItem.resultater}</dd>
+
+      <BlocksRenderer blocks={caseItem.beskrivelse} class="article-content" />
+
+      {caseItem.merkelapper && caseItem.merkelapper.length > 0 && (
+        <div class="tags-section">
+          <Heading level={2} size="xsmall" className="tags-label">Merkelapper</Heading>
+          <div class="tags-list">
+            {caseItem.merkelapper.map(tag => (
+              <span class="tag-pill">{tag.navn}</span>
+            ))}
+          </div>
         </div>
       )}
     </div>
 
-    <BlocksRenderer blocks={caseItem.beskrivelse} class="article-content" />
+    {relatedCases.length > 0 && (
+      <section class="related-section">
+        <div class="related-container">
+          <Heading level={2} size="large" className="related-heading">Andre eksempler</Heading>
+          <div class="related-grid">
+            {relatedCases.map(related => (
+              <Link href={`/eksempler/${related.slug}`} className="related-card">
+                <span class="related-org">{related.organisasjon}</span>
+                <Heading level={3} size="small" className="related-title">{related.tittel}</Heading>
+                <Paragraph size="small" className="related-excerpt">
+                  {getPlainText(related.beskrivelse, 100)}
+                </Paragraph>
+                {related.status && (
+                  <span class={`status-badge status-badge--${related.status}`}>
+                    {statusLabels[related.status] || related.status}
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
 
-    <nav class="article-nav">
-      <Link href="/eksempler" class="back-link">
-        Tilbake til eksempler
-      </Link>
+    <nav class="back-nav">
+      <div class="back-container">
+        <Link href="/eksempler" className="back-link">
+          <span class="material-symbols-outlined">arrow_back</span>
+          Tilbake til eksempler
+        </Link>
+      </div>
     </nav>
   </article>
 </Layout>
@@ -73,27 +163,37 @@ if (!caseItem) return Astro.redirect('/eksempler');
     position: sticky;
     top: 0;
     z-index: 100;
-    background: #d97706;
-    color: #fff;
+    background: var(--ds-color-warning-surface-default, #d97706);
+    color: var(--ds-color-neutral-text-default);
     text-align: center;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
+    padding: var(--ds-size-2);
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
   }
   .preview-banner a {
-    color: #fff;
+    color: inherit;
     text-decoration: underline;
-    margin-left: 0.25rem;
+    margin-left: var(--ds-size-1);
   }
 
-  .page-container {
+  /* Hero */
+  .article-hero {
+    background: linear-gradient(
+      135deg,
+      var(--ds-color-neutral-background-default) 0%,
+      var(--ds-color-accent-surface-default) 100%
+    );
+    padding: var(--ds-size-8) var(--ds-size-4) var(--ds-size-10);
+  }
+
+  .hero-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
   }
 
   .breadcrumb {
     display: flex;
+    align-items: center;
     gap: var(--ds-size-2);
     margin-bottom: var(--ds-size-6);
     font-size: var(--ds-font-size-0);
@@ -109,43 +209,62 @@ if (!caseItem) return Astro.redirect('/eksempler');
     text-decoration: underline;
   }
 
-  .article-header {
-    margin-bottom: var(--ds-size-6);
+  .breadcrumb-sep {
+    color: var(--ds-color-neutral-text-subtle);
   }
 
-  .org-label {
-    display: inline-block;
+  .org-badge {
+    display: inline-flex;
     font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-medium);
-    color: var(--ds-color-accent-text-default);
+    font-weight: var(--ds-font-weight-semibold);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: var(--ds-size-3);
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
   }
 
-  .article-header :global(h1) {
+  :global(.hero-title) {
     margin: 0 0 var(--ds-size-4);
   }
 
-  .lead {
+  :global(.hero-lead) {
     margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  /* Content */
+  .content-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-8) var(--ds-size-4);
   }
 
   .meta-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: var(--ds-size-4);
     padding: var(--ds-size-5);
     background-color: var(--ds-color-neutral-surface-default);
-    border-radius: var(--ds-border-radius-md);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
     margin-bottom: var(--ds-size-8);
   }
 
   .meta-item dt {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-size-1);
     font-size: var(--ds-font-size-0);
     font-weight: var(--ds-font-weight-medium);
     color: var(--ds-color-neutral-text-subtle);
     margin-bottom: var(--ds-size-1);
+  }
+
+  .meta-icon {
+    font-size: 16px;
   }
 
   .meta-item dd {
@@ -153,16 +272,159 @@ if (!caseItem) return Astro.redirect('/eksempler');
     margin: 0;
   }
 
+  .tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-size-1);
+  }
+
+  .tool-tag {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    padding: var(--ds-size-1) var(--ds-size-2);
+    background-color: var(--ds-color-neutral-background-default);
+    border-radius: var(--ds-border-radius-md);
+    color: var(--ds-color-neutral-text-default);
+  }
+
+  /* Results highlight */
+  .results-highlight {
+    display: flex;
+    gap: var(--ds-size-4);
+    padding: var(--ds-size-5);
+    background-color: var(--ds-color-success-surface-default, #e6f5ea);
+    border-radius: var(--ds-border-radius-lg);
+    margin-bottom: var(--ds-size-8);
+  }
+
+  .results-icon {
+    font-size: 28px;
+    color: var(--ds-color-success-text-default, #1a5c2b);
+    flex-shrink: 0;
+  }
+
+  :global(.results-label) {
+    margin: 0 0 var(--ds-size-1);
+    color: var(--ds-color-success-text-default, #1a5c2b);
+  }
+
+  :global(.results-text) {
+    margin: 0;
+  }
+
+  /* Article content */
   .article-content {
     margin-bottom: var(--ds-size-8);
   }
 
-  .article-nav {
+  /* Tags */
+  .tags-section {
     padding-top: var(--ds-size-6);
+    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  :global(.tags-label) {
+    margin: 0 0 var(--ds-size-3);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  .tags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-size-2);
+  }
+
+  .tag-pill {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-medium);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-full);
+    color: var(--ds-color-neutral-text-default);
+  }
+
+  /* Related cases */
+  .related-section {
+    background-color: var(--ds-color-neutral-surface-default);
+    padding: var(--ds-size-10) var(--ds-size-4);
+  }
+
+  .related-container {
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  :global(.related-heading) {
+    margin: 0 0 var(--ds-size-6);
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--ds-size-5);
+  }
+
+  :global(.related-card) {
+    display: flex;
+    flex-direction: column;
+    padding: var(--ds-size-5);
+    background-color: var(--ds-color-neutral-background-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+  }
+
+  :global(.related-card:hover) {
+    border-color: var(--ds-color-accent-border-default);
+    box-shadow: var(--ds-shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .related-org {
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-medium);
+    color: var(--ds-color-accent-text-default);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--ds-size-2);
+  }
+
+  :global(.related-title) {
+    margin: 0 0 var(--ds-size-2);
+  }
+
+  :global(.related-excerpt) {
+    margin: 0 0 var(--ds-size-3);
+    color: var(--ds-color-neutral-text-subtle);
+    flex: 1;
+  }
+
+  /* Back nav */
+  .back-nav {
+    padding: var(--ds-size-6) var(--ds-size-4);
     border-top: 1px solid var(--ds-color-neutral-border-subtle);
   }
 
-  .back-link {
+  .back-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  :global(.back-link) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-size-2);
     font-size: var(--ds-font-size-1);
+    text-decoration: none;
+    color: var(--ds-color-accent-text-default);
+  }
+
+  :global(.back-link:hover) {
+    text-decoration: underline;
   }
 </style>

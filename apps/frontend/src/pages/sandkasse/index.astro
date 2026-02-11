@@ -7,7 +7,7 @@ import { getSide } from '../../lib/umbraco';
 // Check for preview mode
 const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
 
-// Fetch page content from Umbraco
+// Fetch optional CMS content
 let page = null;
 try {
   page = await getSide('sandkasse', { preview: isPreview });
@@ -15,61 +15,331 @@ try {
   console.error('Failed to fetch sandkasse page:', error);
 }
 
-const title = page?.tittel || 'Sandkasse';
-const seoDescription = page?.seoBeskrivelse || '';
+const title = page?.tittel || 'Regulatorisk sandkasse for KI';
+const seoDescription = page?.seoBeskrivelse || 'Altinns regulatoriske sandkasse gir virksomheter mulighet til å utforske kunstig intelligens innenfor trygge rammer.';
+
+const features = [
+  {
+    icon: 'science',
+    title: 'Sikker utforskning',
+    description: 'Utforsk KI-løsninger i et kontrollert miljø med veiledning fra regulatoriske myndigheter.',
+  },
+  {
+    icon: 'gavel',
+    title: 'Regulatorisk veiledning',
+    description: 'Få direkte tilgang til ekspertise fra Datatilsynet, Nkom og andre relevante myndigheter.',
+  },
+  {
+    icon: 'groups',
+    title: 'Tverrfaglig samarbeid',
+    description: 'Samarbeid med andre virksomheter og fagmiljøer for å finne innovative løsninger.',
+  },
+];
+
+const steps = [
+  {
+    number: '01',
+    title: 'Søknad',
+    description: 'Send inn en søknad med beskrivelse av prosjektet, KI-teknologien og regulatoriske utfordringer.',
+  },
+  {
+    number: '02',
+    title: 'Vurdering',
+    description: 'Søknaden vurderes av et tverrfaglig panel. Relevante prosjekter inviteres til sandkassen.',
+  },
+  {
+    number: '03',
+    title: 'Utforskning',
+    description: 'Gjennomfør prosjektet i sandkassen med veiledning og dialog med regulatoriske myndigheter.',
+  },
+  {
+    number: '04',
+    title: 'Evaluering',
+    description: 'Prosjektet evalueres og erfaringene deles med andre virksomheter og fagmiljøer.',
+  },
+];
 ---
 
 <Layout title={title} description={seoDescription}>
-  <div class="page-container">
-    {page?.innhold ? (
-      <>
-        <header class="page-header">
-          <Heading level={1} size="2xlarge">{page.tittel}</Heading>
-        </header>
-        <BlocksRenderer blocks={page.innhold} class="page-content" />
-      </>
-    ) : (
-      <div class="not-found">
-        <Heading level={1} size="2xlarge">Siden er ikke tilgjengelig</Heading>
-        <Paragraph>
-          Denne siden er ikke publisert ennå. Vennligst prøv igjen senere.
-        </Paragraph>
-        <Link href="/">Gå til forsiden</Link>
+  <section class="dark-hero section-dark">
+    <div class="hero-container">
+      <span class="hero-badge">Sandkasse</span>
+      <Heading level={1} size="2xlarge" className="hero-title">Regulatorisk sandkasse for KI</Heading>
+      <Paragraph size="large" className="hero-lead">
+        Et trygt miljø for å utforske kunstig intelligens med regulatorisk veiledning fra norske myndigheter.
+      </Paragraph>
+      <Button asChild variant="primary" size="medium">
+        <a href="https://www.altinn.no/skjemaoversikt/digitaliseringsdirektoratet/regulatorisk-sandkasse-for-kunstig-intelligens/" target="_blank" rel="noopener noreferrer">
+          Søk om deltakelse
+        </a>
+      </Button>
+    </div>
+  </section>
+
+  <section class="features-section">
+    <div class="section-container">
+      <Heading level={2} size="large" className="section-title">Hva tilbyr sandkassen?</Heading>
+      <div class="features-grid">
+        {features.map(feature => (
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <span class="material-symbols-outlined feature-icon">{feature.icon}</span>
+            </div>
+            <Heading level={3} size="small" className="feature-title">{feature.title}</Heading>
+            <Paragraph size="small" className="feature-description">{feature.description}</Paragraph>
+          </div>
+        ))}
       </div>
-    )}
-  </div>
+    </div>
+  </section>
+
+  <section class="process-section">
+    <div class="section-container">
+      <Heading level={2} size="large" className="section-title">Slik fungerer det</Heading>
+      <div class="timeline">
+        {steps.map((step, index) => (
+          <div class="timeline-step">
+            <div class="step-indicator">
+              <span class="step-number">{step.number}</span>
+              {index < steps.length - 1 && <div class="step-line" />}
+            </div>
+            <div class="step-content">
+              <Heading level={3} size="small" className="step-title">{step.title}</Heading>
+              <Paragraph size="small" className="step-description">{step.description}</Paragraph>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {page?.innhold && (
+    <section class="cms-section">
+      <div class="cms-container">
+        <BlocksRenderer blocks={page.innhold} class="cms-content" />
+      </div>
+    </section>
+  )}
+
+  <section class="apply-cta-section">
+    <div class="cta-container">
+      <span class="material-symbols-outlined cta-icon">rocket_launch</span>
+      <Heading level={2} size="medium" className="cta-title">Klar til å søke?</Heading>
+      <Paragraph className="cta-description">
+        Har du et KI-prosjekt som trenger regulatorisk avklaring? Søk om deltakelse i sandkassen.
+      </Paragraph>
+      <Button asChild variant="primary" size="medium">
+        <a href="https://www.altinn.no/skjemaoversikt/digitaliseringsdirektoratet/regulatorisk-sandkasse-for-kunstig-intelligens/" target="_blank" rel="noopener noreferrer">
+          Gå til søknadsskjema
+        </a>
+      </Button>
+    </div>
+  </section>
 </Layout>
 
 <style>
-  .page-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
-  }
-
-  .page-header {
-    margin-bottom: var(--ds-size-6);
-  }
-
-  .page-header :global(h1) {
-    margin: 0;
-  }
-
-  .page-content {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  .not-found {
+  /* Dark hero */
+  .dark-hero {
+    padding: var(--ds-size-14) var(--ds-size-4);
     text-align: center;
+  }
+
+  .hero-container {
+    max-width: 700px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-4);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ds-color-accent-text-default);
+    background-color: rgba(19, 109, 236, 0.2);
+    padding: var(--ds-size-1) var(--ds-size-3);
+    border-radius: var(--ds-border-radius-full);
+  }
+
+  :global(.hero-title) {
+    margin: 0;
+    color: #f1f5f9;
+  }
+
+  :global(.hero-lead) {
+    margin: 0;
+    color: #94a3b8;
+    max-width: 600px;
+  }
+
+  /* Features */
+  .features-section {
     padding: var(--ds-size-12) var(--ds-size-4);
   }
 
-  .not-found :global(h1) {
-    margin: 0 0 var(--ds-size-4);
+  .section-container {
+    max-width: 1000px;
+    margin: 0 auto;
   }
 
-  .not-found :global(p) {
-    margin: 0 0 var(--ds-size-6);
+  :global(.section-title) {
+    margin: 0 0 var(--ds-size-8);
+    text-align: center;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--ds-size-5);
+  }
+
+  .feature-card {
+    padding: var(--ds-size-6);
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    text-align: center;
+  }
+
+  .feature-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background-color: var(--ds-color-accent-surface-default);
+    border-radius: var(--ds-border-radius-full);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    color: var(--ds-color-accent-text-default);
+  }
+
+  :global(.feature-title) {
+    margin: 0 0 var(--ds-size-2);
+  }
+
+  :global(.feature-description) {
+    margin: 0;
     color: var(--ds-color-neutral-text-subtle);
+  }
+
+  /* Process timeline */
+  .process-section {
+    padding: var(--ds-size-10) var(--ds-size-4) var(--ds-size-12);
+    background-color: var(--ds-color-neutral-surface-default);
+  }
+
+  .timeline {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .timeline-step {
+    display: flex;
+    gap: var(--ds-size-5);
+  }
+
+  .step-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .step-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: var(--ds-color-accent-base-default);
+    color: white;
+    border-radius: var(--ds-border-radius-full);
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-bold);
+    flex-shrink: 0;
+  }
+
+  .step-line {
+    width: 2px;
+    flex: 1;
+    background-color: var(--ds-color-accent-border-default);
+    margin: var(--ds-size-2) 0;
+    min-height: var(--ds-size-6);
+  }
+
+  .step-content {
+    padding-bottom: var(--ds-size-6);
+  }
+
+  :global(.step-title) {
+    margin: 0 0 var(--ds-size-1);
+  }
+
+  :global(.step-description) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  /* CMS content */
+  .cms-section {
+    padding: var(--ds-size-10) var(--ds-size-4);
+  }
+
+  .cms-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* Apply CTA */
+  .apply-cta-section {
+    padding: 0 var(--ds-size-4) var(--ds-size-12);
+  }
+
+  .cta-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-10);
+    background-color: var(--ds-color-accent-surface-default);
+    border-radius: var(--ds-border-radius-lg);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--ds-size-3);
+  }
+
+  .cta-icon {
+    font-size: 40px;
+    color: var(--ds-color-accent-text-default);
+  }
+
+  :global(.cta-title) {
+    margin: 0;
+  }
+
+  :global(.cta-description) {
+    margin: 0;
+    color: var(--ds-color-neutral-text-subtle);
+    max-width: 500px;
+  }
+
+  @media (max-width: 640px) {
+    .dark-hero {
+      padding: var(--ds-size-10) var(--ds-size-4);
+    }
+
+    .step-content {
+      padding-bottom: var(--ds-size-4);
+    }
   }
 </style>

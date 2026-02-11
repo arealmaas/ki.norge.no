@@ -2,49 +2,93 @@
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Link, Details, Button } from '@digdir/designsystemet-react';
-import { getFAQs, type FAQ } from '../lib/umbraco';
+import { getFAQs, getMerkelapper, type FAQ, type Merkelapp } from '../lib/umbraco';
 
-// Fetch FAQs from Umbraco
+// Fetch FAQs and categories from Umbraco
 let faqs: FAQ[] = [];
+let merkelapper: Merkelapp[] = [];
 try {
-  const response = await getFAQs();
-  faqs = response.data;
+  const [faqRes, merkelapperRes] = await Promise.all([
+    getFAQs(),
+    getMerkelapper(),
+  ]);
+  faqs = faqRes.data;
+  merkelapper = merkelapperRes.data;
 } catch (error) {
   console.error('Failed to fetch FAQs:', error);
 }
+
+// Group FAQs by category
+const groupedFaqs = faqs.reduce((acc, faq) => {
+  const kategoriNavn = faq.kategori?.navn || 'Annet';
+  const kategoriSlug = faq.kategori?.slug || 'annet';
+  if (!acc[kategoriSlug]) {
+    acc[kategoriSlug] = { navn: kategoriNavn, items: [] };
+  }
+  acc[kategoriSlug].items.push(faq);
+  return acc;
+}, {} as Record<string, { navn: string; items: FAQ[] }>);
+
+const faqCategories = Object.entries(groupedFaqs).map(([slug, group]) => ({
+  slug,
+  title: group.navn,
+  items: group.items,
+}));
+
+const hasCategories = faqCategories.length > 1;
 ---
 
-<Layout title="Vanlige sporsmal (FAQ)" description="Svar pa vanlige sporsmal om KI Norge, den regulatoriske sandkassen og kunstig intelligens i offentlig sektor.">
+<Layout title="Vanlige spørsmål (FAQ)" description="Svar på vanlige spørsmål om KI Norge, den regulatoriske sandkassen og kunstig intelligens i offentlig sektor.">
   <section class="page-hero">
     <div class="hero-container">
       <span class="page-badge">Hjelp</span>
-      <Heading level={1} size="2xlarge" className="page-title">Vanlige sporsmal</Heading>
+      <Heading level={1} size="2xlarge" className="page-title">Vanlige spørsmål</Heading>
       <Paragraph size="large" className="page-lead">
-        Her finner du svar pa de vanligste sporsmalene om KI Norge og vare tjenester.
+        Her finner du svar på de vanligste spørsmålene om KI Norge og våre tjenester.
       </Paragraph>
     </div>
   </section>
 
   <div class="page-content">
-    <div class="faq-list">
-      {faqs.length > 0 ? (
-        faqs.map((faq, index) => (
-          <Details client:load className="faq-item">
-            <Details.Summary>
-              <span class="faq-number">{String(index + 1).padStart(2, '0')}</span>
-              <span class="faq-text">{faq.sporsmal}</span>
-            </Details.Summary>
-            <Details.Content>
-              <div class="faq-answer">
-                <BlocksRenderer blocks={faq.svar} />
-              </div>
-            </Details.Content>
-          </Details>
+    {hasCategories && (
+      <nav class="category-nav" aria-label="FAQ-kategorier">
+        <div class="filter-pills">
+          <button class="filter-pill filter-pill--active" data-category="alle">Alle</button>
+          {faqCategories.map(cat => (
+            <button class="filter-pill" data-category={cat.slug}>{cat.title}</button>
+          ))}
+        </div>
+      </nav>
+    )}
+
+    <div class="faq-sections">
+      {faqCategories.length > 0 ? (
+        faqCategories.map((cat) => (
+          <section class="faq-category" data-faq-category={cat.slug}>
+            {hasCategories && (
+              <Heading level={2} size="medium" className="category-heading">{cat.title}</Heading>
+            )}
+            <div class="faq-list">
+              {cat.items.map((faq, index) => (
+                <Details client:load className="faq-item">
+                  <Details.Summary>
+                    <span class="faq-number">{String(index + 1).padStart(2, '0')}</span>
+                    <span class="faq-text">{faq.sporsmal}</span>
+                  </Details.Summary>
+                  <Details.Content>
+                    <div class="faq-answer">
+                      <BlocksRenderer blocks={faq.svar} />
+                    </div>
+                  </Details.Content>
+                </Details>
+              ))}
+            </div>
+          </section>
         ))
       ) : (
-        <div class="empty-state">
-          <span class="material-symbols-outlined empty-icon">help</span>
-          <Paragraph>Ingen ofte stilte sporsmal funnet.</Paragraph>
+        <div class="empty-state-box">
+          <span class="material-symbols-outlined">help</span>
+          <Paragraph>Ingen ofte stilte spørsmål funnet.</Paragraph>
         </div>
       )}
     </div>
@@ -53,9 +97,9 @@ try {
       <div class="cta-icon-wrapper">
         <span class="material-symbols-outlined cta-icon">support_agent</span>
       </div>
-      <Heading level={2} size="medium" className="cta-title">Fant du ikke svar pa sporsmalet ditt?</Heading>
+      <Heading level={2} size="medium" className="cta-title">Fant du ikke svar på spørsmålet ditt?</Heading>
       <Paragraph className="cta-description">
-        Vi er her for a hjelpe deg. Ta kontakt med oss sa svarer vi sa raskt vi kan.
+        Vi er her for å hjelpe deg. Ta kontakt med oss så svarer vi så raskt vi kan.
       </Paragraph>
       <Button asChild variant="primary" size="medium">
         <a href="/kontakt">Kontakt oss</a>
@@ -63,6 +107,35 @@ try {
     </section>
   </div>
 </Layout>
+
+<script>
+  // Category filter functionality
+  document.addEventListener('DOMContentLoaded', () => {
+    const pills = document.querySelectorAll<HTMLButtonElement>('.filter-pill');
+    const categories = document.querySelectorAll<HTMLElement>('.faq-category');
+
+    if (pills.length === 0) return;
+
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const category = pill.dataset.category;
+
+        // Update active pill
+        pills.forEach(p => p.classList.remove('filter-pill--active'));
+        pill.classList.add('filter-pill--active');
+
+        // Show/hide categories
+        categories.forEach(cat => {
+          if (category === 'alle' || cat.dataset.faqCategory === category) {
+            cat.style.display = '';
+          } else {
+            cat.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
 
 <style>
   .page-hero {
@@ -111,8 +184,27 @@ try {
     padding: var(--ds-size-10) var(--ds-size-4);
   }
 
-  .faq-list {
+  /* Category filter pills */
+  .category-nav {
+    margin-bottom: var(--ds-size-8);
+  }
+
+  /* FAQ sections */
+  .faq-sections {
     margin-bottom: var(--ds-size-12);
+  }
+
+  .faq-category {
+    margin-bottom: var(--ds-size-8);
+  }
+
+  :global(.category-heading) {
+    margin: 0 0 var(--ds-size-4);
+    padding-bottom: var(--ds-size-2);
+    border-bottom: 2px solid var(--ds-color-accent-border-default);
+  }
+
+  .faq-list {
     display: flex;
     flex-direction: column;
     gap: var(--ds-size-3);
@@ -163,20 +255,22 @@ try {
     color: var(--ds-color-neutral-text-subtle);
   }
 
-  .empty-state {
+  /* Empty state */
+  .empty-state-box {
     text-align: center;
     padding: var(--ds-size-12);
     background-color: var(--ds-color-neutral-surface-default);
     border-radius: var(--ds-border-radius-lg);
   }
 
-  .empty-icon {
+  .empty-state-box .material-symbols-outlined {
     font-size: 48px;
     color: var(--ds-color-neutral-text-subtle);
     opacity: 0.5;
     margin-bottom: var(--ds-size-4);
   }
 
+  /* Contact CTA */
   .contact-cta {
     padding: var(--ds-size-10);
     background: linear-gradient(

@@ -12,6 +12,29 @@ try {
 } catch (error) {
   console.error('Failed to fetch articles:', error);
 }
+
+// Extract unique categories from article content (using simple keyword detection)
+// In a real setup these would come from article metadata/merkelapper
+const categoryKeywords: Record<string, string[]> = {
+  'Nyhet': ['nyhet', 'lansering', 'oppdatering'],
+  'Analyse': ['analyse', 'rapport', 'undersøkelse', 'studie'],
+  'Veiledning': ['veiledning', 'guide', 'hvordan', 'tips'],
+};
+
+function getArticleCategory(article: Artikkel): string {
+  const text = (article.tittel + ' ' + getPlainText(article.innhold, 200)).toLowerCase();
+  for (const [category, keywords] of Object.entries(categoryKeywords)) {
+    if (keywords.some(kw => text.includes(kw))) return category;
+  }
+  return 'Nyhet';
+}
+
+const articlesWithCategory = articles.map(a => ({
+  ...a,
+  category: getArticleCategory(a),
+}));
+
+const availableCategories = [...new Set(articlesWithCategory.map(a => a.category))].sort();
 ---
 
 <Layout title="Artikler" description="Nyheter, analyser og veiledning om kunstig intelligens i offentlig sektor.">
@@ -20,40 +43,73 @@ try {
       <span class="page-badge">Artikler</span>
       <Heading level={1} size="2xlarge" className="page-title">Siste nytt</Heading>
       <Paragraph size="large" className="page-lead">
-        Hold deg oppdatert pa nyheter, analyser og veiledning om kunstig intelligens i norsk offentlig sektor.
+        Hold deg oppdatert på nyheter, analyser og veiledning om kunstig intelligens i norsk offentlig sektor.
       </Paragraph>
     </div>
   </section>
 
   <div class="page-content">
+    {availableCategories.length > 1 && (
+      <nav class="filter-nav" aria-label="Artikkelkategorier">
+        <div class="filter-pills">
+          <button class="filter-pill filter-pill--active" data-filter="alle">Alle</button>
+          {availableCategories.map(cat => (
+            <button class="filter-pill" data-filter={cat}>{cat}</button>
+          ))}
+        </div>
+      </nav>
+    )}
+
     <div class="articles-grid">
-      {articles.length > 0 ? (
-        articles.map((article) => (
-          <ArticleCard
-            title={article.tittel}
-            excerpt={getPlainText(article.innhold, 200)}
-            slug={article.slug}
-            publishedAt={article.publishedAt}
-            category="Nyhet"
-          />
+      {articlesWithCategory.length > 0 ? (
+        articlesWithCategory.map((article) => (
+          <div class="article-wrapper" data-category={article.category}>
+            <ArticleCard
+              title={article.tittel}
+              excerpt={getPlainText(article.innhold, 200)}
+              slug={article.slug}
+              publishedAt={article.publishedAt}
+              category={article.category}
+            />
+          </div>
         ))
       ) : (
-        <div class="empty-state">
-          <span class="material-symbols-outlined empty-icon">article</span>
+        <div class="empty-state-box">
+          <span class="material-symbols-outlined">article</span>
           <Paragraph>Ingen artikler funnet.</Paragraph>
         </div>
       )}
     </div>
-
-    {articles.length > 12 && (
-      <nav class="pagination">
-        <Button variant="secondary" size="small" disabled>Forrige</Button>
-        <Paragraph size="small" className="pagination-info">Side 1 av 1</Paragraph>
-        <Button variant="secondary" size="small" disabled>Neste</Button>
-      </nav>
-    )}
   </div>
 </Layout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const pills = document.querySelectorAll<HTMLButtonElement>('.filter-pill');
+    const articles = document.querySelectorAll<HTMLElement>('.article-wrapper');
+
+    if (pills.length === 0) return;
+
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        const filter = pill.dataset.filter;
+
+        // Update active pill
+        pills.forEach(p => p.classList.remove('filter-pill--active'));
+        pill.classList.add('filter-pill--active');
+
+        // Show/hide articles
+        articles.forEach(article => {
+          if (filter === 'alle' || article.dataset.category === filter) {
+            article.style.display = '';
+          } else {
+            article.style.display = 'none';
+          }
+        });
+      });
+    });
+  });
+</script>
 
 <style>
   .page-hero {
@@ -102,6 +158,10 @@ try {
     padding: var(--ds-size-10) var(--ds-size-4);
   }
 
+  .filter-nav {
+    margin-bottom: var(--ds-size-8);
+  }
+
   .articles-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -121,7 +181,7 @@ try {
     }
   }
 
-  .empty-state {
+  .empty-state-box {
     grid-column: 1 / -1;
     text-align: center;
     padding: var(--ds-size-12);
@@ -129,22 +189,10 @@ try {
     border-radius: var(--ds-border-radius-lg);
   }
 
-  .empty-icon {
+  .empty-state-box .material-symbols-outlined {
     font-size: 48px;
     color: var(--ds-color-neutral-text-subtle);
     opacity: 0.5;
     margin-bottom: var(--ds-size-4);
-  }
-
-  .pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--ds-size-4);
-  }
-
-  :global(.pagination-info) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
   }
 </style>
