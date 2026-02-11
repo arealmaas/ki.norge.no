@@ -5,6 +5,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
     "@astrojs/react": "^4.4.2",
+    "@astrojs/sitemap": "^3.7.0",
     "@digdir/designsystemet-css": "^1.11.0",
     "@digdir/designsystemet-react": "^1.11.0",
     "@navikt/aksel-icons": "^8.0.1",
