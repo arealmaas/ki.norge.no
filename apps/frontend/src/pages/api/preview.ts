@@ -1,8 +1,5 @@
 import type { APIRoute } from 'astro';
-
-const PREVIEW_SECRET = import.meta.env.PREVIEW_SECRET || '';
-const UMBRACO_URL = import.meta.env.UMBRACO_URL || 'http://localhost:5000';
-const UMBRACO_API_KEY = import.meta.env.UMBRACO_API_KEY || '';
+export const prerender = false;
 
 // Map content types to their frontend paths
 const contentTypeRoutes: Record<string, (slug: string) => string> = {
@@ -14,6 +11,10 @@ const contentTypeRoutes: Record<string, (slug: string) => string> = {
 };
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
+  const PREVIEW_SECRET = import.meta.env.PREVIEW_SECRET || '';
+  const UMBRACO_URL = import.meta.env.UMBRACO_URL || 'http://localhost:5000';
+  const UMBRACO_API_KEY = import.meta.env.UMBRACO_API_KEY || '';
+
   // Exit preview mode
   if (url.searchParams.has('exit')) {
     cookies.delete('preview', { path: '/' });
@@ -26,7 +27,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const id = url.searchParams.get('id') || url.searchParams.get('documentId');
 
   // Validate secret
-  if (secret !== PREVIEW_SECRET) {
+  if (!PREVIEW_SECRET || secret !== PREVIEW_SECRET) {
     return new Response('Invalid preview secret', { status: 401 });
   }
 
