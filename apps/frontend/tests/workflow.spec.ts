@@ -21,8 +21,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 
 const CMS = process.env.UMBRACO_URL ?? 'http://localhost:5000';
-// Backoffice auth (OpenIddict) requires HTTPS
-const CMS_HTTPS = process.env.UMBRACO_HTTPS_URL ?? 'https://localhost:44391';
 
 // ── Database helper ─────────────────────────────────────────────
 
@@ -213,31 +211,20 @@ test.describe('Auth guards', () => {
 // ── Backoffice authentication ───────────────────────────────────
 
 test.describe('Backoffice authentication', () => {
-  test('admin can reach backoffice login page', async ({ page }) => {
-    await page.goto(`${CMS}/umbraco`);
-    await page.waitForLoadState('load');
+  test('admin can reach backoffice shell', async ({ request }) => {
+    // Use raw HTTP to verify the backoffice shell HTML is served,
+    // avoiding the SPA's client-side OAuth redirect (which requires HTTPS)
+    const res = await request.get(`${CMS}/umbraco`, {
+      ignoreHTTPSErrors: true,
+    });
+    expect(res.status()).toBe(200);
 
-    // Umbraco 17 backoffice is a Lit SPA — verify the shell loads
-    const title = await page.title();
-    expect(title).toContain('Umbraco');
-
-    const content = await page.content();
-    expect(content).toContain('umbraco');
+    const html = await res.text();
+    expect(html).toContain('<title>Umbraco</title>');
+    expect(html).toContain('<umb-app>');
+    expect(html).toContain('app.element.js');
   });
 
-  test('backoffice redirects unauthenticated to login', async ({ page }) => {
-    await page.context().clearCookies();
-    await page.goto(`${CMS}/umbraco/section/content`);
-    await page.waitForLoadState('load');
-
-    // Unauthenticated users get redirected to OAuth authorize or the backoffice shell
-    const url = page.url();
-    const isRedirected =
-      url.includes('login') ||
-      url.includes('authorize') ||
-      url.includes('/umbraco');
-    expect(isRedirected).toBe(true);
-  });
 });
 
 // ── User groups and access levels ───────────────────────────────

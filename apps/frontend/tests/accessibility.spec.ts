@@ -213,39 +213,28 @@ test.describe('Skip link', () => {
 
 test.describe('Form accessibility', () => {
   test('form labels are properly associated', async ({ page }) => {
-    // This test checks pages that have actual forms (not dev toolbar inputs)
-    const pagesWithForms = ['/eksempler/send-inn'];
+    await page.goto('/eksempler/send-inn');
+    await page.waitForLoadState('load');
 
-    for (const url of pagesWithForms) {
-      await page.goto(url);
-      await page.waitForLoadState('networkidle');
+    const inputs = page.locator('form input:not([type="hidden"]):not([type="checkbox"]), form select, form textarea');
+    const count = await inputs.count();
 
-      // Only check inputs within form elements, excluding hidden and checkbox inputs
-      const inputs = page.locator('form input:not([type="hidden"]):not([type="checkbox"]), form select, form textarea');
-      const count = await inputs.count();
+    // This page must have form inputs — fail if it doesn't
+    expect(count).toBeGreaterThan(0);
 
-      // Skip if no form inputs found (CMS might not have content)
-      if (count === 0) continue;
+    for (let i = 0; i < count; i++) {
+      const input = inputs.nth(i);
+      const id = await input.getAttribute('id');
+      const ariaLabel = await input.getAttribute('aria-label');
+      const ariaLabelledBy = await input.getAttribute('aria-labelledby');
 
-      for (let i = 0; i < count; i++) {
-        const input = inputs.nth(i);
-        const id = await input.getAttribute('id');
-        const ariaLabel = await input.getAttribute('aria-label');
-        const ariaLabelledBy = await input.getAttribute('aria-labelledby');
-        const type = await input.getAttribute('type');
-
-        // Skip hidden inputs
-        if (type === 'hidden') continue;
-
-        // Each input should have either an associated label, aria-label, or aria-labelledby
-        if (id) {
-          const label = page.locator(`label[for="${id}"]`);
-          const hasLabel = (await label.count()) > 0;
-          expect(hasLabel || ariaLabel || ariaLabelledBy).toBeTruthy();
-        } else {
-          // Without an ID, must have aria-label or aria-labelledby
-          expect(ariaLabel || ariaLabelledBy).toBeTruthy();
-        }
+      // Each input should have either an associated label, aria-label, or aria-labelledby
+      if (id) {
+        const label = page.locator(`label[for="${id}"]`);
+        const hasLabel = (await label.count()) > 0;
+        expect(hasLabel || ariaLabel || ariaLabelledBy).toBeTruthy();
+      } else {
+        expect(ariaLabel || ariaLabelledBy).toBeTruthy();
       }
     }
   });

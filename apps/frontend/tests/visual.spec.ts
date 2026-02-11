@@ -45,7 +45,7 @@ test.describe('Visual regression tests', () => {
 
     test('FAQ page', async ({ page }) => {
       await page.goto('/faq');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('load');
       await expect(page).toHaveScreenshot('faq-page.png', {
         fullPage: true,
       });

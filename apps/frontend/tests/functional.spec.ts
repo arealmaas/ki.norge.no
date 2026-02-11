@@ -162,29 +162,24 @@ test.describe('Card interactions', () => {
   test('article cards are hoverable and clickable', async ({ page }) => {
     await page.goto('/artikler');
 
-    const firstCard = page.locator('.article-card').first();
-    const cardCount = await page.locator('.article-card').count();
+    // Articles must render cards — fail if none found
+    const cards = page.locator('.article-card');
+    const cardCount = await cards.count();
+    expect(cardCount).toBeGreaterThan(0);
 
-    // Skip if no article cards (CMS content not available)
-    if (cardCount === 0) {
-      test.skip();
-      return;
-    }
-
-    // Card should exist
+    const firstCard = cards.first();
     await expect(firstCard).toBeVisible();
 
-    // Hover should work (check for hover state class or style change)
+    // Hover should work
     await firstCard.hover();
 
-    // Card should be clickable and navigate
+    // Card should contain a link that navigates to an article
     const link = firstCard.locator('a').first();
     const href = await link.getAttribute('href');
+    expect(href).toBeTruthy();
 
-    if (href) {
-      await link.click();
-      await expect(page).toHaveURL(new RegExp(href.replace(/\//g, '\\/')));
-    }
+    await link.click();
+    await expect(page).toHaveURL(new RegExp(href!.replace(/\//g, '\\/')));
   });
 });
 
@@ -206,17 +201,15 @@ test.describe('Responsive breakpoints', () => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await page.goto('/');
 
-    // Mobile menu might still be visible at this breakpoint
-    // Check actual behavior
     const mobileToggle = page.locator('[data-mobile-menu-toggle]');
     const desktopNav = page.locator('.nav-desktop');
 
-    // At 768px, check which nav is showing
     const mobileVisible = await mobileToggle.isVisible();
     const desktopVisible = await desktopNav.isVisible();
 
-    // At least one navigation should be visible
+    // Exactly one navigation mode should be active — not both, not neither
     expect(mobileVisible || desktopVisible).toBe(true);
+    expect(mobileVisible && desktopVisible).toBe(false);
   });
 
   test('layout at 1280px (desktop)', async ({ page }) => {
