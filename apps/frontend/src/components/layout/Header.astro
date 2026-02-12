@@ -1,5 +1,5 @@
 ---
-import { Link, Button } from '@digdir/designsystemet-react';
+import { Link } from '@digdir/designsystemet-react';
 import Logo from '../shared/Logo.astro';
 import DarkModeToggle from '../shared/DarkModeToggle.astro';
 
@@ -41,13 +41,12 @@ const currentPath = Astro.url.pathname;
 
     <div class="header-actions">
       <DarkModeToggle />
-      <Button
-        asChild
-        variant="primary"
-        size="small"
-      >
-        <a href="/logg-inn">Logg inn</a>
-      </Button>
+      <a href="/sok" class="search-link" aria-label="Søk">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </a>
       <button
         type="button"
         class="mobile-menu-toggle"
@@ -225,17 +224,19 @@ const currentPath = Astro.url.pathname;
     gap: var(--ds-size-3);
   }
 
-  .header-actions :global(a[href="/logg-inn"]) {
-    display: none;
-    /* Ensure proper text color in all modes */
-    color: white !important;
-    text-decoration: none;
+  .search-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ds-border-radius-md);
+    color: var(--ds-color-neutral-text-default);
+    transition: all 0.2s ease;
   }
 
-  @media (min-width: 1024px) {
-    .header-actions :global(a[href="/logg-inn"]) {
-      display: inline-flex;
-    }
+  .search-link:hover {
+    background-color: var(--ds-color-neutral-surface-hover);
   }
 
   .mobile-menu-toggle {

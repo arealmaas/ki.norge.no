@@ -9,16 +9,19 @@ const partners = [
 ];
 
 const resourceLinks = [
-  { href: '/veiledning', label: 'Veiledningsmateriell' },
+  { href: '/veiledning', label: 'Veiledning' },
   { href: '/sandkasse', label: 'Regulatorisk sandkasse' },
-  { href: '/eksempler', label: 'Case-bibliotek' },
-  { href: '/ressurser', label: 'Verktøykasse' },
+  { href: '/eksempler', label: 'Eksempler' },
+  { href: '/artikler', label: 'Artikler' },
+  { href: '/faq', label: 'Ofte stilte spørsmål' },
+  { href: '/sok', label: 'Søk' },
 ];
 
 const aboutLinks = [
   { href: '/om-oss', label: 'Om oss' },
   { href: '/kontakt', label: 'Kontakt oss' },
   { href: '/personvern', label: 'Personvern' },
+  { href: '/tilgjengelighet', label: 'Tilgjengelighet' },
 ];
 ---
 
@@ -37,7 +40,7 @@ const aboutLinks = [
 
       <!-- Resources Column -->
       <div class="footer-section">
-        <h4 class="footer-heading">Ressurser</h4>
+        <h4 class="footer-heading">Innhold</h4>
         <ul class="footer-list">
           {resourceLinks.map((link) => (
             <li>
