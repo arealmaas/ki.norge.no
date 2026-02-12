@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="Umbraco.Cms" Version="17.1.0" />
     <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.1.0" />
-    <PackageReference Include="Umbraco.Workflow" Version="17.*" />
   </ItemGroup>
 
   <ItemGroup>
