@@ -8,7 +8,7 @@ import { Button } from '@digdir/designsystemet-react';
       <span class="guidance-label">Veiledning & Ressurser</span>
       <h2 class="guidance-title">Omfattende veiledning for din KI-reise</h2>
       <p class="guidance-description">
-        Vi har samlet alt du trenger av regulatoriske, tekniske og etiske veiledere for a implementere kunstig intelligens pa en trygg og forsvarlig mate i din organisasjon.
+        Vi har samlet alt du trenger av regulatoriske, tekniske og etiske veiledere for å implementere kunstig intelligens på en trygg og forsvarlig måte i din organisasjon.
       </p>
       <Button
         asChild
@@ -29,14 +29,10 @@ import { Button } from '@digdir/designsystemet-react';
   .guidance-cta {
     width: 100%;
     padding: var(--ds-size-14) 0;
-    background: linear-gradient(to right, rgba(19, 109, 236, 0.1) 0%, #eff6ff 50%, rgba(19, 109, 236, 0.05) 100%);
-    border-top: 1px solid rgba(19, 109, 236, 0.05);
-    border-bottom: 1px solid rgba(19, 109, 236, 0.05);
+    background: var(--ds-color-accent-surface-default);
+    border-top: 1px solid var(--ds-color-accent-border-default);
+    border-bottom: 1px solid var(--ds-color-accent-border-default);
     overflow: hidden;
-  }
-
-  :global(html.dark) .guidance-cta {
-    background: linear-gradient(to right, rgba(30, 41, 59, 0.5) 0%, #0f172a 50%, rgba(30, 41, 59, 0.5) 100%);
   }
 
   .guidance-container {
@@ -69,7 +65,7 @@ import { Button } from '@digdir/designsystemet-react';
 
   .guidance-label {
     display: inline-block;
-    color: #136dec;
+    color: var(--ds-color-accent-text-default);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -81,7 +77,7 @@ import { Button } from '@digdir/designsystemet-react';
     margin: 0 0 var(--ds-size-6) 0;
     font-size: 1.875rem;
     font-weight: 700;
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     line-height: 1.2;
   }
 
@@ -91,13 +87,9 @@ import { Button } from '@digdir/designsystemet-react';
     }
   }
 
-  :global(html.dark) .guidance-title {
-    color: #ffffff;
-  }
-
   .guidance-description {
     margin: 0 0 var(--ds-size-10) 0;
-    color: #4c6c9a;
+    color: var(--ds-color-neutral-text-subtle);
     font-size: 1.125rem;
     line-height: 1.7;
     max-width: 640px;
@@ -109,10 +101,6 @@ import { Button } from '@digdir/designsystemet-react';
     }
   }
 
-  :global(html.dark) .guidance-description {
-    color: #94a3b8;
-  }
-
   .guidance-button {
     display: inline-flex;
     align-items: center;
@@ -120,7 +108,7 @@ import { Button } from '@digdir/designsystemet-react';
     min-width: 240px;
     height: 56px;
     padding: 0 var(--ds-size-8);
-    background-color: #136dec;
+    background-color: var(--ds-color-accent-base-default);
     color: white;
     font-size: 1rem;
     font-weight: 700;
@@ -137,7 +125,7 @@ import { Button } from '@digdir/designsystemet-react';
   }
 
   .guidance-button:hover {
-    background-color: rgba(19, 109, 236, 0.9);
+    opacity: 0.9;
   }
 
   .guidance-visual {
@@ -153,14 +141,14 @@ import { Button } from '@digdir/designsystemet-react';
     position: absolute;
     width: 288px;
     height: 288px;
-    background-color: rgba(19, 109, 236, 0.2);
+    background-color: var(--ds-color-accent-surface-default);
     border-radius: 50%;
     filter: blur(80px);
   }
 
   .guidance-icon {
     font-size: 160px !important;
-    color: #136dec;
+    color: var(--ds-color-accent-base-default);
     position: relative;
     z-index: 1;
     opacity: 0.9;

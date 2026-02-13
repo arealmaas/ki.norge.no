@@ -35,7 +35,7 @@ import { Button } from '@digdir/designsystemet-react';
   .sandbox-feature {
     position: relative;
     width: 100%;
-    background-color: #0f172a;
+    background-color: var(--stitch-bg-dark);
     padding: var(--ds-size-14) 0;
     margin-bottom: var(--ds-size-14);
     overflow: hidden;
@@ -89,7 +89,7 @@ import { Button } from '@digdir/designsystemet-react';
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #136dec;
+    color: var(--ds-color-accent-base-default);
     background-color: rgba(19, 109, 236, 0.2);
     padding: var(--ds-size-1) var(--ds-size-3);
     border-radius: 9999px;
@@ -99,7 +99,7 @@ import { Button } from '@digdir/designsystemet-react';
 
   .sandbox-title {
     margin: 0 0 var(--ds-size-6) 0;
-    color: #ffffff;
+    color: white;
     font-size: 2.25rem;
     font-weight: 900;
     line-height: 1.2;
@@ -131,17 +131,17 @@ import { Button } from '@digdir/designsystemet-react';
     min-width: 200px;
     height: 56px;
     padding: 0 var(--ds-size-8);
-    background-color: #136dec;
+    background-color: var(--ds-color-accent-base-default);
     color: white;
     font-size: 1rem;
     font-weight: 700;
     text-decoration: none;
     border-radius: 12px;
     box-shadow: 0 20px 25px -5px rgba(19, 109, 236, 0.2);
-    transition: background-color 0.2s ease;
+    transition: opacity 0.2s ease;
   }
 
   .sandbox-cta:hover {
-    background-color: rgba(19, 109, 236, 0.9);
+    opacity: 0.9;
   }
 </style>

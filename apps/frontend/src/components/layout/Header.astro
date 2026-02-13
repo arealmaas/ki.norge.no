@@ -131,18 +131,13 @@ const currentPath = Astro.url.pathname;
 
 <style>
   .header {
-    background-color: var(--ds-color-neutral-surface-default);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: color-mix(in srgb, var(--ds-color-neutral-surface-default) 90%, transparent);
     border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
     position: sticky;
     top: 0;
     z-index: 100;
-  }
-
-  :global(html.dark) .header {
-    background-color: rgba(26, 35, 50, 0.9);
   }
 
   .skip-link {

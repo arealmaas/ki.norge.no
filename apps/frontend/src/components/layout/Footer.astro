@@ -100,14 +100,9 @@ const aboutLinks = [
 
 <style>
   .footer {
-    background-color: #ffffff;
-    border-top: 1px solid #e2e8f0;
+    background-color: var(--ds-color-neutral-surface-default);
+    border-top: 1px solid var(--ds-color-neutral-border-subtle);
     margin-top: auto;
-  }
-
-  :global(html.dark) .footer {
-    background-color: #0f172a;
-    border-top-color: #1e293b;
   }
 
   .footer-container {
@@ -149,19 +144,15 @@ const aboutLinks = [
     display: flex;
     align-items: center;
     gap: var(--ds-size-3);
-    color: #136dec;
+    color: var(--ds-color-accent-base-default);
   }
 
   .footer-description {
     margin: 0;
-    color: #475569; /* Darker for WCAG AA contrast */
+    color: var(--ds-color-neutral-text-subtle);
     font-size: 0.875rem;
     line-height: 1.6;
     max-width: 320px;
-  }
-
-  :global(html.dark) .footer-description {
-    color: #94a3b8;
   }
 
   .footer-section {
@@ -172,15 +163,11 @@ const aboutLinks = [
 
   .footer-heading {
     margin: 0;
-    color: #0f172a;
+    color: var(--ds-color-neutral-text-default);
     font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-  }
-
-  :global(html.dark) .footer-heading {
-    color: #ffffff;
   }
 
   .footer-list {
@@ -193,46 +180,30 @@ const aboutLinks = [
   }
 
   :global(.footer-link) {
-    color: #475569; /* Darker for WCAG AA contrast */
+    color: var(--ds-color-neutral-text-subtle);
     text-decoration: none;
     font-size: 0.875rem;
     transition: color 0.2s ease;
   }
 
-  :global(html.dark .footer-link) {
-    color: #94a3b8;
-  }
-
   :global(.footer-link:hover) {
-    color: #136dec;
-  }
-
-  :global(html.dark .footer-link:hover) {
-    color: #5da3f7;
+    color: var(--ds-color-accent-text-default);
   }
 
   /* Partners Section */
   .footer-partners {
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--ds-color-neutral-border-subtle);
     padding: var(--ds-size-10) 0;
-  }
-
-  :global(html.dark) .footer-partners {
-    border-top-color: #1e293b;
   }
 
   .partners-label {
     margin: 0 0 var(--ds-size-8) 0;
     text-align: center;
-    color: #475569; /* Improved contrast for WCAG AA (7:1 on white) */
+    color: var(--ds-color-neutral-text-subtle);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.2em;
-  }
-
-  :global(html.dark) .partners-label {
-    color: #94a3b8; /* Good contrast on dark background */
   }
 
   .partners-logos {
@@ -241,7 +212,6 @@ const aboutLinks = [
     justify-content: center;
     align-items: center;
     gap: var(--ds-size-10);
-    /* Removed grayscale filter and reduced opacity for WCAG AA compliance */
     transition: opacity 0.3s ease;
   }
 
@@ -254,24 +224,16 @@ const aboutLinks = [
   }
 
   .partner-name {
-    color: #1e293b; /* Darker for WCAG AA contrast (12.6:1 on white) */
+    color: var(--ds-color-neutral-text-default);
     font-size: 1.5rem;
     font-weight: 900;
     letter-spacing: -0.025em;
   }
 
-  :global(html.dark) .partner-name {
-    color: #e2e8f0; /* Light for dark mode contrast */
-  }
-
   .partner-subtitle {
-    color: #475569; /* Improved contrast for WCAG AA */
+    color: var(--ds-color-neutral-text-subtle);
     font-size: 0.625rem;
     font-weight: 500;
-  }
-
-  :global(html.dark) .partner-subtitle {
-    color: #94a3b8; /* Good contrast on dark background (5.6:1) */
   }
 
   /* Copyright */
@@ -282,11 +244,7 @@ const aboutLinks = [
   .copyright {
     margin: 0;
     text-align: center;
-    color: #475569; /* Improved contrast for WCAG AA */
+    color: var(--ds-color-neutral-text-subtle);
     font-size: 0.75rem;
-  }
-
-  :global(html.dark) .copyright {
-    color: #94a3b8; /* Good contrast on dark background */
   }
 </style>

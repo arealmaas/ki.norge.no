@@ -78,7 +78,7 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 
   :global(.hero-title) {
     margin: 0;
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     line-height: 1.1;
     letter-spacing: -0.033em;
     font-weight: 900;
@@ -91,12 +91,8 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
     }
   }
 
-  :global(html.dark .hero-title) {
-    color: #ffffff;
-  }
-
   :global(.hero-subtitle) {
-    color: #4c6c9a;
+    color: var(--ds-color-neutral-text-subtle);
     margin: 0;
     line-height: 1.6;
     max-width: 540px;
@@ -107,10 +103,6 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
     :global(.hero-subtitle) {
       font-size: 1.25rem;
     }
-  }
-
-  :global(html.dark .hero-subtitle) {
-    color: #94a3b8;
   }
 
   .hero-actions {
@@ -135,7 +127,7 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
   }
 
   .hero-actions :global(a:first-child) {
-    background-color: #136dec;
+    background-color: var(--ds-color-accent-base-default);
     color: white;
     box-shadow: 0 10px 25px -5px rgba(19, 109, 236, 0.2);
   }
@@ -149,23 +141,13 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
   }
 
   .hero-actions :global(a:last-child) {
-    background-color: white;
-    color: #0d131b;
-    border: 1px solid #cfd9e7;
+    background-color: var(--ds-color-neutral-surface-default);
+    color: var(--ds-color-neutral-text-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
   }
 
   .hero-actions :global(a:last-child:hover) {
-    background-color: #f8fafc;
-  }
-
-  :global(html.dark) .hero-actions :global(a:last-child) {
-    background-color: #1e293b;
-    color: white;
-    border-color: #334155;
-  }
-
-  :global(html.dark) .hero-actions :global(a:last-child:hover) {
-    background-color: #334155;
+    background-color: var(--ds-color-neutral-surface-hover);
   }
 
   /* Hero Visual / Image */

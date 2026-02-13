@@ -64,23 +64,15 @@ const hasArticles = articles.length > 0;
     margin: 0;
     font-size: 1.875rem;
     font-weight: 700;
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     letter-spacing: -0.025em;
   }
 
-  :global(html.dark) .news-heading {
-    color: #ffffff;
-  }
-
   :global(.news-link) {
-    color: #0d5fc2; /* Darker blue for WCAG AA contrast */
+    color: var(--ds-color-accent-text-default);
     font-size: 0.875rem;
     font-weight: 600;
     text-decoration: none;
-  }
-
-  :global(html.dark .news-link) {
-    color: #5da3f7;
   }
 
   :global(.news-link:hover) {

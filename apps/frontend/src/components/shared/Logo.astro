@@ -23,17 +23,13 @@ const { className = '' } = Astro.props;
   .logo-icon {
     width: 32px;
     height: 32px;
-    color: #136dec;
+    color: var(--ds-color-accent-base-default);
   }
 
   .logo-text {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     letter-spacing: -0.015em;
-  }
-
-  :global(html.dark) .logo-text {
-    color: #ffffff;
   }
 </style>

@@ -62,7 +62,7 @@ const displayImage = image || stockImages[imageIndex];
     width: 100%;
     border-radius: 12px;
     overflow: hidden;
-    background-color: #e2e8f0;
+    background-color: var(--ds-color-neutral-border-subtle);
   }
 
   .card-image {
@@ -84,15 +84,11 @@ const displayImage = image || stockImages[imageIndex];
   }
 
   .category {
-    color: #0d5fc2; /* Darker blue for WCAG AA contrast (4.7:1 on light backgrounds) */
+    color: var(--ds-color-accent-text-default);
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-  }
-
-  :global(html.dark) .category {
-    color: #5da3f7; /* Lighter blue for dark mode contrast */
   }
 
   .title {
@@ -100,25 +96,17 @@ const displayImage = image || stockImages[imageIndex];
     font-size: 1.125rem;
     font-weight: 700;
     line-height: 1.4;
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     transition: color 0.2s ease;
   }
 
-  :global(html.dark) .title {
-    color: #ffffff;
-  }
-
   .article-card:hover .title {
-    color: #136dec;
+    color: var(--ds-color-accent-text-default);
   }
 
   .date {
     margin: 0;
     font-size: 0.875rem;
-    color: #475569; /* Darker for WCAG AA contrast */
-  }
-
-  :global(html.dark) .date {
-    color: #94a3b8;
+    color: var(--ds-color-neutral-text-subtle);
   }
 </style>

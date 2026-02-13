@@ -88,26 +88,18 @@ const placeholderImages = [
     margin: 0;
     font-size: 1.875rem;
     font-weight: 700;
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     letter-spacing: -0.025em;
-  }
-
-  :global(html.dark) .examples-heading {
-    color: #ffffff;
   }
 
   :global(.examples-link) {
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #0d5fc2; /* Darker blue for WCAG AA contrast */
+    color: var(--ds-color-accent-text-default);
     font-size: 0.875rem;
     font-weight: 600;
     text-decoration: none;
-  }
-
-  :global(html.dark .examples-link) {
-    color: #5da3f7;
   }
 
   :global(.examples-link:hover) {
@@ -141,21 +133,16 @@ const placeholderImages = [
     flex-direction: column;
     gap: var(--ds-size-4);
     padding: var(--ds-size-4);
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
     border-radius: 12px;
     text-decoration: none;
     color: inherit;
     transition: border-color 0.2s ease;
   }
 
-  :global(html.dark .example-card) {
-    background-color: #0f172a;
-    border-color: #1e293b;
-  }
-
   :global(.example-card:hover) {
-    border-color: rgba(19, 109, 236, 0.5);
+    border-color: var(--ds-color-accent-border-default);
   }
 
   .example-image {
@@ -163,7 +150,7 @@ const placeholderImages = [
     width: 100%;
     border-radius: 8px;
     overflow: hidden;
-    background-color: #f1f5f9;
+    background-color: var(--ds-color-neutral-background-default);
   }
 
   .example-image img {
@@ -179,25 +166,17 @@ const placeholderImages = [
   }
 
   .example-org {
-    color: #0d5fc2; /* Darker blue for WCAG AA contrast */
+    color: var(--ds-color-accent-text-default);
     font-size: 0.625rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
-  :global(html.dark) .example-org {
-    color: #5da3f7; /* Lighter blue for dark mode */
-  }
-
   .example-title {
-    color: #0d131b;
+    color: var(--ds-color-neutral-text-default);
     font-size: 0.875rem;
     font-weight: 700;
     line-height: 1.4;
-  }
-
-  :global(html.dark) .example-title {
-    color: #ffffff;
   }
 </style>
