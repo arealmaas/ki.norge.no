@@ -14,13 +14,13 @@
         "CacheBuster": "Timestamp"
       },
       "DeliveryApi": {
-        "ApiKey": "Xt6lJ5iqqkhCDEFdFjm92b_G8uANmS8d8mOSLD9-Nqg"
+        "ApiKey": "generate-a-random-key-here"
       }
     }
   },
   "HeadlessPreview": {
     "FrontendUrl": "http://localhost:4321",
-    "PreviewSecret": "ki-norge-preview-secret-2024"
+    "PreviewSecret": "generate-a-random-secret-here"
   },
   "ConnectionStrings": {
   }
