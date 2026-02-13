@@ -19,6 +19,7 @@ public class HeadlessPreviewComposer : ComponentComposer<HeadlessPreviewSetup>
 public class HeadlessPreviewSetup : IAsyncComponent
 {
     private readonly IContentTypeService _contentTypeService;
+    private readonly IContentService _contentService;
     private readonly IFileService _fileService;
     private readonly IRuntimeState _runtimeState;
     private readonly IShortStringHelper _shortStringHelper;
@@ -32,11 +33,13 @@ public class HeadlessPreviewSetup : IAsyncComponent
 
     public HeadlessPreviewSetup(
         IContentTypeService contentTypeService,
+        IContentService contentService,
         IFileService fileService,
         IRuntimeState runtimeState,
         IShortStringHelper shortStringHelper)
     {
         _contentTypeService = contentTypeService;
+        _contentService = contentService;
         _fileService = fileService;
         _runtimeState = runtimeState;
         _shortStringHelper = shortStringHelper;
@@ -58,24 +61,29 @@ public class HeadlessPreviewSetup : IAsyncComponent
                 Console.WriteLine("HeadlessPreviewSetup: Created HeadlessPreview template");
             }
 
-            // Assign template to all content types that don't have one
+            // Assign template to all previewable content types
             foreach (var alias in PreviewableTypes)
             {
                 var ct = _contentTypeService.Get(alias);
                 if (ct == null) continue;
 
-                // Skip if already has this template assigned
-                if (ct.AllowedTemplates?.Any(t => t.Alias == TemplateAlias) == true)
-                    continue;
-
-                var allowed = ct.AllowedTemplates?.ToList() ?? [];
-                allowed.Add(template);
-                ct.AllowedTemplates = allowed;
-                ct.SetDefaultTemplate(template);
-                _contentTypeService.Save(ct);
+                // Add template to allowed list if missing
+                if (ct.AllowedTemplates?.Any(t => t.Alias == TemplateAlias) != true)
+                {
+                    var allowed = ct.AllowedTemplates?.ToList() ?? [];
+                    allowed.Add(template);
+                    ct.AllowedTemplates = allowed;
+                    ct.SetDefaultTemplate(template);
+                    _contentTypeService.Save(ct);
+                }
             }
 
-            Console.WriteLine("HeadlessPreviewSetup: Assigned preview template to content types");
+            // Also assign the template to all existing content items that lack one,
+            // since setting a default on the type doesn't retroactively apply to
+            // already-published items.
+            AssignTemplateToExistingContent(template);
+
+            Console.WriteLine("HeadlessPreviewSetup: Preview template ready");
         }
         catch (Exception ex)
         {
@@ -83,6 +91,26 @@ public class HeadlessPreviewSetup : IAsyncComponent
         }
 
         return Task.CompletedTask;
+    }
+
+    private void AssignTemplateToExistingContent(ITemplate template)
+    {
+        foreach (var alias in PreviewableTypes)
+        {
+            var ct = _contentTypeService.Get(alias);
+            if (ct == null) continue;
+
+            // Get all content of this type
+            var items = _contentService.GetPagedOfType(ct.Id, 0, 1000, out _, null);
+            foreach (var item in items)
+            {
+                if (item.TemplateId != null) continue; // already has a template
+
+                item.TemplateId = template.Id;
+                _contentService.Save(item);
+                _contentService.Publish(item, new[] { "*" });
+            }
+        }
     }
 
     public Task TerminateAsync(bool isRestarting, CancellationToken cancellationToken) => Task.CompletedTask;

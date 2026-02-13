@@ -50,7 +50,7 @@ const currentPath = Astro.url.pathname;
       <button
         type="button"
         class="mobile-menu-toggle"
-        aria-label="Apne meny"
+        aria-label="Åpne meny"
         aria-expanded="false"
         aria-controls="mobile-nav"
         data-mobile-menu-toggle
@@ -101,7 +101,7 @@ const currentPath = Astro.url.pathname;
     toggle.addEventListener('click', () => {
       const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!isExpanded));
-      toggle.setAttribute('aria-label', isExpanded ? 'Apne meny' : 'Lukk meny');
+      toggle.setAttribute('aria-label', isExpanded ? 'Åpne meny' : 'Lukk meny');
       nav.hidden = isExpanded;
 
       if (!isExpanded) {
@@ -115,7 +115,7 @@ const currentPath = Astro.url.pathname;
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !nav.hidden) {
         toggle.setAttribute('aria-expanded', 'false');
-        toggle.setAttribute('aria-label', 'Apne meny');
+        toggle.setAttribute('aria-label', 'Åpne meny');
         nav.hidden = true;
         document.body.style.overflow = '';
       }
