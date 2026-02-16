@@ -2,7 +2,8 @@
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Link, Details, Button } from '@digdir/designsystemet-react';
-import { getFAQs, getMerkelapper, type FAQ, type Merkelapp } from '../lib/umbraco';
+import { getFAQs, getMerkelapper, getPlainText, type FAQ, type Merkelapp } from '../lib/umbraco';
+import { faqPageSchema } from '../lib/seo';
 
 // Fetch FAQs and categories from Umbraco
 let faqs: FAQ[] = [];
@@ -36,9 +37,14 @@ const faqCategories = Object.entries(groupedFaqs).map(([slug, group]) => ({
 }));
 
 const hasCategories = faqCategories.length > 1;
+
+const faqJsonLd = faqPageSchema(
+  faqs.map(faq => ({ question: faq.sporsmal, answer: getPlainText(faq.svar) }))
+);
 ---
 
 <Layout title="Vanlige spørsmål (FAQ)" description="Svar på vanlige spørsmål om KI Norge, den regulatoriske sandkassen og kunstig intelligens i offentlig sektor.">
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
   <section class="page-hero">
     <div class="hero-container">
       <span class="page-badge">Hjelp</span>

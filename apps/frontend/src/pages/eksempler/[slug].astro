@@ -43,7 +43,7 @@ function formatDate(dateStr: string): string {
 }
 ---
 
-<Layout title={caseItem.tittel} description={getPlainText(caseItem.beskrivelse, 200)}>
+<Layout title={caseItem.tittel} description={getPlainText(caseItem.beskrivelse, 200)} ogType="article">
   {isPreview && (
     <div class="preview-banner">
       Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>

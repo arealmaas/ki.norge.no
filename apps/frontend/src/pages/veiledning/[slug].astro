@@ -14,7 +14,7 @@ if (!veiledning) return Astro.redirect('/veiledning');
 const kategori = veiledning.kategori?.navn || 'Veiledning';
 ---
 
-<Layout title={veiledning.tittel} description={getPlainText(veiledning.innhold, 200)}>
+<Layout title={veiledning.tittel} description={getPlainText(veiledning.innhold, 200)} ogType="article">
   {isPreview && (
     <div class="preview-banner">
       Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>

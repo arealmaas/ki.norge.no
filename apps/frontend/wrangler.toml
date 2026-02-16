@@ -1,0 +1,7 @@
+name = "ki-norge"
+compatibility_date = "2025-01-01"
+
+# Astro builds to dist/ with _worker.js for SSR pages
+# and static assets for prerendered pages
+[assets]
+directory = "./dist"

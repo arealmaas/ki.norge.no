@@ -4,6 +4,7 @@ import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 export const prerender = false;
 
 import { getArtikkel, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
+import { articleSchema } from '../../lib/seo';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 const { slug } = Astro.params;
@@ -18,9 +19,18 @@ const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', 
 });
 
 const headings = extractHeadings(article.innhold);
+
+const articleJsonLd = articleSchema({
+  headline: article.tittel,
+  description: getPlainText(article.innhold, 200),
+  slug: slug!,
+  datePublished: article.publishedAt,
+  dateModified: article.updatedAt || article.publishedAt,
+});
 ---
 
-<Layout title={article.tittel} description={getPlainText(article.innhold, 200)}>
+<Layout title={article.tittel} description={getPlainText(article.innhold, 200)} ogType="article" publishedAt={article.publishedAt}>
+  <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
   {isPreview && (
     <div class="preview-banner">
       Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>

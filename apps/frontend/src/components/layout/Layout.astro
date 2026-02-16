@@ -7,13 +7,26 @@ import '../../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  ogType?: 'website' | 'article';
+  ogImage?: string;
+  publishedAt?: string;
 }
 
-const { title, description = 'Norges nasjonale strategi for kunstig intelligens' } = Astro.props;
+const {
+  title,
+  description = 'Norges nasjonale strategi for kunstig intelligens',
+  ogType = 'website',
+  ogImage,
+  publishedAt,
+} = Astro.props;
 
 // Check for preview mode
 const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
 const currentPath = Astro.url.pathname;
+const siteUrl = import.meta.env.SITE_URL || 'https://ki.norge.no';
+const canonicalUrl = new URL(currentPath, siteUrl).href;
+const fullTitle = `${title} | KI Norge`;
+const ogImageUrl = ogImage ? new URL(ogImage, siteUrl).href : undefined;
 ---
 
 <!doctype html>
@@ -23,8 +36,25 @@ const currentPath = Astro.url.pathname;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>{title} | KI Norge</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <title>{fullTitle}</title>
     {isPreview && <meta name="robots" content="noindex" />}
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="KI Norge" />
+    <meta property="og:locale" content="nb_NO" />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    {publishedAt && <meta property="article:published_time" content={publishedAt} />}
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
 
     <!-- Google Fonts: Public Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
