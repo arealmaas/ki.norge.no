@@ -31,7 +31,7 @@ const displayImage = image || stockImages[imageIndex];
 <article class="article-card group">
   <Link href={`/artikler/${slug}`} className="card-link">
     <div class="card-image-wrapper">
-      <div class="card-image" style={`background-image: url('${displayImage}');`}></div>
+      <img class="card-image" src={displayImage} alt="" width="800" height="500" loading="lazy" />
     </div>
     <div class="card-content">
       {category && <span class="category">{category}</span>}
@@ -68,8 +68,7 @@ const displayImage = image || stockImages[imageIndex];
   .card-image {
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
+    object-fit: cover;
     transition: transform 0.5s ease;
   }
 
