@@ -12,9 +12,13 @@ const veiledning = await getVeiledning(slug!, { preview: isPreview });
 if (!veiledning) return Astro.redirect('/veiledning');
 
 const kategori = veiledning.kategori?.navn || 'Veiledning';
+
+const seoTitle = veiledning.seoTittel || veiledning.tittel;
+const seoDesc = veiledning.seoBeskrivelse || getPlainText(veiledning.innhold, 200);
+const seoImage = veiledning.seoBilde?.url;
 ---
 
-<Layout title={veiledning.tittel} description={getPlainText(veiledning.innhold, 200)} ogType="article">
+<Layout title={seoTitle} description={seoDesc} ogType="article" ogImage={seoImage}>
   {isPreview && (
     <div class="preview-banner">
       Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>

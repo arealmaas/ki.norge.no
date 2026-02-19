@@ -15,8 +15,9 @@ try {
   console.error('Failed to fetch om-oss page:', error);
 }
 
-const title = page?.tittel || 'Om oss';
+const title = page?.seoTittel || page?.tittel || 'Om oss';
 const seoDescription = page?.seoBeskrivelse || 'Lær mer om KI Norge og vårt arbeid med kunstig intelligens i offentlig sektor.';
+const seoImage = page?.seoBilde?.url;
 
 const partners = [
   {
@@ -67,7 +68,7 @@ const offerings = [
 ];
 ---
 
-<Layout title={title} description={seoDescription}>
+<Layout title={title} description={seoDescription} ogImage={seoImage}>
   <section class="page-hero">
     <div class="hero-container">
       <span class="page-badge">Om KI Norge</span>

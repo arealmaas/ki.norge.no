@@ -12,11 +12,12 @@ try {
   console.error('Failed to fetch kontakt page:', error);
 }
 
-const title = page?.tittel || 'Kontakt';
+const title = page?.seoTittel || page?.tittel || 'Kontakt';
 const seoDescription = page?.seoBeskrivelse || 'Ta kontakt med KI Norge for spørsmål om kunstig intelligens i offentlig sektor.';
+const seoImage = page?.seoBilde?.url;
 ---
 
-<Layout title={title} description={seoDescription}>
+<Layout title={title} description={seoDescription} ogImage={seoImage}>
   <section class="page-hero">
     <div class="hero-container">
       <span class="page-badge">Kontakt</span>

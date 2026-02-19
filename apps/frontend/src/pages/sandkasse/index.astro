@@ -15,8 +15,9 @@ try {
   console.error('Failed to fetch sandkasse page:', error);
 }
 
-const title = page?.tittel || 'Regulatorisk sandkasse for KI';
+const title = page?.seoTittel || page?.tittel || 'Regulatorisk sandkasse for KI';
 const seoDescription = page?.seoBeskrivelse || 'Altinns regulatoriske sandkasse gir virksomheter mulighet til å utforske kunstig intelligens innenfor trygge rammer.';
+const seoImage = page?.seoBilde?.url;
 
 const features = [
   {
@@ -60,7 +61,7 @@ const steps = [
 ];
 ---
 
-<Layout title={title} description={seoDescription}>
+<Layout title={title} description={seoDescription} ogImage={seoImage}>
   <section class="dark-hero section-dark">
     <div class="hero-container">
       <span class="hero-badge">Sandkasse</span>

@@ -41,9 +41,12 @@ function formatDate(dateStr: string): string {
     return '';
   }
 }
+const seoTitle = caseItem.seoTittel || caseItem.tittel;
+const seoDesc = caseItem.seoBeskrivelse || getPlainText(caseItem.beskrivelse, 200);
+const seoImage = caseItem.seoBilde?.url;
 ---
 
-<Layout title={caseItem.tittel} description={getPlainText(caseItem.beskrivelse, 200)} ogType="article">
+<Layout title={seoTitle} description={seoDesc} ogType="article" ogImage={seoImage}>
   {isPreview && (
     <div class="preview-banner">
       Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>

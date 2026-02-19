@@ -50,13 +50,14 @@ try {
   // Homepage content is optional
 }
 
-const title = forside?.tittel || 'Hjem';
+const title = forside?.seoTittel || forside?.tittel || 'Hjem';
 const seoDescription = forside?.seoBeskrivelse || 'KI Norge - Norges nasjonale strategi for kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.';
+const seoImage = forside?.seoBilde?.url;
 
 const websiteJsonLd = websiteSchema(seoDescription);
 ---
 
-<Layout title={title} description={seoDescription}>
+<Layout title={title} description={seoDescription} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
   <Hero />
   <News articles={articles} />

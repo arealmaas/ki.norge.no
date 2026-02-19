@@ -60,7 +60,7 @@ Tasks we can do right now, ordered by impact and urgency.
 
 4. ~~**Add JSON-LD structured data**~~ — DONE. FAQPage schema on `/faq`, Article schema on `/artikler/[slug]`, WebSite+SearchAction on homepage.
 
-5. **CMS-editable SEO fields** — Add `seoTittel`, `seoBeskrivelse`, and `seoBilde` (media picker) to Artikkel, Eksempel, and Veiledning content types. Map in `umbraco.ts`, use in page templates with fallback to auto-generated values. Also wire up the existing but unused `seoTittel` field on Side. Lets editors control social sharing previews and search result appearance.
+5. ~~**CMS-editable SEO fields**~~ — DONE. Added `seoTittel`, `seoBeskrivelse`, `seoBilde` to Artikkel, Eksempel, Veiledning, Side. Mapped in `umbraco.ts`, used in all page templates with auto-generated fallbacks. Note: existing databases need a fresh install to pick up the new content type fields.
 
 6. **Fix image performance** — Replace CSS `background-image` patterns in ArticleCard, ExamplesGrid, and Hero with proper `<img>` tags (or Astro `<Image>`) with `width`, `height`, `loading="lazy"`, and `alt` text. Eliminates layout shift (CLS) and improves Core Web Vitals.
 

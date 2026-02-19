@@ -39,6 +39,9 @@ export interface Artikkel {
   tittel: string;
   slug: string;
   innhold?: UmbracoBlock[];
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -53,6 +56,7 @@ export interface Side {
   template?: 'standard' | 'bred' | 'landingsside';
   seoTittel?: string;
   seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -71,6 +75,9 @@ export interface Eksempel {
   status?: 'i_utvikling' | 'pilot' | 'i_drift' | 'avsluttet';
   bilde?: UmbracoMedia;
   merkelapper?: Merkelapp[];
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -86,6 +93,9 @@ export interface Veiledning {
   kategori?: Merkelapp;
   lenker?: { tekst: string; url: string; ekstern?: boolean }[];
   rekkefølge?: number;
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -310,6 +320,9 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         tittel: props.tittel as string || item.name,
         slug: props.slug as string || '',
         innhold: mapRichText(props.innhold),
+        seoTittel: props.seoTittel as string || '',
+        seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
       } as T;
 
     case 'side':
@@ -321,6 +334,7 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         template: props.template as string || 'standard',
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
       } as T;
 
     case 'eksempel':
@@ -335,6 +349,9 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         status: props.status as string || undefined,
         bilde: mapMedia(props.bilde),
         merkelapper: mapMerkelapper(props.merkelapper),
+        seoTittel: props.seoTittel as string || '',
+        seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
       } as T;
 
     case 'veiledning':
@@ -346,6 +363,9 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         kategori: mapKategori(props.kategori),
         lenker: mapLenker(props.lenker),
         rekkefølge: props.rekkefolge as number || 0,
+        seoTittel: props.seoTittel as string || '',
+        seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
       } as T;
 
     case 'faq':

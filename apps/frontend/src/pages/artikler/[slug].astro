@@ -20,16 +20,20 @@ const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', 
 
 const headings = extractHeadings(article.innhold);
 
+const seoTitle = article.seoTittel || article.tittel;
+const seoDesc = article.seoBeskrivelse || getPlainText(article.innhold, 200);
+const seoImage = article.seoBilde?.url;
+
 const articleJsonLd = articleSchema({
-  headline: article.tittel,
-  description: getPlainText(article.innhold, 200),
+  headline: seoTitle,
+  description: seoDesc,
   slug: slug!,
   datePublished: article.publishedAt,
   dateModified: article.updatedAt || article.publishedAt,
 });
 ---
 
-<Layout title={article.tittel} description={getPlainText(article.innhold, 200)} ogType="article" publishedAt={article.publishedAt}>
+<Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
   {isPreview && (
     <div class="preview-banner">

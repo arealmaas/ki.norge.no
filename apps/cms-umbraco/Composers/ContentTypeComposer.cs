@@ -157,6 +157,11 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, description: "Hovedinnhold"), "innhold");
+
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -178,8 +183,9 @@ public class ContentTypeComponent : IAsyncComponent
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("template", "Mal", _textStringDt, description: "standard, bred, landingsside"), "seo");
-        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt), "seo");
-        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt), "seo");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -204,6 +210,11 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("status", "Status", _textStringDt, description: "i_utvikling, pilot, i_drift, avsluttet"), "innhold");
         ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
         ct.AddPropertyType(Prop("merkelapper", "Merkelapper", _textAreaDt, description: "JSON array med merkelapp-slugs"), "innhold");
+
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -225,6 +236,11 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt, description: "Velg merkelapp-kategori"), "innhold");
         ct.AddPropertyType(Prop("lenker", "Relaterte lenker", _textAreaDt, description: "JSON: [{\"tekst\": \"\", \"url\": \"\", \"ekstern\": false}]"), "innhold");
         ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
+
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
     }
