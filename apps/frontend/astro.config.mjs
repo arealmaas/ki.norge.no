@@ -9,5 +9,8 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   integrations: [react(), sitemap()],
   site: 'https://ki.norge.no',
-  adapter: cloudflare(),
+  adapter: cloudflare({
+    imageService: 'compile',
+    sessions: { enabled: false },
+  }),
 });
