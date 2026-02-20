@@ -11,6 +11,5 @@ export default defineConfig({
   site: 'https://ki.norge.no',
   adapter: cloudflare({
     imageService: 'compile',
-    sessions: { enabled: false },
   }),
 });
