@@ -4,13 +4,10 @@ import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Button, Link } from '@digdir/designsystemet-react';
 import { getSide } from '../../lib/umbraco';
 
-// Check for preview mode
-const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
-
 // Fetch optional CMS content
 let page = null;
 try {
-  page = await getSide('sandkasse', { preview: isPreview });
+  page = await getSide('sandkasse');
 } catch (error) {
   console.error('Failed to fetch sandkasse page:', error);
 }

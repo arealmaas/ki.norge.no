@@ -1,7 +1,6 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
-export const prerender = false;
 
 import { getEksempel, getEksempler, getPlainText, type Eksempel } from '../../lib/umbraco';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
@@ -14,9 +13,17 @@ const statusLabels: Record<string, string> = {
   avsluttet: 'Avsluttet',
 };
 
+export async function getStaticPaths() {
+  try {
+    const { data } = await getEksempler();
+    return data.map(e => ({ params: { slug: e.slug } }));
+  } catch {
+    return [];
+  }
+}
+
 const { slug } = Astro.params;
-const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
-const caseItem = await getEksempel(slug!, { preview: isPreview });
+const caseItem = await getEksempel(slug!);
 if (!caseItem) return Astro.redirect('/eksempler');
 
 // Fetch related cases (same status or random, excluding current)
@@ -47,12 +54,6 @@ const seoImage = caseItem.seoBilde?.url;
 ---
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" ogImage={seoImage}>
-  {isPreview && (
-    <div class="preview-banner">
-      Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>
-    </div>
-  )}
-
   <article>
     <section class="article-hero">
       <div class="hero-container">
@@ -162,23 +163,6 @@ const seoImage = caseItem.seoBilde?.url;
 </Layout>
 
 <style>
-  .preview-banner {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: var(--ds-color-warning-surface-default, #d97706);
-    color: var(--ds-color-neutral-text-default);
-    text-align: center;
-    padding: var(--ds-size-2);
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-  }
-  .preview-banner a {
-    color: inherit;
-    text-decoration: underline;
-    margin-left: var(--ds-size-1);
-  }
-
   /* Hero */
   .article-hero {
     background: linear-gradient(

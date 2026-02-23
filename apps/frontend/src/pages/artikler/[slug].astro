@@ -1,15 +1,22 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
-export const prerender = false;
 
-import { getArtikkel, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
+import { getArtikkel, getArtikler, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
 import { articleSchema } from '../../lib/seo';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
+export async function getStaticPaths() {
+  try {
+    const { data } = await getArtikler();
+    return data.map(a => ({ params: { slug: a.slug } }));
+  } catch {
+    return [];
+  }
+}
+
 const { slug } = Astro.params;
-const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
-const article = await getArtikkel(slug!, { preview: isPreview });
+const article = await getArtikkel(slug!);
 if (!article) return Astro.redirect('/artikler');
 
 const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', {
@@ -35,11 +42,6 @@ const articleJsonLd = articleSchema({
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
-  {isPreview && (
-    <div class="preview-banner">
-      Forhåndsvisning — <a href={`/api/preview?exit&returnTo=${Astro.url.pathname}`}>Avslutt</a>
-    </div>
-  )}
   <div class="article-page">
     <div class="article-container">
       <nav class="breadcrumb" aria-label="Brødsmuler">
@@ -94,23 +96,6 @@ const articleJsonLd = articleSchema({
 </Layout>
 
 <style>
-  .preview-banner {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: #d97706;
-    color: #fff;
-    text-align: center;
-    padding: 0.5rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-  }
-  .preview-banner a {
-    color: #fff;
-    text-decoration: underline;
-    margin-left: 0.25rem;
-  }
-
   .article-page {
     padding: var(--ds-size-6) var(--ds-size-4);
   }
