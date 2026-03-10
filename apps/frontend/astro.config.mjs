@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
-import cloudflare from '@astrojs/cloudflare';
+import node from '@astrojs/node';
 
 import sitemap from '@astrojs/sitemap';
 
@@ -10,7 +10,7 @@ export default defineConfig({
   output: 'server',
   integrations: [react(), sitemap()],
   site: 'https://ki.norge.no',
-  adapter: cloudflare({
-    imageService: 'compile',
+  adapter: node({
+    mode: 'standalone',
   }),
 });

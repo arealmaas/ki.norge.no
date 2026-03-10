@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "cloudflare:install": "deno install --allow-scripts=npm:sharp,npm:workerd",
+    "install": "deno install --allow-scripts=npm:sharp",
     "dev": "deno -A npm:astro dev",
     "build": "deno -A npm:astro build",
     "preview": "deno -A npm:astro preview",
