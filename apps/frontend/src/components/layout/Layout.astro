@@ -1,6 +1,7 @@
 ---
 import Header from './Header.astro';
 import Footer from './Footer.astro';
+import PreviewBanner from '../shared/PreviewBanner.astro';
 import '../../styles/global.css';
 
 interface Props {
@@ -19,6 +20,7 @@ const {
   publishedAt,
 } = Astro.props;
 
+const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
 const currentPath = Astro.url.pathname;
 const siteUrl = import.meta.env.SITE_URL || 'https://ki.norge.no';
 const canonicalUrl = new URL(currentPath, siteUrl).href;
@@ -35,6 +37,7 @@ const ogImageUrl = ogImage ? new URL(ogImage, siteUrl).href : undefined;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="canonical" href={canonicalUrl} />
     <title>{fullTitle}</title>
+    {isPreview && <meta name="robots" content="noindex" />}
     <!-- Open Graph -->
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
@@ -77,6 +80,7 @@ const ogImageUrl = ogImage ? new URL(ogImage, siteUrl).href : undefined;
       <slot />
     </main>
     <Footer />
+    {isPreview && <PreviewBanner currentPath={currentPath} />}
   </body>
 </html>
 

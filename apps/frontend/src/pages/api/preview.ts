@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro';
-export const prerender = false;
 
 // Map content types to their frontend paths
 const contentTypeRoutes: Record<string, (slug: string) => string> = {

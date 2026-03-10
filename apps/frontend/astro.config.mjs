@@ -7,6 +7,7 @@ import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
+  output: 'server',
   integrations: [react(), sitemap()],
   site: 'https://ki.norge.no',
   adapter: cloudflare({

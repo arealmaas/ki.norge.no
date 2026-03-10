@@ -2,21 +2,13 @@
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 
-import { getArtikkel, getArtikler, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
+import { getArtikkel, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
 import { articleSchema } from '../../lib/seo';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
-export async function getStaticPaths() {
-  try {
-    const { data } = await getArtikler();
-    return data.map(a => ({ params: { slug: a.slug } }));
-  } catch {
-    return [];
-  }
-}
-
 const { slug } = Astro.params;
-const article = await getArtikkel(slug!);
+const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
+const article = await getArtikkel(slug!, { preview: isPreview });
 if (!article) return Astro.redirect('/artikler');
 
 const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', {

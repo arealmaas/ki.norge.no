@@ -2,20 +2,12 @@
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 
-import { getVeiledning, getVeiledninger, getPlainText, type Veiledning } from '../../lib/umbraco';
+import { getVeiledning, getPlainText, type Veiledning } from '../../lib/umbraco';
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
-export async function getStaticPaths() {
-  try {
-    const { data } = await getVeiledninger();
-    return data.map(v => ({ params: { slug: v.slug } }));
-  } catch {
-    return [];
-  }
-}
-
 const { slug } = Astro.params;
-const veiledning = await getVeiledning(slug!);
+const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
+const veiledning = await getVeiledning(slug!, { preview: isPreview });
 if (!veiledning) return Astro.redirect('/veiledning');
 
 const kategori = veiledning.kategori?.navn || 'Veiledning';

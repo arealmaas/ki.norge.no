@@ -4,10 +4,12 @@ import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
 import { getSide } from '../lib/umbraco';
 
+const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
+
 // Fetch page content from Umbraco
 let page = null;
 try {
-  page = await getSide('om-oss');
+  page = await getSide('om-oss', { preview: isPreview });
 } catch (error) {
   console.error('Failed to fetch om-oss page:', error);
 }
