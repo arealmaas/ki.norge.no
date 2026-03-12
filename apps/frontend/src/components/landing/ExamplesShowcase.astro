@@ -26,12 +26,6 @@ const tabs = [
   { label: 'Offentlige virksomheter', active: false },
   { label: 'Private virksomheter', active: false },
 ];
-
-const placeholderImages = [
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuC8g6yS7kZkdK6gqtiJaak5i23M9xMHtkZEwB1JRInSi7czgeErdanJdHB7jh1TFFX3ToeUiqYr5ChwqRTraj_HA07Peirc5TOrNBkqo25PGcSt95zztIfv7X-qD8tHXM0fDtT_NKkHh4T9FkM_ywQx5NzqjyKNOsKGIei50c6KBiW5QcWCeOili-yrk0AHv4gT5upBB4gXHfP9YkmouWinpez320mhEoXCZ62YNQCqjySaqbVabn7NpBfxTximu_3uF03UUdLLoQrz',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuB9jwgOe84PVN2Qg7Gqu0RkJHO1Sdb0HQtEdjVxBRrNlLBfz8t8zoOh0hT5Nb4HvnN9kRcIs8G3Y31Xr2V9LcepDFFiY3ylzd6Z7ZonAddgbJfhKAFpyDs7DC9uObDiGgfsJWDE2xN9gy4jdpZizntx5i6sIXyfEW90x1yPeZX-5Nv5eS5VHwzlYCtt5Fg3Y20eWE7CjGNC99vzGrXocfTKSBXhlSzL0e8dhYRCguQ8LKqZMOzFm5BVjQz-uIZN0Dl1O3e1ZCDNbHgU',
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuCsU49vh5Zi91EMo8t3relyycF21yFwqrCPUTNyq5_qzL-pCvFxC3H3D1f4xKEhTojd_3DfW6odwrBVCFAeboaOeMEqqK_30P4U8bemeFakWvd6xUpZA52I64E5WZiYutVMH2ms_B6Ar1j9HDnnDhViG7wC2nutbz-Pyt2DU9syMutHi0-8BU1KeacPmLWzpYzaBnWBZzHXNsEnnm5O-zaQ1zrl-791sjos28R5VuEF1T4nEXqZ1CeRaEjddh6QwXo2TxREK_AmHrh9',
-];
 ---
 
 <section class="examples-showcase">
@@ -57,14 +51,14 @@ const placeholderImages = [
     </div>
 
     <div class="examples-showcase-grid">
-      {displayExamples.slice(0, 3).map((example, index) => (
+      {displayExamples.slice(0, 3).map((example) => (
         <a href={`/eksempler/${example.slug}`} class="showcase-card">
           <div class="showcase-card-image">
-            <img
-              src={example.image || placeholderImages[index % placeholderImages.length]}
-              alt=""
-              loading="lazy"
-            />
+            {example.image ? (
+              <img src={example.image} alt="" loading="lazy" />
+            ) : (
+              <div class="showcase-card-placeholder"></div>
+            )}
           </div>
           <div class="showcase-card-content">
             <span class="showcase-card-org">{example.organization}</span>
@@ -176,7 +170,6 @@ const placeholderImages = [
   }
 
   .showcase-card-image {
-    aspect-ratio: 16 / 9;
     width: 100%;
     overflow: hidden;
     background-color: var(--ds-color-neutral-background-default);
@@ -184,8 +177,15 @@ const placeholderImages = [
 
   .showcase-card-image img {
     width: 100%;
-    height: 100%;
+    aspect-ratio: 16 / 9;
     object-fit: cover;
+    display: block;
+  }
+
+  .showcase-card-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #e5e7eb;
   }
 
   .showcase-card-content {

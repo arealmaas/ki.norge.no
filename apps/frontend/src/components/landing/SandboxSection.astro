@@ -4,32 +4,38 @@ import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 <section class="sandbox-section">
   <div class="sandbox-section-container">
-    <Heading level={2} size="xlarge" className="sandbox-section-heading">
-      Sandkassen for kunstig intelligens
-    </Heading>
-    <div class="sandbox-section-text">
-      <Paragraph size="medium" className="sandbox-section-paragraph">
-        Den regulatoriske sandkassen er et samarbeid mellom for virksomheter som vil utforske nye måter å bruke KI på innenfor rammene av personvern, etikk og lovgivning. Sandkassen gir veiledning og rammer.
-      </Paragraph>
-      <Paragraph size="medium" className="sandbox-section-paragraph">
-        KI-senter bidrar til robustheten til det norske tilsynssystemet. De tre regulatoriske sandkassene som under Datatilsynet, Finanstilsynet, og Medietilsynet er tilgjengelige for et bredt spekter av virksomheter.
-      </Paragraph>
+    <div class="sandbox-section-content">
+      <Heading level={2} size="xlarge" className="sandbox-section-heading">
+        Sandkassen for kunstig intelligens
+      </Heading>
+      <div class="sandbox-section-text">
+        <Paragraph size="medium" className="sandbox-section-paragraph">
+          Den regulatoriske sandkassen er et samarbeid mellom for virksomheter som vil utforske nye måter å bruke KI på innenfor rammene av personvern, etikk og lovgivning. Sandkassen gir veiledning og rammer.
+        </Paragraph>
+        <Paragraph size="medium" className="sandbox-section-paragraph">
+          KI-senter bidrar til robustheten til det norske tilsynssystemet. De tre regulatoriske sandkassene som under Datatilsynet, Finanstilsynet, og Medietilsynet er tilgjengelige for et bredt spekter av virksomheter.
+        </Paragraph>
+      </div>
+      <Link href="/sandkasse" className="sandbox-section-link">
+        Les mer om sandkassen →
+      </Link>
     </div>
-    <Link href="/sandkasse" className="sandbox-section-link">
-      Les mer om sandkassen →
-    </Link>
   </div>
 </section>
 
 <style>
   .sandbox-section {
     padding: var(--ds-size-14) var(--ds-size-4);
-    background-color: #eef1f7;
+    background-color: #eaecf5;
   }
 
   .sandbox-section-container {
-    max-width: 800px;
+    max-width: 1280px;
     margin: 0 auto;
+  }
+
+  .sandbox-section-content {
+    max-width: 800px;
   }
 
   :global(.sandbox-section-heading) {

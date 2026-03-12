@@ -1,14 +1,12 @@
 ---
 import { Link } from '@digdir/designsystemet-react';
 import Logo from '../shared/Logo.astro';
-import DarkModeToggle from '../shared/DarkModeToggle.astro';
+
 
 const navItems = [
   { href: '/veiledning', label: 'Veiledning' },
-  { href: '/sandkasse', label: 'Sandkasse' },
   { href: '/eksempler', label: 'Eksempler' },
-  { href: '/artikler', label: 'Artikler' },
-  { href: '/om-oss', label: 'Om oss' },
+  { href: '/sandkasse', label: 'Sandkasse' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -40,13 +38,6 @@ const currentPath = Astro.url.pathname;
     </nav>
 
     <div class="header-actions">
-      <DarkModeToggle />
-      <a href="/sok" class="search-link" aria-label="Søk">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-      </a>
       <button
         type="button"
         class="mobile-menu-toggle"
@@ -55,12 +46,13 @@ const currentPath = Astro.url.pathname;
         aria-controls="mobile-nav"
         data-mobile-menu-toggle
       >
-        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <span class="menu-label">Meny</span>
+        <svg class="menu-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="6" x2="21" y2="6"/>
           <line x1="3" y1="12" x2="21" y2="12"/>
           <line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
-        <svg class="close-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg class="close-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
@@ -190,7 +182,7 @@ const currentPath = Astro.url.pathname;
     list-style: none;
     margin: 0;
     padding: 0;
-    justify-content: center;
+    justify-content: flex-end;
   }
 
   :global(.nav-link) {
@@ -219,33 +211,19 @@ const currentPath = Astro.url.pathname;
     gap: var(--ds-size-3);
   }
 
-  .search-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border-radius: var(--ds-border-radius-md);
-    color: var(--ds-color-neutral-text-default);
-    transition: all 0.2s ease;
-  }
-
-  .search-link:hover {
-    background-color: var(--ds-color-neutral-surface-hover);
-  }
-
   .mobile-menu-toggle {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    padding: 0;
+    gap: var(--ds-size-2);
+    padding: var(--ds-size-2) var(--ds-size-3);
     background: transparent;
     border: 1px solid var(--ds-color-neutral-border-subtle);
     border-radius: var(--ds-border-radius-md);
     cursor: pointer;
     color: var(--ds-color-neutral-text-default);
+    font-family: inherit;
+    font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-medium);
     transition: all 0.2s ease;
   }
 
@@ -258,9 +236,13 @@ const currentPath = Astro.url.pathname;
     outline-offset: 2px;
   }
 
+  .menu-label {
+    display: none;
+  }
+
   @media (min-width: 1024px) {
-    .mobile-menu-toggle {
-      display: none;
+    .menu-label {
+      display: inline;
     }
   }
 
