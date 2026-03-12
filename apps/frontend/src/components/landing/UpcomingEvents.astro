@@ -1,0 +1,139 @@
+---
+import { Heading, Paragraph } from '@digdir/designsystemet-react';
+
+const events = [
+  {
+    date: 'Dato',
+    title: 'Arrangement 1',
+    description: 'Call to a feature, benefit, or value that can hook readers to this.',
+  },
+  {
+    date: 'Dato',
+    title: 'Arrangement 2',
+    description: 'Call to a feature, benefit, or value that can hook readers to this.',
+  },
+  {
+    date: 'Dato',
+    title: 'Arrangement 3',
+    description: 'Call to a feature, benefit, or value that can hook readers to this.',
+  },
+];
+---
+
+<section class="upcoming-events">
+  <div class="upcoming-events-container">
+    <div class="upcoming-events-header">
+      <Heading level={2} size="xlarge" className="upcoming-events-heading">
+        Kommende arrangementer
+      </Heading>
+      <a href="/arrangementer" class="upcoming-events-calendar-link">Se kalenderen</a>
+    </div>
+    <div class="upcoming-events-grid">
+      {events.map((event) => (
+        <div class="event-card">
+          <div class="event-card-image">
+            <div class="event-card-placeholder"></div>
+          </div>
+          <div class="event-card-content">
+            <span class="event-date">{event.date}</span>
+            <Heading level={3} size="xsmall" className="event-title">
+              {event.title}
+            </Heading>
+            <Paragraph size="small" className="event-description">
+              {event.description}
+            </Paragraph>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .upcoming-events {
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .upcoming-events-container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .upcoming-events-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: var(--ds-size-8);
+    flex-wrap: wrap;
+    gap: var(--ds-size-4);
+  }
+
+  :global(.upcoming-events-heading) {
+    margin: 0;
+  }
+
+  .upcoming-events-calendar-link {
+    color: var(--ds-color-accent-text-default);
+    font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-semibold);
+    text-decoration: none;
+  }
+
+  .upcoming-events-calendar-link:hover {
+    text-decoration: underline;
+  }
+
+  .upcoming-events-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-6);
+  }
+
+  @media (min-width: 768px) {
+    .upcoming-events-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .event-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    overflow: hidden;
+  }
+
+  .event-card-image {
+    width: 100%;
+  }
+
+  .event-card-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #d9d9d9;
+  }
+
+  .event-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-1);
+    padding: var(--ds-size-5);
+  }
+
+  .event-date {
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-medium);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  :global(.event-title) {
+    margin: 0;
+  }
+
+  :global(.event-description) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+    line-height: 1.5;
+  }
+</style>

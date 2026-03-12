@@ -1,0 +1,109 @@
+---
+import { Heading, Paragraph } from '@digdir/designsystemet-react';
+
+const tips = [
+  {
+    title: 'Start med problemet',
+    description: 'Definer klart hva du ønsker å oppnå før du velger teknologi. Gode KI-prosjekter starter med et tydelig behov, og en forståelse over hvordan verdien skapes, gi verdi.',
+    image: '/frontpage-target.png',
+  },
+  {
+    title: 'Forstå dataene dine',
+    description: 'Kartlegg hvilke data du har tilgang til, kvaliteten på dem, og om de er egnet for formålet. Det er datasettene som avgjør hvor godt modellen fungerer.',
+    image: '/frontpage-datacloud.png',
+  },
+  {
+    title: 'Sjekk rammer og ansvar',
+    description: 'Forstå regelverket som gjelder for ditt bruksområde. Sørg for at løsningen ivaretar personvern, etiske hensyn og at du tar ansvar for prosessene.',
+    image: '/frontpage-magnifying_glass.png',
+  },
+];
+---
+
+<section class="three-tips">
+  <div class="three-tips-container">
+    <div class="three-tips-header">
+      <Heading level={2} size="xlarge" className="three-tips-heading">
+        Tre råd før du går i gang med KI
+      </Heading>
+    </div>
+    <div class="three-tips-grid">
+      {tips.map((tip) => (
+        <div class="tip-card">
+          <div class="tip-illustration">
+            <img src={tip.image} alt="" width="140" height="140" loading="lazy" />
+          </div>
+          <Heading level={3} size="small" className="tip-title">
+            {tip.title}
+          </Heading>
+          <Paragraph size="small" className="tip-description">
+            {tip.description}
+          </Paragraph>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .three-tips {
+    padding: var(--ds-size-12) var(--ds-size-4);
+    background-color: var(--ds-color-neutral-surface-default);
+  }
+
+  .three-tips-container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .three-tips-header {
+    text-align: center;
+    margin-bottom: var(--ds-size-10);
+  }
+
+  :global(.three-tips-heading) {
+    margin: 0;
+  }
+
+  .three-tips-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-8);
+  }
+
+  @media (min-width: 768px) {
+    .three-tips-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .tip-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--ds-size-4);
+  }
+
+  .tip-illustration {
+    margin-bottom: var(--ds-size-5);
+  }
+
+  .tip-illustration img {
+    width: 140px;
+    height: 140px;
+    object-fit: contain;
+  }
+
+  :global(.tip-title) {
+    margin: 0 0 var(--ds-size-3);
+    font-weight: var(--ds-font-weight-semibold);
+  }
+
+  :global(.tip-description) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 340px;
+  }
+</style>

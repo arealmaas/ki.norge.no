@@ -1,0 +1,215 @@
+---
+import { Heading, Paragraph } from '@digdir/designsystemet-react';
+
+interface Example {
+  title: string;
+  organization: string;
+  slug: string;
+  image?: string;
+  description?: string;
+}
+
+interface Props {
+  examples?: Example[];
+}
+
+const { examples = [] } = Astro.props;
+
+const displayExamples: Example[] = examples.length > 0 ? examples : [
+  { title: 'KI hos Oslo universitetssykehus', organization: 'Ullensag', slug: 'oslo-saksbehandling', description: 'Vi bruker maskinlæring og bildegjenkjenning for raskere og bedre diagnostisering.' },
+  { title: 'Kunnskapsassistenten', organization: 'Virksomhet', slug: 'nav-prediktiv', description: 'Vi har bygget en chatbot som hjelper med å finne informasjon om digitaliseringsforskundet.' },
+  { title: 'Spacemaker', organization: 'Virksomhet', slug: 'sykehus-radiologi', description: '' },
+];
+
+const tabs = [
+  { label: 'Se alle eksempler', active: true },
+  { label: 'Offentlige virksomheter', active: false },
+  { label: 'Private virksomheter', active: false },
+];
+
+const placeholderImages = [
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuC8g6yS7kZkdK6gqtiJaak5i23M9xMHtkZEwB1JRInSi7czgeErdanJdHB7jh1TFFX3ToeUiqYr5ChwqRTraj_HA07Peirc5TOrNBkqo25PGcSt95zztIfv7X-qD8tHXM0fDtT_NKkHh4T9FkM_ywQx5NzqjyKNOsKGIei50c6KBiW5QcWCeOili-yrk0AHv4gT5upBB4gXHfP9YkmouWinpez320mhEoXCZ62YNQCqjySaqbVabn7NpBfxTximu_3uF03UUdLLoQrz',
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuB9jwgOe84PVN2Qg7Gqu0RkJHO1Sdb0HQtEdjVxBRrNlLBfz8t8zoOh0hT5Nb4HvnN9kRcIs8G3Y31Xr2V9LcepDFFiY3ylzd6Z7ZonAddgbJfhKAFpyDs7DC9uObDiGgfsJWDE2xN9gy4jdpZizntx5i6sIXyfEW90x1yPeZX-5Nv5eS5VHwzlYCtt5Fg3Y20eWE7CjGNC99vzGrXocfTKSBXhlSzL0e8dhYRCguQ8LKqZMOzFm5BVjQz-uIZN0Dl1O3e1ZCDNbHgU',
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuCsU49vh5Zi91EMo8t3relyycF21yFwqrCPUTNyq5_qzL-pCvFxC3H3D1f4xKEhTojd_3DfW6odwrBVCFAeboaOeMEqqK_30P4U8bemeFakWvd6xUpZA52I64E5WZiYutVMH2ms_B6Ar1j9HDnnDhViG7wC2nutbz-Pyt2DU9syMutHi0-8BU1KeacPmLWzpYzaBnWBZzHXNsEnnm5O-zaQ1zrl-791sjos28R5VuEF1T4nEXqZ1CeRaEjddh6QwXo2TxREK_AmHrh9',
+];
+---
+
+<section class="examples-showcase">
+  <div class="examples-showcase-container">
+    <div class="examples-showcase-header">
+      <Heading level={2} size="xlarge" className="examples-showcase-heading">
+        Se hvordan andre har brukt KI
+      </Heading>
+      <Paragraph size="medium" className="examples-showcase-subtext">
+        Finn inspirasjon og lær av andre.
+      </Paragraph>
+    </div>
+
+    <div class="examples-showcase-tabs">
+      {tabs.map((tab) => (
+        <button
+          class:list={['examples-tab', { 'examples-tab--active': tab.active }]}
+          type="button"
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+
+    <div class="examples-showcase-grid">
+      {displayExamples.slice(0, 3).map((example, index) => (
+        <a href={`/eksempler/${example.slug}`} class="showcase-card">
+          <div class="showcase-card-image">
+            <img
+              src={example.image || placeholderImages[index % placeholderImages.length]}
+              alt=""
+              loading="lazy"
+            />
+          </div>
+          <div class="showcase-card-content">
+            <span class="showcase-card-org">{example.organization}</span>
+            <Heading level={3} size="xsmall" className="showcase-card-title">
+              {example.title}
+            </Heading>
+            {example.description && (
+              <Paragraph size="small" className="showcase-card-description">
+                {example.description}
+              </Paragraph>
+            )}
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .examples-showcase {
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .examples-showcase-container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .examples-showcase-header {
+    margin-bottom: var(--ds-size-6);
+  }
+
+  :global(.examples-showcase-heading) {
+    margin: 0 0 var(--ds-size-2);
+  }
+
+  :global(.examples-showcase-subtext) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+  }
+
+  .examples-showcase-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ds-size-2);
+    margin-bottom: var(--ds-size-8);
+  }
+
+  .examples-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--ds-size-2) var(--ds-size-4);
+    font-size: var(--ds-font-size-1);
+    font-weight: var(--ds-font-weight-medium);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-full);
+    background-color: var(--ds-color-neutral-surface-default);
+    color: var(--ds-color-neutral-text-default);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+
+  .examples-tab:hover {
+    border-color: var(--ds-color-accent-border-default);
+    color: var(--ds-color-accent-text-default);
+  }
+
+  .examples-tab--active {
+    background-color: var(--ds-color-accent-surface-default);
+    border-color: var(--ds-color-accent-border-default);
+    color: var(--ds-color-accent-text-default);
+    font-weight: var(--ds-font-weight-semibold);
+  }
+
+  .examples-showcase-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-6);
+  }
+
+  @media (min-width: 640px) {
+    .examples-showcase-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .examples-showcase-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .showcase-card {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .showcase-card:hover {
+    border-color: var(--ds-color-accent-border-default);
+    box-shadow: var(--ds-shadow-md);
+  }
+
+  .showcase-card-image {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    overflow: hidden;
+    background-color: var(--ds-color-neutral-background-default);
+  }
+
+  .showcase-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .showcase-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-size-1);
+    padding: var(--ds-size-5);
+  }
+
+  .showcase-card-org {
+    color: var(--ds-color-neutral-text-subtle);
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-medium);
+  }
+
+  :global(.showcase-card-title) {
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  :global(.showcase-card-description) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.8125rem;
+  }
+</style>

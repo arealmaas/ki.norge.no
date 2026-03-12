@@ -1,0 +1,126 @@
+---
+import { Heading, Paragraph } from '@digdir/designsystemet-react';
+
+const cards = [
+  {
+    title: 'Vi skal ta i bruk KI',
+    subtext: 'For deg som vil ta i bruk kunstig intelligens modeller →',
+    href: '/veiledning/ta-i-bruk-ki',
+    image: '/frontpage-browsing-hand.png',
+  },
+  {
+    title: 'Vi skal lage noe',
+    subtext: 'For deg som ønsker å bygge en modell selv →',
+    href: '/veiledning/lage-noe',
+    image: '/frontpage-person_with_portrait.png',
+  },
+];
+---
+
+<section class="guidance-cards">
+  <div class="guidance-cards-container">
+    <div class="guidance-cards-header">
+      <Heading level={2} size="xlarge" className="guidance-cards-heading">
+        Guider og veiledning
+      </Heading>
+      <Paragraph size="medium" className="guidance-cards-subtext">
+        Praktisk veiledning for deg som vil bruke kunstig intelligens på en trygg og ansvarlig måte.
+      </Paragraph>
+    </div>
+    <div class="guidance-cards-grid">
+      {cards.map((card) => (
+        <a href={card.href} class="guidance-card">
+          <span class="guidance-card-title">{card.title}</span>
+          <div class="guidance-card-illustration">
+            <img src={card.image} alt="" width="140" height="140" />
+          </div>
+          <span class="guidance-card-link">{card.subtext}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .guidance-cards {
+    padding: var(--ds-size-12) var(--ds-size-4);
+  }
+
+  .guidance-cards-container {
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+
+  .guidance-cards-header {
+    margin-bottom: var(--ds-size-8);
+  }
+
+  :global(.guidance-cards-heading) {
+    margin: 0 0 var(--ds-size-2);
+  }
+
+  :global(.guidance-cards-subtext) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+  }
+
+  .guidance-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-6);
+  }
+
+  @media (min-width: 768px) {
+    .guidance-cards-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .guidance-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--ds-size-6);
+    background-color: var(--ds-color-neutral-surface-default);
+    border: 1px solid var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .guidance-card:hover {
+    border-color: var(--ds-color-accent-border-default);
+    box-shadow: var(--ds-shadow-md);
+  }
+
+  .guidance-card-title {
+    font-size: 1rem;
+    font-weight: var(--ds-font-weight-semibold);
+    color: var(--ds-color-neutral-text-default);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .guidance-card-illustration {
+    width: 200px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--ds-color-neutral-border-subtle);
+    border-radius: var(--ds-border-radius-lg);
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .guidance-card-illustration img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+  }
+
+  .guidance-card-link {
+    font-size: var(--ds-font-size-1);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+</style>

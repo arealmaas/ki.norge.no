@@ -1,45 +1,30 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import Hero from '../components/landing/Hero.astro';
-import News from '../components/landing/News.astro';
-import SandboxFeature from '../components/landing/SandboxFeature.astro';
-import ExamplesGrid from '../components/landing/ExamplesGrid.astro';
-import GuidanceCTA from '../components/landing/GuidanceCTA.astro';
-import { getArtikler, getEksempler, getSide, getPlainText, type Artikkel, type Eksempel } from '../lib/umbraco';
+import GuidanceCards from '../components/landing/GuidanceCards.astro';
+import ExamplesShowcase from '../components/landing/ExamplesShowcase.astro';
+import ThreeTips from '../components/landing/ThreeTips.astro';
+import SandboxSection from '../components/landing/SandboxSection.astro';
+import UpcomingEvents from '../components/landing/UpcomingEvents.astro';
+import { getEksempler, getPlainText, getSide, type Eksempel } from '../lib/umbraco';
 import { websiteSchema } from '../lib/seo';
 
-// Fetch latest articles for News section
-let artikler: Artikkel[] = [];
-try {
-  const artiklerRes = await getArtikler(3);
-  artikler = artiklerRes.data || [];
-} catch (error) {
-  console.error('Failed to fetch articles for homepage:', error);
-}
-
-// Transform articles for News component
-const articles = artikler.map(a => ({
-  title: a.tittel,
-  excerpt: getPlainText(a.innhold, 120),
-  slug: a.slug,
-  publishedAt: a.publishedAt,
-  category: 'Nyhet',
-}));
-
-// Fetch examples for ExamplesGrid section
+// Fetch examples for ExamplesShowcase section
 let eksempler: Eksempel[] = [];
 try {
   const eksemplerRes = await getEksempler();
-  eksempler = (eksemplerRes.data || []).slice(0, 4);
+  eksempler = (eksemplerRes.data || []).slice(0, 3);
 } catch (error) {
   console.error('Failed to fetch examples for homepage:', error);
 }
 
-// Transform examples for ExamplesGrid component
+// Transform examples for ExamplesShowcase component
 const examples = eksempler.map(e => ({
   title: e.tittel,
   organization: e.organisasjon || 'Offentlig sektor',
   slug: e.slug,
+  description: e.beskrivelse ? getPlainText(e.beskrivelse, 120) : undefined,
+  image: e.bilde?.url,
 }));
 
 // Fetch homepage content from CMS (optional)
@@ -60,8 +45,9 @@ const websiteJsonLd = websiteSchema(seoDescription);
 <Layout title={title} description={seoDescription} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
   <Hero />
-  <News articles={articles} />
-  <SandboxFeature />
-  <ExamplesGrid examples={examples} />
-  <GuidanceCTA />
+  <GuidanceCards />
+  <ExamplesShowcase examples={examples} />
+  <ThreeTips />
+  <SandboxSection />
+  <UpcomingEvents />
 </Layout>

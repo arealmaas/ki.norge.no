@@ -1,59 +1,69 @@
 ---
-import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 ---
 
 <section class="hero">
+  <img
+    class="hero-bg"
+    src="/frontend-top_gradient.png"
+    alt=""
+    aria-hidden="true"
+  />
   <div class="hero-container">
     <div class="hero-content">
-      <Heading level={1} size="2xlarge" className="hero-title">
-        Kunstig intelligens i offentlig sektor
-      </Heading>
-      <Paragraph size="large" className="hero-subtitle">
-        Vi hjelper deg med å ta i bruk KI på en ansvarlig og innovativ måte gjennom veiledning, eksempler og vår regulatoriske sandkasse.
-      </Paragraph>
-      <div class="hero-actions">
-        <Button
-          asChild
-          variant="primary"
-          size="large"
-        >
-          <a href="/veiledning">Utforsk veiledning</a>
-        </Button>
-        <Button
-          asChild
-          variant="secondary"
-          size="large"
-        >
-          <a href="/eksempler">Se eksempler</a>
-        </Button>
-      </div>
+      <h1 class="hero-title">
+        <span class="hero-title-regular">Norge satser på</span>
+        <span class="hero-title-bold">trygg og verdiskapende</span>
+        <span class="hero-title-bold">bruk av <strong>kunstig intelligens</strong></span>
+      </h1>
     </div>
     <div class="hero-visual">
-      <div class="hero-image-wrapper">
-        <img class="hero-image" src="https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=1000&auto=format&fit=crop" alt="" width="1000" height="563" aria-hidden="true" />
-        <div class="hero-gradient-overlay"></div>
-      </div>
+      <img
+        class="hero-robot"
+        src="/frontpage-ai_robot.png"
+        alt="Illustrasjon av en robot"
+        width="500"
+        height="500"
+      />
     </div>
   </div>
 </section>
 
 <style>
   .hero {
-    padding: var(--ds-size-10) var(--ds-size-4);
+    position: relative;
+    overflow: hidden;
+    padding: var(--ds-size-12) var(--ds-size-4);
+    min-height: 400px;
+    display: flex;
+    align-items: center;
   }
 
   @media (min-width: 768px) {
     .hero {
       padding: var(--ds-size-14) var(--ds-size-4);
+      min-height: 500px;
     }
   }
 
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
   .hero-container {
+    position: relative;
+    z-index: 1;
     max-width: 1280px;
     margin: 0 auto;
+    width: 100%;
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-10);
+    align-items: center;
+    gap: var(--ds-size-8);
   }
 
   @media (min-width: 1024px) {
@@ -64,126 +74,74 @@ import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
   }
 
   .hero-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ds-size-4);
     flex: 1;
   }
 
   @media (min-width: 1024px) {
     .hero-content {
-      max-width: 50%;
+      max-width: 55%;
     }
   }
 
-  :global(.hero-title) {
+  .hero-title {
     margin: 0;
-    color: var(--ds-color-neutral-text-default);
-    line-height: 1.1;
-    letter-spacing: -0.033em;
-    font-weight: 900;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
     font-size: 2.25rem;
+    color: white;
   }
 
   @media (min-width: 768px) {
-    :global(.hero-title) {
+    .hero-title {
+      font-size: 3.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .hero-title {
       font-size: 3.75rem;
     }
   }
 
-  :global(.hero-subtitle) {
-    color: var(--ds-color-neutral-text-subtle);
-    margin: 0;
-    line-height: 1.6;
-    max-width: 540px;
-    font-size: 1.125rem;
+  .hero-title-regular {
+    font-weight: 400;
   }
 
-  @media (min-width: 768px) {
-    :global(.hero-subtitle) {
-      font-size: 1.25rem;
-    }
-  }
-
-  .hero-actions {
-    display: flex;
-    gap: var(--ds-size-4);
-    flex-wrap: wrap;
-    margin-top: var(--ds-size-4);
-  }
-
-  .hero-actions :global(a) {
-    text-decoration: none;
-    min-width: 160px;
-    height: 56px;
-    padding: 0 var(--ds-size-8);
-    border-radius: 12px;
+  .hero-title-bold {
     font-weight: 700;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
   }
 
-  .hero-actions :global(a:first-child) {
-    background-color: var(--ds-color-accent-base-default);
-    color: white;
-    box-shadow: 0 10px 25px -5px rgba(19, 109, 236, 0.2);
+  .hero-title-bold strong {
+    font-weight: 900;
   }
 
-  .hero-actions :global(a:first-child:hover) {
-    transform: scale(1.02);
-  }
-
-  .hero-actions :global(a:first-child:active) {
-    transform: scale(0.98);
-  }
-
-  .hero-actions :global(a:last-child) {
-    background-color: var(--ds-color-neutral-surface-default);
-    color: var(--ds-color-neutral-text-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-  }
-
-  .hero-actions :global(a:last-child:hover) {
-    background-color: var(--ds-color-neutral-surface-hover);
-  }
-
-  /* Hero Visual / Image */
   .hero-visual {
-    width: 100%;
-    flex: 1;
+    flex-shrink: 0;
   }
 
   @media (min-width: 1024px) {
     .hero-visual {
-      max-width: 50%;
+      flex: 0 0 auto;
     }
   }
 
-  .hero-image-wrapper {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-    border-radius: 16px;
-    overflow: hidden;
-    position: relative;
-    background: linear-gradient(135deg, rgba(19, 109, 236, 0.2) 0%, rgba(19, 109, 236, 0.05) 50%, transparent 100%);
-    border: 1px solid rgba(19, 109, 236, 0.1);
+  .hero-robot {
+    width: 280px;
+    height: auto;
+    display: block;
   }
 
-  .hero-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    mix-blend-mode: overlay;
-    opacity: 0.6;
+  @media (min-width: 768px) {
+    .hero-robot {
+      width: 380px;
+    }
   }
 
-  .hero-gradient-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, var(--ds-color-neutral-background-default) 0%, transparent 40%);
-    opacity: 0.4;
+  @media (min-width: 1024px) {
+    .hero-robot {
+      width: 440px;
+    }
   }
 </style>

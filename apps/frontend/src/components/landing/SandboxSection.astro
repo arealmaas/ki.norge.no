@@ -1,0 +1,55 @@
+---
+import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+---
+
+<section class="sandbox-section">
+  <div class="sandbox-section-container">
+    <Heading level={2} size="xlarge" className="sandbox-section-heading">
+      Sandkassen for kunstig intelligens
+    </Heading>
+    <div class="sandbox-section-text">
+      <Paragraph size="medium" className="sandbox-section-paragraph">
+        Den regulatoriske sandkassen er et samarbeid mellom for virksomheter som vil utforske nye måter å bruke KI på innenfor rammene av personvern, etikk og lovgivning. Sandkassen gir veiledning og rammer.
+      </Paragraph>
+      <Paragraph size="medium" className="sandbox-section-paragraph">
+        KI-senter bidrar til robustheten til det norske tilsynssystemet. De tre regulatoriske sandkassene som under Datatilsynet, Finanstilsynet, og Medietilsynet er tilgjengelige for et bredt spekter av virksomheter.
+      </Paragraph>
+    </div>
+    <Link href="/sandkasse" className="sandbox-section-link">
+      Les mer om sandkassen →
+    </Link>
+  </div>
+</section>
+
+<style>
+  .sandbox-section {
+    padding: var(--ds-size-14) var(--ds-size-4);
+    background-color: #eef1f7;
+  }
+
+  .sandbox-section-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  :global(.sandbox-section-heading) {
+    margin: 0 0 var(--ds-size-6);
+  }
+
+  .sandbox-section-text {
+    margin-bottom: var(--ds-size-6);
+  }
+
+  :global(.sandbox-section-paragraph) {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0 0 var(--ds-size-4);
+    line-height: 1.7;
+  }
+
+  :global(.sandbox-section-link) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-size-2);
+    font-weight: var(--ds-font-weight-medium);
+  }
+</style>
