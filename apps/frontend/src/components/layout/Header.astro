@@ -6,7 +6,6 @@ import Logo from '../shared/Logo.astro';
 const navItems = [
   { href: '/veiledning', label: 'Veiledning' },
   { href: '/eksempler', label: 'Eksempler' },
-  { href: '/sandkasse', label: 'Sandkasse' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -75,6 +74,11 @@ const currentPath = Astro.url.pathname;
         </li>
       ))}
       <li>
+        <Link href="/sandkasse" className="mobile-nav-link">
+          Sandkasse
+        </Link>
+      </li>
+      <li>
         <Link href="/kontakt" className="mobile-nav-link">
           Kontakt oss
         </Link>
@@ -123,13 +127,12 @@ const currentPath = Astro.url.pathname;
 
 <style>
   .header {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    background-color: color-mix(in srgb, var(--ds-color-neutral-surface-default) 90%, transparent);
-    border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
-    position: sticky;
+    position: absolute;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
+    background: transparent;
   }
 
   .skip-link {
@@ -149,9 +152,9 @@ const currentPath = Astro.url.pathname;
   }
 
   .header-container {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: var(--ds-size-3) var(--ds-size-4);
+    padding: var(--ds-size-4) var(--ds-size-4);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -197,12 +200,11 @@ const currentPath = Astro.url.pathname;
   }
 
   :global(.nav-link:hover) {
-    background-color: var(--ds-color-neutral-surface-hover);
+    background-color: rgba(255, 255, 255, 0.2);
   }
 
   :global(.nav-link.active) {
-    background-color: var(--ds-color-accent-surface-default);
-    color: var(--ds-color-accent-text-default);
+    background-color: rgba(255, 255, 255, 0.2);
   }
 
   .header-actions {
@@ -215,10 +217,10 @@ const currentPath = Astro.url.pathname;
     display: flex;
     align-items: center;
     gap: var(--ds-size-2);
-    padding: var(--ds-size-2) var(--ds-size-3);
-    background: transparent;
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-md);
+    padding: var(--ds-size-2) var(--ds-size-4);
+    background: rgba(255, 255, 255, 0.4);
+    border: none;
+    border-radius: 9999px;
     cursor: pointer;
     color: var(--ds-color-neutral-text-default);
     font-family: inherit;
@@ -228,7 +230,7 @@ const currentPath = Astro.url.pathname;
   }
 
   .mobile-menu-toggle:hover {
-    background-color: var(--ds-color-neutral-surface-hover);
+    background: rgba(255, 255, 255, 0.6);
   }
 
   .mobile-menu-toggle:focus-visible {
@@ -237,13 +239,7 @@ const currentPath = Astro.url.pathname;
   }
 
   .menu-label {
-    display: none;
-  }
-
-  @media (min-width: 1024px) {
-    .menu-label {
-      display: inline;
-    }
+    display: inline;
   }
 
   .close-icon {

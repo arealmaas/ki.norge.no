@@ -1,5 +1,5 @@
 ---
-import { Heading, Paragraph } from '@digdir/designsystemet-react';
+import { Paragraph } from '@digdir/designsystemet-react';
 
 const tips = [
   {
@@ -23,9 +23,9 @@ const tips = [
 <section class="three-tips">
   <div class="three-tips-container">
     <div class="three-tips-header">
-      <Heading level={2} size="xlarge" className="three-tips-heading">
+      <h2 class="three-tips-heading">
         Tre råd før du går i gang med KI
-      </Heading>
+      </h2>
     </div>
     <div class="three-tips-grid">
       {tips.map((tip) => (
@@ -33,9 +33,7 @@ const tips = [
           <div class="tip-illustration">
             <img src={tip.image} alt="" width="140" height="140" loading="lazy" />
           </div>
-          <Heading level={3} size="small" className="tip-title">
-            {tip.title}
-          </Heading>
+          <h3 class="tip-title">{tip.title}</h3>
           <Paragraph size="small" className="tip-description">
             {tip.description}
           </Paragraph>
@@ -48,7 +46,7 @@ const tips = [
 <style>
   .three-tips {
     padding: var(--ds-size-12) var(--ds-size-4);
-    background-color: var(--ds-color-neutral-surface-default);
+    background-color: #E2F0FC;
   }
 
   .three-tips-container {
@@ -61,8 +59,12 @@ const tips = [
     margin-bottom: var(--ds-size-10);
   }
 
-  :global(.three-tips-heading) {
+  .three-tips-heading {
     margin: 0;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--ds-color-neutral-text-default);
   }
 
   .three-tips-grid {
@@ -87,17 +89,27 @@ const tips = [
 
   .tip-illustration {
     margin-bottom: var(--ds-size-5);
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border-radius: 24px;
   }
 
   .tip-illustration img {
-    width: 140px;
-    height: 140px;
+    width: 120px;
+    height: 120px;
     object-fit: contain;
+    opacity: 0.85;
   }
 
-  :global(.tip-title) {
+  .tip-title {
     margin: 0 0 var(--ds-size-3);
     font-weight: var(--ds-font-weight-semibold);
+    font-size: 1.125rem;
+    color: var(--ds-color-neutral-text-default);
   }
 
   :global(.tip-description) {
