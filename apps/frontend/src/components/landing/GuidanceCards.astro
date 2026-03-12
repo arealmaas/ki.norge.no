@@ -1,5 +1,6 @@
 ---
 import { Heading, Paragraph } from '@digdir/designsystemet-react';
+import { HandHeartIcon, PackageIcon } from '@navikt/aksel-icons';
 
 const cards = [
   {
@@ -7,12 +8,14 @@ const cards = [
     subtext: 'For deg som vil ta i bruk kunstig intelligens modeller →',
     href: '/veiledning/ta-i-bruk-ki',
     image: '/frontpage-browsing-hand.png',
+    icon: 'handheart',
   },
   {
     title: 'Vi skal lage noe',
     subtext: 'For deg som ønsker å bygge en modell selv →',
     href: '/veiledning/lage-noe',
     image: '/frontpage-person_with_portrait.png',
+    icon: 'package',
   },
 ];
 ---
@@ -20,9 +23,9 @@ const cards = [
 <section class="guidance-cards">
   <div class="guidance-cards-container">
     <div class="guidance-cards-header">
-      <Heading level={2} size="xlarge" className="guidance-cards-heading">
+      <h2 class="guidance-cards-heading">
         Guider og veiledning
-      </Heading>
+      </h2>
       <Paragraph size="medium" className="guidance-cards-subtext">
         Praktisk veiledning for deg som vil bruke kunstig intelligens på en trygg og ansvarlig måte.
       </Paragraph>
@@ -30,7 +33,14 @@ const cards = [
     <div class="guidance-cards-grid">
       {cards.map((card) => (
         <a href={card.href} class="guidance-card">
-          <span class="guidance-card-title">{card.title}</span>
+          <span class="guidance-card-title">
+            {card.icon === 'handheart' ? (
+              <HandHeartIcon aria-hidden="true" className="guidance-card-icon" />
+            ) : (
+              <PackageIcon aria-hidden="true" className="guidance-card-icon" />
+            )}
+            {card.title}
+          </span>
           <div class="guidance-card-illustration">
             <img src={card.image} alt="" width="140" height="140" />
           </div>
@@ -55,8 +65,13 @@ const cards = [
     margin-bottom: var(--ds-size-8);
   }
 
-  :global(.guidance-cards-heading) {
+  .guidance-cards-heading {
+    font-family: 'Inter', sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
     margin: 0 0 var(--ds-size-2);
+    color: var(--ds-color-neutral-text-default);
   }
 
   :global(.guidance-cards-subtext) {
@@ -82,24 +97,32 @@ const cards = [
     align-items: center;
     text-align: center;
     padding: var(--ds-size-6);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
+    background-color: #E2F0FC;
+    border: none;
+    border-radius: 8px;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: box-shadow 0.2s ease;
   }
 
   .guidance-card:hover {
-    border-color: var(--ds-color-accent-border-default);
     box-shadow: var(--ds-shadow-md);
   }
 
   .guidance-card-title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ds-size-2);
     font-size: 1rem;
     font-weight: var(--ds-font-weight-semibold);
     color: var(--ds-color-neutral-text-default);
     margin-bottom: var(--ds-size-4);
+  }
+
+  :global(.guidance-card-icon) {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
   }
 
   .guidance-card-illustration {
@@ -108,14 +131,12 @@ const cards = [
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px dashed var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
     margin-bottom: var(--ds-size-4);
   }
 
   .guidance-card-illustration img {
-    width: 120px;
-    height: 120px;
+    width: 140px;
+    height: 140px;
     object-fit: contain;
   }
 

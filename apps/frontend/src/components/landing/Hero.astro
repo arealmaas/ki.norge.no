@@ -11,15 +11,15 @@
   <div class="hero-container">
     <div class="hero-content">
       <h1 class="hero-title">
-        <span class="hero-title-regular">Norge satser på</span>
-        <span class="hero-title-bold">trygg og verdiskapende</span>
-        <span class="hero-title-bold">bruk av <strong>kunstig intelligens</strong></span>
+        <span class="hero-title-small">Norge satser på</span>
+        <span class="hero-title-large">trygg og verdiskapende</span>
+        <span class="hero-title-large">bruk av <strong>kunstig intelligens</strong></span>
       </h1>
     </div>
     <div class="hero-visual">
       <img
         class="hero-robot"
-        src="/frontpage-ai_robot.png"
+        src="/frontpage-ai_robot-alpha.png"
         alt="Illustrasjon av en robot"
         width="500"
         height="500"
@@ -33,6 +33,7 @@
     position: relative;
     overflow: hidden;
     padding: var(--ds-size-12) var(--ds-size-4);
+    padding-top: 100px;
     min-height: 400px;
     display: flex;
     align-items: center;
@@ -41,6 +42,7 @@
   @media (min-width: 768px) {
     .hero {
       padding: var(--ds-size-14) var(--ds-size-4);
+      padding-top: 120px;
       min-height: 500px;
     }
   }
@@ -79,7 +81,7 @@
 
   @media (min-width: 1024px) {
     .hero-content {
-      max-width: 55%;
+      max-width: 65%;
     }
   }
 
@@ -89,31 +91,38 @@
     flex-direction: column;
     line-height: 1.15;
     letter-spacing: -0.02em;
-    font-size: 2.25rem;
-    color: white;
+    color: #000000;
+  }
+
+  .hero-title-small {
+    font-size: 24px;
+    font-weight: 700;
   }
 
   @media (min-width: 768px) {
-    .hero-title {
-      font-size: 3.5rem;
+    .hero-title-small {
+      font-size: 32px;
+    }
+  }
+
+  .hero-title-large {
+    font-size: 40px;
+    font-weight: 700;
+  }
+
+  @media (min-width: 768px) {
+    .hero-title-large {
+      font-size: 56px;
     }
   }
 
   @media (min-width: 1024px) {
-    .hero-title {
-      font-size: 3.75rem;
+    .hero-title-large {
+      font-size: 64px;
     }
   }
 
-  .hero-title-regular {
-    font-weight: 400;
-  }
-
-  .hero-title-bold {
-    font-weight: 700;
-  }
-
-  .hero-title-bold strong {
+  .hero-title-large strong {
     font-weight: 900;
   }
 
@@ -131,6 +140,7 @@
     width: 280px;
     height: auto;
     display: block;
+    filter: contrast(1.3);
   }
 
   @media (min-width: 768px) {
