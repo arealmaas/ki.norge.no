@@ -15,7 +15,7 @@
   --ds-color-accent-base-default: var(--ds-color-accent-9);
 
   /* Background overrides */
-  --ds-color-neutral-background-default: #f6f7f8;
+  --ds-color-neutral-background-default: #ffffff;
   --ds-color-neutral-surface-default: #ffffff;
 
   /* Stitch-specific custom properties */
