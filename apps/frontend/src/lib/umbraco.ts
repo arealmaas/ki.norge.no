@@ -1,5 +1,5 @@
-const UMBRACO_URL = import.meta.env.UMBRACO_URL || 'http://localhost:5000';
-const API_KEY = import.meta.env.UMBRACO_API_KEY;
+const UMBRACO_URL = process.env.UMBRACO_URL || import.meta.env.UMBRACO_URL || 'http://localhost:5000';
+const API_KEY = process.env.UMBRACO_API_KEY || import.meta.env.UMBRACO_API_KEY;
 
 // Preview mode options
 export interface FetchOptions {

@@ -10,9 +10,9 @@ const contentTypeRoutes: Record<string, (slug: string) => string> = {
 };
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
-  const PREVIEW_SECRET = import.meta.env.PREVIEW_SECRET || '';
-  const UMBRACO_URL = import.meta.env.UMBRACO_URL || 'http://localhost:5000';
-  const UMBRACO_API_KEY = import.meta.env.UMBRACO_API_KEY || '';
+  const PREVIEW_SECRET = process.env.PREVIEW_SECRET || import.meta.env.PREVIEW_SECRET || '';
+  const UMBRACO_URL = process.env.UMBRACO_URL || import.meta.env.UMBRACO_URL || 'http://localhost:5000';
+  const UMBRACO_API_KEY = process.env.UMBRACO_API_KEY || import.meta.env.UMBRACO_API_KEY || '';
 
   // Exit preview mode
   if (url.searchParams.has('exit')) {
