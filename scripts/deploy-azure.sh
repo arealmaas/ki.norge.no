@@ -13,6 +13,8 @@ CONTAINERAPPS_ENV="ki-norge-no-env"
 ACR_NAME="kinorgeacr"
 UMBRACO_APP_NAME="ki-norge-cms"
 FRONTEND_APP_NAME="ki-norge-frontend"
+STORAGE_ACCOUNT="kinorgestorage"
+BLOB_CONTAINER="umbraco-db"
 IMAGE_TAG="$(date +%Y%m%d%H%M%S)"
 
 echo "=== ki.norge.no Azure deployment ==="
@@ -55,6 +57,26 @@ ACR_PASSWORD="$(az acr credential show --resource-group "${RESOURCE_GROUP}" --na
 UMBRACO_IMAGE="${ACR_LOGIN_SERVER}/ki-norge/cms:${IMAGE_TAG}"
 FRONTEND_IMAGE="${ACR_LOGIN_SERVER}/ki-norge/frontend:${IMAGE_TAG}"
 
+# --- Storage account for Litestream ---
+echo "==> Ensuring storage account: ${STORAGE_ACCOUNT}"
+if ! az storage account show --name "${STORAGE_ACCOUNT}" --resource-group "${RESOURCE_GROUP}" >/dev/null 2>&1; then
+  az storage account create \
+    --name "${STORAGE_ACCOUNT}" \
+    --resource-group "${RESOURCE_GROUP}" \
+    --location "${LOCATION}" \
+    --sku Standard_LRS >/dev/null
+fi
+echo "OK"
+
+echo "==> Ensuring blob container: ${BLOB_CONTAINER}"
+STORAGE_KEY="$(az storage account keys list --account-name "${STORAGE_ACCOUNT}" --resource-group "${RESOURCE_GROUP}" --query "[0].value" -o tsv)"
+az storage container create \
+  --name "${BLOB_CONTAINER}" \
+  --account-name "${STORAGE_ACCOUNT}" \
+  --account-key "${STORAGE_KEY}" \
+  --only-show-errors >/dev/null 2>&1 || true
+echo "OK"
+
 # --- Build images (remote ACR build) ---
 echo "==> Building CMS image: ${UMBRACO_IMAGE}"
 az acr build \
@@ -82,17 +104,89 @@ if ! az containerapp env show --resource-group "${RESOURCE_GROUP}" --name "${CON
 fi
 echo "OK"
 
-# --- Generate secrets ---
-DELIVERY_API_KEY="$(openssl rand -base64 32 | tr -d '\n')"
-PREVIEW_SECRET="$(openssl rand -base64 32 | tr -d '\n')"
+# --- Secrets (only generate on first deploy, reuse existing) ---
+CMS_EXISTS=false
+if az containerapp show --resource-group "${RESOURCE_GROUP}" --name "${UMBRACO_APP_NAME}" >/dev/null 2>&1; then
+  CMS_EXISTS=true
+fi
+
+FRONTEND_EXISTS=false
+if az containerapp show --resource-group "${RESOURCE_GROUP}" --name "${FRONTEND_APP_NAME}" >/dev/null 2>&1; then
+  FRONTEND_EXISTS=true
+fi
+
+if [ "${CMS_EXISTS}" = false ]; then
+  DELIVERY_API_KEY="$(openssl rand -base64 32 | tr -d '\n')"
+  PREVIEW_SECRET="$(openssl rand -base64 32 | tr -d '\n')"
+  echo
+  echo "Generated new secrets (save these):"
+  echo "  DELIVERY_API_KEY: ${DELIVERY_API_KEY}"
+  echo "  PREVIEW_SECRET:   ${PREVIEW_SECRET}"
+  echo
+fi
 
 # --- Deploy CMS ---
 echo "==> Deploying CMS: ${UMBRACO_APP_NAME}"
-if az containerapp show --resource-group "${RESOURCE_GROUP}" --name "${UMBRACO_APP_NAME}" >/dev/null 2>&1; then
+if [ "${CMS_EXISTS}" = true ]; then
+  # Update existing — use YAML to reliably set all env vars
+  az containerapp secret set \
+    --name "${UMBRACO_APP_NAME}" \
+    --resource-group "${RESOURCE_GROUP}" \
+    --secrets "litestream-azure-account-key=${STORAGE_KEY}" \
+    --only-show-errors >/dev/null 2>&1 || true
+
+  cat > /tmp/cms-deploy.yaml <<YAMLDOC
+properties:
+  template:
+    containers:
+    - env:
+      - name: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - name: ASPNETCORE_URLS
+        value: http://0.0.0.0:8080
+      - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: 'true'
+      - name: ConnectionStrings__umbracoDbDSN
+        value: Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True
+      - name: ConnectionStrings__umbracoDbDSN_ProviderName
+        value: Microsoft.Data.Sqlite
+      - name: UMBRACO__CMS__DELIVERYAPI__ENABLED
+        value: 'true'
+      - name: UMBRACO__CMS__DELIVERYAPI__PUBLICACCESS
+        value: 'true'
+      - name: UMBRACO__CMS__DELIVERYAPI__APIKEY
+        secretRef: delivery-api-key
+      - name: UMBRACO__CMS__DELIVERYAPI__RICHTEXTOUTPUTASJSON
+        value: 'true'
+      - name: UMBRACO__CMS__GLOBAL__MAINDOMLOCK
+        value: FileSystemMainDomLock
+      - name: UMBRACO__CMS__UNATTENDED__INSTALLUNATTENDED
+        value: 'true'
+      - name: UMBRACO__CMS__UNATTENDED__UNATTENDEDUSERNAME
+        value: 'admin'
+      - name: UMBRACO__CMS__UNATTENDED__UNATTENDEDUSEREMAIL
+        value: 'admin@ki.norge.no'
+      - name: UMBRACO__CMS__UNATTENDED__UNATTENDEDUSERPASSWORD
+        value: 'KiNorge2025!'
+      - name: LITESTREAM_AZURE_ACCOUNT_KEY
+        secretRef: litestream-azure-account-key
+      - name: Serilog__MinimumLevel__Default
+        value: Information
+      - name: Serilog__WriteTo__0__Name
+        value: Console
+      image: ${UMBRACO_IMAGE}
+      name: ki-norge-cms
+      resources:
+        cpu: 0.5
+        memory: 1Gi
+    volumes: []
+YAMLDOC
+
   az containerapp update \
     --resource-group "${RESOURCE_GROUP}" \
     --name "${UMBRACO_APP_NAME}" \
-    --image "${UMBRACO_IMAGE}" >/dev/null
+    --yaml /tmp/cms-deploy.yaml >/dev/null
+  rm -f /tmp/cms-deploy.yaml
 else
   az containerapp create \
     --resource-group "${RESOURCE_GROUP}" \
@@ -106,7 +200,10 @@ else
     --registry-server "${ACR_LOGIN_SERVER}" \
     --registry-username "${ACR_USERNAME}" \
     --registry-password "${ACR_PASSWORD}" \
-    --secrets "delivery-api-key=${DELIVERY_API_KEY}" "preview-secret=${PREVIEW_SECRET}" \
+    --secrets \
+      "delivery-api-key=${DELIVERY_API_KEY}" \
+      "preview-secret=${PREVIEW_SECRET}" \
+      "litestream-azure-account-key=${STORAGE_KEY}" \
     --env-vars \
       "ASPNETCORE_ENVIRONMENT=Production" \
       "ASPNETCORE_URLS=http://0.0.0.0:8080" \
@@ -118,6 +215,13 @@ else
       "UMBRACO__CMS__DELIVERYAPI__APIKEY=secretref:delivery-api-key" \
       "UMBRACO__CMS__DELIVERYAPI__RICHTEXTOUTPUTASJSON=true" \
       "UMBRACO__CMS__GLOBAL__MAINDOMLOCK=FileSystemMainDomLock" \
+      "UMBRACO__CMS__UNATTENDED__INSTALLUNATTENDED=true" \
+      "UMBRACO__CMS__UNATTENDED__UNATTENDEDUSERNAME=admin" \
+      "UMBRACO__CMS__UNATTENDED__UNATTENDEDUSEREMAIL=admin@ki.norge.no" \
+      "UMBRACO__CMS__UNATTENDED__UNATTENDEDUSERPASSWORD=KiNorge2025!" \
+      "LITESTREAM_AZURE_ACCOUNT_KEY=secretref:litestream-azure-account-key" \
+      "Serilog__MinimumLevel__Default=Information" \
+      "Serilog__WriteTo__0__Name=Console" \
     >/dev/null
 fi
 
@@ -134,7 +238,7 @@ CONTAINERAPPS_DEFAULT_DOMAIN="$(az containerapp env show --resource-group "${RES
 UMBRACO_INTERNAL_URL="https://${UMBRACO_APP_NAME}.internal.${CONTAINERAPPS_DEFAULT_DOMAIN}"
 
 echo "==> Deploying frontend: ${FRONTEND_APP_NAME}"
-if az containerapp show --resource-group "${RESOURCE_GROUP}" --name "${FRONTEND_APP_NAME}" >/dev/null 2>&1; then
+if [ "${FRONTEND_EXISTS}" = true ]; then
   az containerapp update \
     --resource-group "${RESOURCE_GROUP}" \
     --name "${FRONTEND_APP_NAME}" \
@@ -170,7 +274,3 @@ echo
 echo "=== Deployment complete ==="
 echo "CMS:      https://${UMBRACO_FQDN}"
 echo "Frontend: https://${FRONTEND_FQDN}"
-echo
-echo "Generated secrets (save these):"
-echo "  DELIVERY_API_KEY: ${DELIVERY_API_KEY}"
-echo "  PREVIEW_SECRET:   ${PREVIEW_SECRET}"
