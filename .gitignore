@@ -43,3 +43,6 @@ pnpm-debug.log*
 # Test results
 playwright-report/
 test-results/
+
+# Playwright CLI
+.playwright-cli/
