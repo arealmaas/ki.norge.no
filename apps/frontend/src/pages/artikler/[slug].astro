@@ -1,10 +1,11 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
+import ContactCard from '../../components/shared/ContactCard.astro';
+import SidebarCard from '../../components/shared/SidebarCard.astro';
 
 import { getArtikkel, getPlainText, extractHeadings, type Artikkel } from '../../lib/umbraco';
 import { articleSchema } from '../../lib/seo';
-import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
 
 const { slug } = Astro.params;
 const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
@@ -36,8 +37,8 @@ const articleJsonLd = articleSchema({
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
   <div class="article-page">
     <div class="article-container">
-      <nav class="breadcrumb" aria-label="Brødsmuler">
-        <a href="/">Hjem</a>
+      <nav class="breadcrumb" aria-label="Brodsmuler">
+        <a href="/">Forside</a>
         <span class="breadcrumb-sep" aria-hidden="true">/</span>
         <a href="/artikler">Artikler</a>
         <span class="breadcrumb-sep" aria-hidden="true">/</span>
@@ -45,12 +46,9 @@ const articleJsonLd = articleSchema({
       </nav>
 
       <header class="article-header">
-        <Heading level={1} size="2xlarge" className="article-title">
-          {article.tittel}
-        </Heading>
+        <h1 class="article-title">{article.tittel}</h1>
         <div class="article-meta">
-          <span class="meta-item">
-            <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
+          <span class="meta-date">
             <time datetime={article.publishedAt}>{formattedDate}</time>
           </span>
         </div>
@@ -63,44 +61,41 @@ const articleJsonLd = articleSchema({
 
         {headings.length > 0 && (
           <aside class="article-sidebar">
-            <nav class="toc" aria-label="Innhold">
-              <div class="toc-title">Innhold</div>
-              <ul class="toc-list">
-                {headings.map(h => (
-                  <li class={h.level === 3 ? 'toc-sub' : ''}>
-                    <a href={`#${h.id}`}>{h.text}</a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            <SidebarCard title="Innhold">
+              <nav aria-label="Innhold">
+                <ul class="toc-list">
+                  {headings.map(h => (
+                    <li class={h.level === 3 ? 'toc-sub' : ''}>
+                      <a href={`#${h.id}`}>{h.text}</a>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </SidebarCard>
           </aside>
         )}
       </div>
-
-      <nav class="article-footer" aria-label="Navigasjon">
-        <a href="/artikler" class="back-link">
-          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
-          Tilbake til artikler
-        </a>
-      </nav>
     </div>
+
+    <ContactCard />
   </div>
 </Layout>
 
 <style>
   .article-page {
-    padding: var(--ds-size-6) var(--ds-size-4);
+    padding-top: var(--ds-size-6);
   }
 
   @media (min-width: 768px) {
     .article-page {
-      padding: var(--ds-size-10) var(--ds-size-4);
+      padding-top: var(--ds-size-10);
     }
   }
 
   .article-container {
     max-width: 1120px;
     margin: 0 auto;
+    padding: 0 var(--ds-size-4);
   }
 
   /* Breadcrumbs */
@@ -114,10 +109,6 @@ const articleJsonLd = articleSchema({
     flex-wrap: wrap;
   }
 
-  html.dark .breadcrumb {
-    color: #94a3b8;
-  }
-
   .breadcrumb a {
     color: #136dec;
     text-decoration: none;
@@ -127,25 +118,13 @@ const articleJsonLd = articleSchema({
     text-decoration: underline;
   }
 
-  html.dark .breadcrumb a {
-    color: #5ba0f5;
-  }
-
   .breadcrumb-sep {
     color: #cbd5e1;
-  }
-
-  html.dark .breadcrumb-sep {
-    color: #475569;
   }
 
   .breadcrumb [aria-current] {
     color: #0d131b;
     font-weight: 500;
-  }
-
-  html.dark .breadcrumb [aria-current] {
-    color: #f1f5f9;
   }
 
   /* Header */
@@ -154,43 +133,29 @@ const articleJsonLd = articleSchema({
     max-width: 720px;
   }
 
-  :global(.article-title) {
+  .article-title {
+    font-size: 2.25rem;
+    font-weight: 800;
     margin: 0 0 var(--ds-size-4);
     color: #0d131b;
     letter-spacing: -0.02em;
     line-height: 1.15;
-    font-weight: 800;
   }
 
-  html.dark :global(.article-title) {
-    color: #f1f5f9;
+  @media (min-width: 768px) {
+    .article-title {
+      font-size: 2.75rem;
+    }
   }
 
   .article-meta {
     display: flex;
     align-items: center;
     gap: var(--ds-size-4);
-    flex-wrap: wrap;
   }
 
-  .meta-item {
-    display: flex;
-    align-items: center;
-    gap: 0.375rem;
+  .meta-date {
     font-size: 0.875rem;
-    color: #64748b;
-  }
-
-  html.dark .meta-item {
-    color: #94a3b8;
-  }
-
-  .meta-item .material-symbols-outlined {
-    font-size: 18px;
-    color: #94a3b8;
-  }
-
-  html.dark .meta-item .material-symbols-outlined {
     color: #64748b;
   }
 
@@ -215,46 +180,23 @@ const articleJsonLd = articleSchema({
     scroll-margin-top: 100px;
   }
 
-  /* Sidebar / TOC */
+  /* Sidebar */
   .article-sidebar {
     display: none;
-    width: 280px;
+    width: 300px;
     flex-shrink: 0;
   }
 
   @media (min-width: 1024px) {
     .article-sidebar {
       display: block;
+      position: sticky;
+      top: 100px;
+      align-self: flex-start;
     }
   }
 
-  .toc {
-    position: sticky;
-    top: 100px;
-    padding: var(--ds-size-5);
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-  }
-
-  html.dark .toc {
-    background: #1a2332;
-    border-color: #334155;
-  }
-
-  .toc-title {
-    font-size: 0.8125rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #64748b;
-    margin-bottom: var(--ds-size-3);
-  }
-
-  html.dark .toc-title {
-    color: #94a3b8;
-  }
-
+  /* TOC list inside SidebarCard */
   .toc-list {
     list-style: none;
     margin: 0;
@@ -280,50 +222,8 @@ const articleJsonLd = articleSchema({
     line-height: 1.4;
   }
 
-  html.dark .toc-list a {
-    color: #cbd5e1;
-  }
-
   .toc-list a:hover {
     background: #f1f5f9;
     color: #136dec;
-  }
-
-  html.dark .toc-list a:hover {
-    background: #243042;
-    color: #5ba0f5;
-  }
-
-  /* Footer navigation */
-  .article-footer {
-    margin-top: var(--ds-size-10);
-    padding-top: var(--ds-size-6);
-    border-top: 1px solid #e2e8f0;
-  }
-
-  html.dark .article-footer {
-    border-color: #334155;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #136dec;
-    text-decoration: none;
-    font-size: 0.9375rem;
-    font-weight: 500;
-  }
-
-  .back-link:hover {
-    text-decoration: underline;
-  }
-
-  html.dark .back-link {
-    color: #5ba0f5;
-  }
-
-  .back-link .material-symbols-outlined {
-    font-size: 20px;
   }
 </style>

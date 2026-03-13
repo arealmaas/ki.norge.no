@@ -1,409 +1,218 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
+import ContactCard from '../../components/shared/ContactCard.astro';
+import SidebarCard from '../../components/shared/SidebarCard.astro';
 
 import { getEksempel, getEksempler, getPlainText, type Eksempel } from '../../lib/umbraco';
-import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
-
-// Status label mapping
-const statusLabels: Record<string, string> = {
-  i_utvikling: 'Under utvikling',
-  pilot: 'Pilot',
-  i_drift: 'I drift',
-  avsluttet: 'Avsluttet',
-};
 
 const { slug } = Astro.params;
 const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
 const caseItem = await getEksempel(slug!, { preview: isPreview });
 if (!caseItem) return Astro.redirect('/eksempler');
 
-// Fetch related cases (same status or random, excluding current)
-let relatedCases: Eksempel[] = [];
+// Find next case for "Neste steg" sidebar card
+let nextCase: Eksempel | null = null;
 try {
   const allCases = await getEksempler();
-  relatedCases = allCases.data
-    .filter(c => c.slug !== slug)
-    .slice(0, 3);
+  const currentIndex = allCases.data.findIndex(c => c.slug === slug);
+  if (currentIndex !== -1 && currentIndex < allCases.data.length - 1) {
+    nextCase = allCases.data[currentIndex + 1];
+  } else if (allCases.data.length > 1) {
+    nextCase = allCases.data[0]; // Wrap around to first
+  }
 } catch {
-  // Non-critical, ignore
+  // Non-critical
 }
 
-function formatDate(dateStr: string): string {
-  try {
-    return new Date(dateStr).toLocaleDateString('nb-NO', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-  } catch {
-    return '';
-  }
-}
 const seoTitle = caseItem.seoTittel || caseItem.tittel;
 const seoDesc = caseItem.seoBeskrivelse || getPlainText(caseItem.beskrivelse, 200);
 const seoImage = caseItem.seoBilde?.url;
 ---
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" ogImage={seoImage}>
-  <article>
-    <section class="article-hero">
-      <div class="hero-container">
-        <nav class="breadcrumb">
-          <Link href="/eksempler">Gode eksempler</Link>
-          <span class="breadcrumb-sep">/</span>
-          <span>{caseItem.tittel}</span>
-        </nav>
+  <div class="article-page">
+    <div class="article-container">
+      <nav class="breadcrumb" aria-label="Brodsmuler">
+        <a href="/">Forside</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <a href="/eksempler">Case</a>
+        <span class="breadcrumb-sep" aria-hidden="true">/</span>
+        <span aria-current="page">{caseItem.tittel}</span>
+      </nav>
 
-        {caseItem.organisasjon && (
-          <span class="org-badge">{caseItem.organisasjon}</span>
-        )}
-        <Heading level={1} size="2xlarge" className="hero-title">{caseItem.tittel}</Heading>
-        <Paragraph size="large" className="hero-lead">{getPlainText(caseItem.beskrivelse, 200)}</Paragraph>
-      </div>
-    </section>
+      <header class="article-header">
+        <h1 class="article-title">{caseItem.tittel}</h1>
 
-    <div class="content-container">
-      <div class="meta-grid">
-        {caseItem.organisasjon && (
-          <div class="meta-item">
-            <dt><span class="material-symbols-outlined meta-icon">business</span> Organisasjon</dt>
-            <dd>{caseItem.organisasjon}</dd>
-          </div>
-        )}
-        {caseItem.status && (
-          <div class="meta-item">
-            <dt><span class="material-symbols-outlined meta-icon">info</span> Status</dt>
-            <dd><span class={`status-badge status-badge--${caseItem.status}`}>{statusLabels[caseItem.status] || caseItem.status}</span></dd>
-          </div>
-        )}
-        {caseItem.verktoy && caseItem.verktoy.length > 0 && (
-          <div class="meta-item">
-            <dt><span class="material-symbols-outlined meta-icon">build</span> Verktøy</dt>
-            <dd class="tools-list">
-              {caseItem.verktoy.map(tool => (
-                <span class="tool-tag">{tool}</span>
-              ))}
-            </dd>
-          </div>
-        )}
-        {caseItem.publishedAt && (
-          <div class="meta-item">
-            <dt><span class="material-symbols-outlined meta-icon">calendar_today</span> Publisert</dt>
-            <dd>{formatDate(caseItem.publishedAt)}</dd>
-          </div>
-        )}
-      </div>
-
-      {caseItem.resultater && (
-        <div class="results-highlight">
-          <span class="material-symbols-outlined results-icon">emoji_events</span>
-          <div>
-            <Heading level={2} size="xsmall" className="results-label">Resultater</Heading>
-            <Paragraph className="results-text">{caseItem.resultater}</Paragraph>
-          </div>
-        </div>
-      )}
-
-      <BlocksRenderer blocks={caseItem.beskrivelse} class="article-content" />
-
-      {caseItem.merkelapper && caseItem.merkelapper.length > 0 && (
-        <div class="tags-section">
-          <Heading level={2} size="xsmall" className="tags-label">Merkelapper</Heading>
-          <div class="tags-list">
+        {caseItem.merkelapper && caseItem.merkelapper.length > 0 && (
+          <div class="tag-pills">
             {caseItem.merkelapper.map(tag => (
               <span class="tag-pill">{tag.navn}</span>
             ))}
           </div>
-        </div>
-      )}
+        )}
+
+        <p class="article-lead">{getPlainText(caseItem.beskrivelse, 200)}</p>
+      </header>
+
+      <div class="article-layout">
+        <article class="article-content">
+          <BlocksRenderer blocks={caseItem.beskrivelse} class="article-body" />
+        </article>
+
+        <aside class="article-sidebar">
+          {caseItem.resultater && (
+            <SidebarCard title="Dette laerte vi" variant="highlight">
+              <ul>
+                {caseItem.resultater.split(/[\n•]/).filter(s => s.trim()).map(item => (
+                  <li>{item.trim()}</li>
+                ))}
+              </ul>
+            </SidebarCard>
+          )}
+
+          {nextCase && (
+            <SidebarCard title="Neste steg">
+              <p>{getPlainText(nextCase.beskrivelse, 120)}</p>
+              <a href={`/eksempler/${nextCase.slug}`}>Les {nextCase.tittel} &rarr;</a>
+            </SidebarCard>
+          )}
+        </aside>
+      </div>
     </div>
 
-    {relatedCases.length > 0 && (
-      <section class="related-section">
-        <div class="related-container">
-          <Heading level={2} size="large" className="related-heading">Andre eksempler</Heading>
-          <div class="related-grid">
-            {relatedCases.map(related => (
-              <Link href={`/eksempler/${related.slug}`} className="related-card">
-                <span class="related-org">{related.organisasjon}</span>
-                <Heading level={3} size="small" className="related-title">{related.tittel}</Heading>
-                <Paragraph size="small" className="related-excerpt">
-                  {getPlainText(related.beskrivelse, 100)}
-                </Paragraph>
-                {related.status && (
-                  <span class={`status-badge status-badge--${related.status}`}>
-                    {statusLabels[related.status] || related.status}
-                  </span>
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-    )}
-
-    <nav class="back-nav">
-      <div class="back-container">
-        <Link href="/eksempler" className="back-link">
-          <span class="material-symbols-outlined">arrow_back</span>
-          Tilbake til eksempler
-        </Link>
-      </div>
-    </nav>
-  </article>
+    <ContactCard />
+  </div>
 </Layout>
 
 <style>
-  /* Hero */
-  .article-hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    padding: var(--ds-size-8) var(--ds-size-4) var(--ds-size-10);
+  .article-page {
+    padding-top: var(--ds-size-6);
   }
 
-  .hero-container {
-    max-width: 800px;
+  @media (min-width: 768px) {
+    .article-page {
+      padding-top: var(--ds-size-10);
+    }
+  }
+
+  .article-container {
+    max-width: 1120px;
     margin: 0 auto;
+    padding: 0 var(--ds-size-4);
   }
 
+  /* Breadcrumbs */
   .breadcrumb {
     display: flex;
     align-items: center;
-    gap: var(--ds-size-2);
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
     margin-bottom: var(--ds-size-6);
-    font-size: var(--ds-font-size-0);
-    color: var(--ds-color-neutral-text-subtle);
+    flex-wrap: wrap;
   }
 
-  .breadcrumb :global(a) {
-    color: var(--ds-color-accent-text-default);
+  .breadcrumb a {
+    color: #136dec;
     text-decoration: none;
   }
 
-  .breadcrumb :global(a:hover) {
+  .breadcrumb a:hover {
     text-decoration: underline;
   }
 
   .breadcrumb-sep {
-    color: var(--ds-color-neutral-text-subtle);
+    color: #cbd5e1;
   }
 
-  .org-badge {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
+  .breadcrumb [aria-current] {
+    color: #0d131b;
+    font-weight: 500;
   }
 
-  :global(.hero-title) {
+  /* Header */
+  .article-header {
+    margin-bottom: var(--ds-size-8);
+    max-width: 720px;
+  }
+
+  .article-title {
+    font-size: 2.25rem;
+    font-weight: 800;
     margin: 0 0 var(--ds-size-4);
+    color: #0d131b;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
   }
 
-  :global(.hero-lead) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
+  @media (min-width: 768px) {
+    .article-title {
+      font-size: 2.75rem;
+    }
   }
 
-  /* Content */
-  .content-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
-  }
-
-  .meta-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--ds-size-4);
-    padding: var(--ds-size-5);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    margin-bottom: var(--ds-size-8);
-  }
-
-  .meta-item dt {
-    display: flex;
-    align-items: center;
-    gap: var(--ds-size-1);
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-medium);
-    color: var(--ds-color-neutral-text-subtle);
-    margin-bottom: var(--ds-size-1);
-  }
-
-  .meta-icon {
-    font-size: 16px;
-  }
-
-  .meta-item dd {
-    font-size: var(--ds-font-size-1);
-    margin: 0;
-  }
-
-  .tools-list {
+  /* Tag pills */
+  .tag-pills {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--ds-size-1);
-  }
-
-  .tool-tag {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    padding: var(--ds-size-1) var(--ds-size-2);
-    background-color: var(--ds-color-neutral-background-default);
-    border-radius: var(--ds-border-radius-md);
-    color: var(--ds-color-neutral-text-default);
-  }
-
-  /* Results highlight */
-  .results-highlight {
-    display: flex;
-    gap: var(--ds-size-4);
-    padding: var(--ds-size-5);
-    background-color: var(--ds-color-success-surface-default, #e6f5ea);
-    border-radius: var(--ds-border-radius-lg);
-    margin-bottom: var(--ds-size-8);
-  }
-
-  .results-icon {
-    font-size: 28px;
-    color: var(--ds-color-success-text-default, #1a5c2b);
-    flex-shrink: 0;
-  }
-
-  :global(.results-label) {
-    margin: 0 0 var(--ds-size-1);
-    color: var(--ds-color-success-text-default, #1a5c2b);
-  }
-
-  :global(.results-text) {
-    margin: 0;
-  }
-
-  /* Article content */
-  .article-content {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  /* Tags */
-  .tags-section {
-    padding-top: var(--ds-size-6);
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+    gap: 0.5rem;
     margin-bottom: var(--ds-size-4);
-  }
-
-  :global(.tags-label) {
-    margin: 0 0 var(--ds-size-3);
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  .tags-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ds-size-2);
   }
 
   .tag-pill {
     display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-medium);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-full);
-    color: var(--ds-color-neutral-text-default);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 0.25rem 0.75rem;
+    background-color: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 9999px;
+    color: #334155;
   }
 
-  /* Related cases */
-  .related-section {
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-10) var(--ds-size-4);
+  /* Lead text */
+  .article-lead {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: #64748b;
+    margin: 0;
   }
 
-  .related-container {
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-
-  :global(.related-heading) {
-    margin: 0 0 var(--ds-size-6);
-  }
-
-  .related-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--ds-size-5);
-  }
-
-  :global(.related-card) {
+  /* Two-column layout */
+  .article-layout {
     display: flex;
-    flex-direction: column;
-    padding: var(--ds-size-5);
-    background-color: var(--ds-color-neutral-background-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    text-decoration: none;
-    color: inherit;
-    transition: all 0.2s ease;
+    gap: var(--ds-size-10);
   }
 
-  :global(.related-card:hover) {
-    border-color: var(--ds-color-accent-border-default);
-    box-shadow: var(--ds-shadow-md);
-    transform: translateY(-2px);
-  }
-
-  .related-org {
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-medium);
-    color: var(--ds-color-accent-text-default);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: var(--ds-size-2);
-  }
-
-  :global(.related-title) {
-    margin: 0 0 var(--ds-size-2);
-  }
-
-  :global(.related-excerpt) {
-    margin: 0 0 var(--ds-size-3);
-    color: var(--ds-color-neutral-text-subtle);
+  .article-content {
     flex: 1;
+    min-width: 0;
+    max-width: 720px;
   }
 
-  /* Back nav */
-  .back-nav {
-    padding: var(--ds-size-6) var(--ds-size-4);
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+  :global(.article-body) {
+    line-height: 1.7;
   }
 
-  .back-container {
-    max-width: 800px;
-    margin: 0 auto;
+  :global(.article-body h2),
+  :global(.article-body h3) {
+    scroll-margin-top: 100px;
   }
 
-  :global(.back-link) {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-size-2);
-    font-size: var(--ds-font-size-1);
-    text-decoration: none;
-    color: var(--ds-color-accent-text-default);
+  /* Sidebar */
+  .article-sidebar {
+    display: none;
+    width: 300px;
+    flex-shrink: 0;
   }
 
-  :global(.back-link:hover) {
-    text-decoration: underline;
+  @media (min-width: 1024px) {
+    .article-sidebar {
+      display: block;
+      position: sticky;
+      top: 100px;
+      align-self: flex-start;
+    }
   }
 </style>
