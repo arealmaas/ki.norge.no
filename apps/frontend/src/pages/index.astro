@@ -18,14 +18,24 @@ try {
   console.error('Failed to fetch examples for homepage:', error);
 }
 
-// Transform examples for ExamplesShowcase component
-const examples = eksempler.map(e => ({
+// Demo example for showcasing the article page design
+const demoExample = {
+  title: 'Kunnskapsassistenten',
+  organization: 'Digitaliseringsdirektoratet',
+  slug: 'kunnskapsassistenten',
+  description: 'KI-assistent som hjelper med å finne og sammenstille kunnskap i utredningsprosesser.',
+  image: undefined,
+};
+
+// Transform examples for ExamplesShowcase component, prepend demo
+const cmsExamples = eksempler.map(e => ({
   title: e.tittel,
   organization: e.organisasjon || 'Offentlig sektor',
   slug: e.slug,
   description: e.beskrivelse ? getPlainText(e.beskrivelse, 120) : undefined,
   image: e.bilde?.url,
 }));
+const examples = [demoExample, ...cmsExamples].slice(0, 3);
 
 // Fetch homepage content from CMS (optional)
 let forside = null;

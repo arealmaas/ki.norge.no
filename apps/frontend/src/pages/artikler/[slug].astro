@@ -37,7 +37,7 @@ const articleJsonLd = articleSchema({
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
   <div class="article-page">
     <div class="article-container">
-      <nav class="breadcrumb" aria-label="Brodsmuler">
+      <nav class="breadcrumb" aria-label="Brødsmuler">
         <a href="/">Forside</a>
         <span class="breadcrumb-sep" aria-hidden="true">/</span>
         <a href="/artikler">Artikler</a>
@@ -106,11 +106,13 @@ const articleJsonLd = articleSchema({
     font-size: 0.875rem;
     color: #64748b;
     margin-bottom: var(--ds-size-6);
+    padding-bottom: var(--ds-size-4);
+    border-bottom: 1px solid #e2e8f0;
     flex-wrap: wrap;
   }
 
   .breadcrumb a {
-    color: #136dec;
+    color: #64748b;
     text-decoration: none;
   }
 
@@ -123,8 +125,7 @@ const articleJsonLd = articleSchema({
   }
 
   .breadcrumb [aria-current] {
-    color: #0d131b;
-    font-weight: 500;
+    color: #64748b;
   }
 
   /* Header */
