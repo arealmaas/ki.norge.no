@@ -118,7 +118,7 @@ Content is fetched via the Umbraco Content Delivery API v2 at `/umbraco/delivery
 
 | Page | CMS-controlled | Code-controlled |
 |------|---------------|-----------------|
-| `/` (homepage) | Articles (News), Veiledninger (Resources) | Layout, Hero, Stats, Pillars, TargetAudiences |
+| `/` (homepage) | Articles (News), Veiledninger (Resources) | Layout, Hero, Pillars, TargetAudiences |
 | `/artikler` | Article list + category filtering | Page layout, filter pills |
 | `/artikler/[slug]` | Article content (rich text blocks) | Page template, TOC |
 | `/eksempler` | Example list, status, tools | Page layout, status badges, filters |

@@ -114,30 +114,23 @@ ki.norge.no/
    - Subheadline explaining the portal purpose
    - Two CTA buttons: "Utforsk veiledning" (primary), "Se eksempler" (secondary)
 
-2. **Stats Bar**
-   - Light background
-   - 4-column grid
-   - Large accent-colored numbers
-   - Labels below each stat
-   - Example: "50+ veiledninger", "25 sandkasse-prosjekter", etc.
-
-3. **Three Pillars**
+2. **Three Pillars**
    - Equal-width cards (3 columns)
    - Each with: circular icon, title, description, link
    - Pillars: Veiledning, Sandkasse, Eksempler
    - Hover: lift effect with shadow
 
-4. **Resources Section**
+3. **Resources Section**
    - Header: "Populære ressurser" with "Se alle" link
    - Horizontal card grid (auto-fit, min 250px)
    - Cards show: type label, title, description
 
-5. **Target Audiences**
+4. **Target Audiences**
    - 3 cards for each audience type
    - Each with: title, description, bullet list of features, CTA link
    - Icons or illustrations for each audience
 
-6. **News/Articles**
+5. **News/Articles**
    - Header: "Siste nytt" with "Se alle artikler" link
    - 3-column grid of article cards
    - Cards show: category tag, title, excerpt, date
@@ -214,8 +207,7 @@ ki.norge.no/
 | Element | Desktop | Mobile |
 |---------|---------|--------|
 | Navigation | Horizontal links | Hamburger menu |
-| Hero | Large text, side-by-side buttons | Stacked buttons |
-| Stats | 4 columns | 2 columns |
+| Hero | Large text, side-by-side buttons | Stacked buttons | 4 columns | 2 columns |
 | Pillars | 3 columns | 1 column (stacked) |
 | Article grid | 3 columns | 1 column |
 | Footer | 4 columns | Stacked |
