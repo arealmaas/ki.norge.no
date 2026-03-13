@@ -46,3 +46,6 @@ test-results/
 
 # Playwright CLI
 .playwright-cli/
+
+# Design files
+design/
