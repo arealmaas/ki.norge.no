@@ -26,9 +26,9 @@ echo
 # --- Prerequisites ---
 echo "==> Registering Azure providers..."
 az extension add --name containerapp --upgrade --only-show-errors 2>/dev/null || true
-az provider register --namespace Microsoft.App --wait >/dev/null
-az provider register --namespace Microsoft.OperationalInsights --wait >/dev/null
-az provider register --namespace Microsoft.ContainerRegistry --wait >/dev/null
+az provider register --namespace Microsoft.App --wait >/dev/null 2>&1 || echo "  (skipped Microsoft.App — already registered or insufficient permissions)"
+az provider register --namespace Microsoft.OperationalInsights --wait >/dev/null 2>&1 || echo "  (skipped Microsoft.OperationalInsights)"
+az provider register --namespace Microsoft.ContainerRegistry --wait >/dev/null 2>&1 || echo "  (skipped Microsoft.ContainerRegistry)"
 echo "OK"
 
 # --- Resource group ---
