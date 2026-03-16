@@ -4,7 +4,7 @@ import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import ContactCard from '../../components/shared/ContactCard.astro';
 import SidebarCard from '../../components/shared/SidebarCard.astro';
 
-import { getEksempel, getEksempler, getPlainText, type Eksempel, type UmbracoBlock } from '../../lib/umbraco';
+import { getEksempel, getEksempler, getPlainText, getMediaUrl, type Eksempel, type UmbracoBlock } from '../../lib/umbraco';
 
 // Demo article for showcasing the page design
 const DEMO_EKSEMPEL: Record<string, Eksempel> = {
@@ -38,10 +38,10 @@ const DEMO_EKSEMPEL: Record<string, Eksempel> = {
         </ul>
       `}}
     ] as UmbracoBlock[],
-    resultater: 'Økt effektivitet i kunnskapsinnhenting, med resultater som viser trygg og ansvarlig bruk av KI.\nBrukertester viste at verktøyet oppleves som nyttig og pålitelig.\nPiloten viste at kunnskapsassistenten gir størst verdi i starten av en kunnskapsprosess – når brukere trenger bred orientering og bakgrunnskunnskap.\nI senere faser av et prosjekt styrker KI faglige vurderinger, men erstatter ikke menneskelig kompetanse.',
+    resultater: 'Den største utfordringen er ikke teknologisk, men institusjonell: KI må oppleves som trygg, etterprøvbar og tillitsvekkende.',
     merkelapper: [
-      { id: 'm1', documentId: 'm1', navn: 'First project', slug: 'first-project', locale: 'nb-NO' },
-      { id: 'm2', documentId: 'm2', navn: 'Se ansatte i retning', slug: 'se-ansatte-i-retning', locale: 'nb-NO' },
+      { id: 'm1', documentId: 'm1', navn: 'Pilot prosjekt', slug: 'pilot-prosjekt', locale: 'nb-NO' },
+      { id: 'm2', documentId: 'm2', navn: 'For ansatte i offentlig', slug: 'for-ansatte-i-offentlig', locale: 'nb-NO' },
       { id: 'm3', documentId: 'm3', navn: 'LLM', slug: 'llm', locale: 'nb-NO' },
     ],
     status: 'pilot',
@@ -92,23 +92,39 @@ const seoImage = caseItem.seoBilde?.url;
       <nav class="breadcrumb" aria-label="Brødsmuler">
         <a href="/">Forside</a>
         <span class="breadcrumb-sep" aria-hidden="true">/</span>
-        <a href="/eksempler">Case</a>
+        <a href="/eksempler">Caser</a>
         <span class="breadcrumb-sep" aria-hidden="true">/</span>
         <span aria-current="page">{caseItem.tittel}</span>
       </nav>
 
       <header class="article-header">
-        <h1 class="article-title">{caseItem.tittel}</h1>
+        <div class="article-hero">
+          <div class="article-hero-text">
+            <h1 class="article-title">{caseItem.tittel}</h1>
 
-        {caseItem.merkelapper && caseItem.merkelapper.length > 0 && (
-          <div class="tag-pills">
-            {caseItem.merkelapper.map(tag => (
-              <span class="tag-pill">{tag.navn}</span>
-            ))}
+            {caseItem.merkelapper && caseItem.merkelapper.length > 0 && (
+              <div class="tag-pills">
+                {caseItem.merkelapper.map(tag => (
+                  <span class="tag-pill">{tag.navn}</span>
+                ))}
+              </div>
+            )}
+
+            <p class="article-lead">{getPlainText(caseItem.beskrivelse, 200)}</p>
           </div>
-        )}
-
-        <p class="article-lead">{getPlainText(caseItem.beskrivelse, 200)}</p>
+          <div class="article-hero-image">
+            {caseItem.bilde ? (
+              <div class="article-hero-image-wrap">
+                <img src={getMediaUrl(caseItem.bilde)} alt={caseItem.bilde.alternativeText || caseItem.tittel} loading="lazy" />
+                <div class="article-hero-image-overlay"></div>
+              </div>
+            ) : (
+              <div class="article-hero-image-placeholder">
+                <div class="article-hero-image-overlay"></div>
+              </div>
+            )}
+          </div>
+        </div>
       </header>
 
       <div class="article-layout">
@@ -118,19 +134,32 @@ const seoImage = caseItem.seoBilde?.url;
 
         <aside class="article-sidebar">
           {caseItem.resultater && (
-            <SidebarCard title="Dette lærte vi" variant="highlight">
-              <ul>
-                {caseItem.resultater.split(/[\n•]/).filter(s => s.trim()).map(item => (
-                  <li>{item.trim()}</li>
-                ))}
-              </ul>
+            <SidebarCard title="Dette lærte vi" variant="highlight" icon="learn">
+              <p>{caseItem.resultater}</p>
+              <details>
+                <summary>Brukerbehov vi avdekket i piloten</summary>
+                <div>
+                  <p>Piloten viste at kunnskapsassistenten gir størst verdi i tidlige faser av arbeidet – når brukeren skal orientere seg, oppsummere og finne relevante dokumenter. Brukerne var tydelige om hvordan KI kan være nyttig: KI må styrke faglige vurderinger – ikke gjøre dem mer sårbare.</p>
+                </div>
+              </details>
+              <details>
+                <summary>Slik bygger vi tillit til KI</summary>
+                <div>
+                  <p>Gjennom åpenhet om hvordan modellen fungerer, tydelige begrensninger og mulighet for brukerne å etterprøve svarene. Tillit bygges over tid gjennom erfaring og transparens.</p>
+                </div>
+              </details>
             </SidebarCard>
           )}
 
           {nextCase && (
-            <SidebarCard title="Neste steg">
-              <p>{getPlainText(nextCase.beskrivelse, 120)}</p>
-              <a href={`/eksempler/${nextCase.slug}`}>Les {nextCase.tittel} &rarr;</a>
+            <SidebarCard title="Neste steg" icon="clock">
+              <p>Kunnskapsassistenten er en KI-chat i betaversjon. Kunnskapsgrunnlaget til chatten er et avgrenset utdrag av Kudos-databasen. Den er brukertestet av 89 brukere i departementer og direktorater.</p>
+              <details>
+                <summary>Neste steg/veien videre</summary>
+                <div>
+                  <p>Vi planlegger å utvide kunnskapsgrunnlaget, forbedre presisjonen og rulle ut til flere virksomheter i 2026.</p>
+                </div>
+              </details>
             </SidebarCard>
           )}
         </aside>
@@ -163,17 +192,15 @@ const seoImage = caseItem.seoBilde?.url;
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #64748b;
+    font-size: 1rem;
+    color: #000;
     margin-bottom: var(--ds-size-6);
-    padding-bottom: var(--ds-size-4);
-    border-bottom: 1px solid #e2e8f0;
     flex-wrap: wrap;
   }
 
   .breadcrumb a {
-    color: #64748b;
-    text-decoration: none;
+    color: #000;
+    text-decoration: underline;
   }
 
   .breadcrumb a:hover {
@@ -185,13 +212,67 @@ const seoImage = caseItem.seoBilde?.url;
   }
 
   .breadcrumb [aria-current] {
-    color: #64748b;
+    color: #000;
+    text-decoration: none;
   }
 
   /* Header */
   .article-header {
     margin-bottom: var(--ds-size-8);
+  }
+
+  .article-hero {
+    display: flex;
+    gap: var(--ds-size-8);
+    align-items: flex-start;
+  }
+
+  .article-hero-text {
+    flex: 1;
+    min-width: 0;
     max-width: 720px;
+  }
+
+  .article-hero-image {
+    display: none;
+    width: 407px;
+    flex-shrink: 0;
+  }
+
+  @media (min-width: 1024px) {
+    .article-hero-image {
+      display: block;
+    }
+  }
+
+  .article-hero-image-wrap {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .article-hero-image img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    display: block;
+  }
+
+  .article-hero-image-placeholder {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .article-hero-image-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 71.6%, rgba(0, 0, 0, 0.2));
+    pointer-events: none;
   }
 
   .article-title {
@@ -205,7 +286,7 @@ const seoImage = caseItem.seoBilde?.url;
 
   @media (min-width: 768px) {
     .article-title {
-      font-size: 2.75rem;
+      font-size: 3rem;
     }
   }
 
@@ -230,9 +311,9 @@ const seoImage = caseItem.seoBilde?.url;
 
   /* Lead text */
   .article-lead {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    color: #64748b;
+    font-size: var(--ds-font-size-5, 21px);
+    line-height: 1.7;
+    color: rgba(0,0,0,0.75);
     margin: 0;
   }
 
@@ -249,10 +330,18 @@ const seoImage = caseItem.seoBilde?.url;
   }
 
   :global(.article-body) {
+    font-size: var(--ds-font-size-4, 18px);
     line-height: 1.7;
+    color: rgba(0,0,0,0.75);
   }
 
-  :global(.article-body h2),
+  :global(.article-body h2) {
+    font-size: var(--ds-font-size-7, 30px);
+    font-weight: 500;
+    color: #0d131b;
+    scroll-margin-top: 100px;
+  }
+
   :global(.article-body h3) {
     scroll-margin-top: 100px;
   }
@@ -260,7 +349,7 @@ const seoImage = caseItem.seoBilde?.url;
   /* Sidebar */
   .article-sidebar {
     display: none;
-    width: 300px;
+    width: 340px;
     flex-shrink: 0;
   }
 
@@ -272,4 +361,5 @@ const seoImage = caseItem.seoBilde?.url;
       align-self: flex-start;
     }
   }
+
 </style>
