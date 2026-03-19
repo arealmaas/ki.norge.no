@@ -1,5 +1,19 @@
 ---
 import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+import BlocksRenderer from '../shared/BlocksRenderer.astro';
+import type { UmbracoBlock } from '../../lib/umbraco';
+
+interface Props {
+  tittel?: string;
+  tekst?: UmbracoBlock[];
+  url?: string;
+}
+
+const { tittel, tekst, url } = Astro.props;
+
+const heading = tittel || 'Sandkassen for kunstig intelligens';
+const linkUrl = url || '/sandkasse';
+const hasCmsText = tekst && tekst.length > 0;
 ---
 
 <section class="sandbox-section">
@@ -7,17 +21,23 @@ import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
     <div class="sandbox-card">
       <div class="sandbox-card-content">
         <Heading level={2} size="xlarge" className="sandbox-section-heading">
-          Sandkassen for kunstig intelligens
+          {heading}
         </Heading>
         <div class="sandbox-section-text">
-          <Paragraph size="medium" className="sandbox-section-paragraph">
-            Den regulatoriske sandkassen er et samarbeid mellom for virksomheter som vil utforske nye måter å bruke KI på innenfor rammene av personvern, etikk og lovgivning. Sandkassen gir veiledning og rammer.
-          </Paragraph>
-          <Paragraph size="medium" className="sandbox-section-paragraph">
-            KI-senter bidrar til robustheten til det norske tilsynssystemet. De tre regulatoriske sandkassene som under Datatilsynet, Finanstilsynet, og Medietilsynet er tilgjengelige for et bredt spekter av virksomheter.
-          </Paragraph>
+          {hasCmsText ? (
+            <BlocksRenderer blocks={tekst} class="sandbox-section-richtext" />
+          ) : (
+            <>
+              <Paragraph size="medium" className="sandbox-section-paragraph">
+                Den regulatoriske sandkassen er et samarbeid mellom for virksomheter som vil utforske nye måter å bruke KI på innenfor rammene av personvern, etikk og lovgivning. Sandkassen gir veiledning og rammer.
+              </Paragraph>
+              <Paragraph size="medium" className="sandbox-section-paragraph">
+                KI-senter bidrar til robustheten til det norske tilsynssystemet. De tre regulatoriske sandkassene som under Datatilsynet, Finanstilsynet, og Medietilsynet er tilgjengelige for et bredt spekter av virksomheter.
+              </Paragraph>
+            </>
+          )}
         </div>
-        <Link href="/sandkasse" className="sandbox-section-link">
+        <Link href={linkUrl} className="sandbox-section-link">
           Les mer om sandkassen →
         </Link>
       </div>
@@ -70,6 +90,15 @@ import { Heading, Paragraph, Link } from '@digdir/designsystemet-react';
     color: var(--ds-color-neutral-text-subtle);
     margin: 0 0 var(--ds-size-4);
     line-height: 1.7;
+  }
+
+  :global(.sandbox-section-richtext) {
+    color: var(--ds-color-neutral-text-subtle);
+    line-height: 1.7;
+  }
+
+  :global(.sandbox-section-richtext p) {
+    margin: 0 0 var(--ds-size-4);
   }
 
   :global(.sandbox-section-link) {

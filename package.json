@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "cms:dev": "cd apps/cms-umbraco && dotnet run",
+    "cms:restart": "pkill -f KiNorge.Cms 2>/dev/null; sleep 2; cd apps/cms-umbraco && dotnet run",
     "cms:build": "cd apps/cms-umbraco && dotnet build -c Release",
     "cms:restore": "cd apps/cms-umbraco && dotnet restore",
     "frontend:dev": "cd apps/frontend && deno task dev",

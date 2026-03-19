@@ -1,374 +1,213 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
-import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
-import { getSide } from '../lib/umbraco';
+import PartnersSection from '../components/shared/PartnersSection.astro';
+import { getOmOss, getOmOssSeksjoner, getMediaUrl, getPlainText } from '../lib/umbraco';
 
-const isPreview = Astro.url.searchParams.has('preview') || Astro.cookies.has('preview');
+const omOss = await getOmOss();
+const seksjonerRes = await getOmOssSeksjoner();
+const seksjoner = seksjonerRes.data;
 
-// Fetch page content from Umbraco
-let page = null;
-try {
-  page = await getSide('om-oss', { preview: isPreview });
-} catch (error) {
-  console.error('Failed to fetch om-oss page:', error);
-}
+const heroTittel = omOss?.heroTittel || 'KI Norge';
+const heroUndertittel = omOss?.heroUndertittel || 'Verdigrunnlag';
 
-const title = page?.seoTittel || page?.tittel || 'Om oss';
-const seoDescription = page?.seoBeskrivelse || 'Lær mer om KI Norge og vårt arbeid med kunstig intelligens i offentlig sektor.';
-const seoImage = page?.seoBilde?.url;
-
-const partners = [
-  {
-    name: 'Nkom',
-    fullName: 'Nasjonal kommunikasjonsmyndighet',
-    description: 'Regulerer og overvåker elektronisk kommunikasjon i Norge.',
-    icon: 'cell_tower',
-  },
-  {
-    name: 'Datatilsynet',
-    fullName: 'Datatilsynet',
-    description: 'Beskytter personvern og ivaretar borgernes rettigheter i møte med ny teknologi.',
-    icon: 'shield',
-  },
-  {
-    name: 'Digdir',
-    fullName: 'Digitaliseringsdirektoratet',
-    description: 'Leder digitaliseringen av offentlig sektor og utvikler felles løsninger.',
-    icon: 'hub',
-  },
-];
-
-const offerings = [
-  {
-    icon: 'menu_book',
-    title: 'Veiledning',
-    description: 'Praktisk veiledning for ansvarlig bruk av KI i offentlig sektor.',
-    href: '/veiledning',
-  },
-  {
-    icon: 'science',
-    title: 'Sandkasse',
-    description: 'Regulatorisk sandkasse for utforskning av KI-løsninger.',
-    href: '/sandkasse',
-  },
-  {
-    icon: 'lightbulb',
-    title: 'Eksempler',
-    description: 'Gode eksempler på bruk av KI fra norsk offentlig sektor.',
-    href: '/eksempler',
-  },
-  {
-    icon: 'article',
-    title: 'Artikler',
-    description: 'Nyheter, analyser og veiledning om kunstig intelligens.',
-    href: '/artikler',
-  },
-];
+const seoTitle = omOss?.seoTittel || 'Om oss';
+const seoDesc = omOss?.seoBeskrivelse || 'Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.';
 ---
 
-<Layout title={title} description={seoDescription} ogImage={seoImage}>
-  <section class="page-hero">
-    <div class="hero-container">
-      <span class="page-badge">Om KI Norge</span>
-      <Heading level={1} size="2xlarge" className="hero-title">{title}</Heading>
-      <Paragraph size="large" className="hero-lead">
-        Et samarbeid mellom Nkom, Datatilsynet og Digdir for å fremme ansvarlig bruk av kunstig intelligens i offentlig sektor.
-      </Paragraph>
-    </div>
-  </section>
-
-  <section class="partners-section">
-    <div class="section-container">
-      <Heading level={2} size="large" className="section-title">Våre partnere</Heading>
-      <div class="partners-grid">
-        {partners.map(partner => (
-          <div class="partner-card">
-            <div class="partner-icon-wrapper">
-              <span class="material-symbols-outlined partner-icon">{partner.icon}</span>
-            </div>
-            <Heading level={3} size="small" className="partner-name">{partner.name}</Heading>
-            <Paragraph size="xsmall" className="partner-fullname">{partner.fullName}</Paragraph>
-            <Paragraph size="small" className="partner-description">{partner.description}</Paragraph>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <section class="offerings-section">
-    <div class="section-container">
-      <Heading level={2} size="large" className="section-title">Hva vi tilbyr</Heading>
-      <div class="offerings-grid">
-        {offerings.map(offering => (
-          <a href={offering.href} class="offering-card card-hover">
-            <span class="material-symbols-outlined offering-icon">{offering.icon}</span>
-            <Heading level={3} size="small" className="offering-title">{offering.title}</Heading>
-            <Paragraph size="small" className="offering-description">{offering.description}</Paragraph>
-            <span class="offering-link">
-              Les mer <span class="material-symbols-outlined offering-arrow">arrow_forward</span>
-            </span>
-          </a>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  {page?.innhold && (
-    <section class="cms-section">
-      <div class="cms-container">
-        <BlocksRenderer blocks={page.innhold} className="content-blocks" />
-      </div>
+<Layout title={seoTitle} description={seoDesc}>
+  <div class="om-oss-page">
+    <!-- Hero -->
+    <section class="om-oss-hero">
+      <h1 class="om-oss-hero-title">{heroTittel}</h1>
+      <p class="om-oss-hero-subtitle">{heroUndertittel}</p>
     </section>
-  )}
 
-  <section class="contact-cta-section">
-    <div class="cta-container">
-      <span class="material-symbols-outlined cta-icon">mail</span>
-      <Heading level={2} size="medium" className="cta-title">Vil du vite mer?</Heading>
-      <Paragraph className="cta-description">
-        Ta kontakt med oss for spørsmål om KI Norge, samarbeid eller andre henvendelser.
-      </Paragraph>
-      <Button asChild variant="primary" size="medium">
-        <a href="/kontakt">Kontakt oss</a>
-      </Button>
+    <!-- Intro -->
+    {omOss?.introTekst && (
+      <section class="om-oss-intro">
+        <div class="om-oss-intro-inner">
+          <BlocksRenderer blocks={omOss.introTekst} class="om-oss-intro-text" />
+        </div>
+      </section>
+    )}
+
+    <!-- Alternating stubs -->
+    <div class="om-oss-seksjoner">
+      {seksjoner.map((seksjon, index) => (
+        <section class:list={['om-oss-stub', index % 2 === 0 ? 'stub--image-left' : 'stub--image-right']}>
+          <div class="stub-image" aria-hidden="true">
+            {seksjon.bilde ? (
+              <img src={getMediaUrl(seksjon.bilde)} alt={seksjon.bilde.alternativeText || seksjon.tittel} loading="lazy" />
+            ) : (
+              <div class="stub-image-placeholder"></div>
+            )}
+          </div>
+          <div class="stub-content">
+            <h2 class="stub-title">{seksjon.tittel}</h2>
+            <div class="stub-text">
+              <BlocksRenderer blocks={seksjon.tekst} />
+            </div>
+          </div>
+        </section>
+      ))}
     </div>
-  </section>
+
+    <!-- Partners -->
+    <PartnersSection />
+  </div>
 </Layout>
 
 <style>
+  .om-oss-page {
+    margin-top: -72px;
+  }
+
   /* Hero */
-  .page-hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    padding: var(--ds-size-12) var(--ds-size-4);
-  }
-
-  .hero-container {
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
-  }
-
-  .page-badge {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
-  }
-
-  :global(.hero-title) {
-    margin: 0 0 var(--ds-size-4);
-  }
-
-  :global(.hero-lead) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  /* Partners */
-  .partners-section {
-    padding: var(--ds-size-12) var(--ds-size-4);
-  }
-
-  .section-container {
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-
-  :global(.section-title) {
-    margin: 0 0 var(--ds-size-8);
-    text-align: center;
-  }
-
-  .partners-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--ds-size-5);
-  }
-
-  .partner-card {
-    padding: var(--ds-size-6);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    text-align: center;
-  }
-
-  .partner-icon-wrapper {
-    display: inline-flex;
+  .om-oss-hero {
+    background-color: #8bc9ce;
+    height: 584px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 56px;
-    height: 56px;
-    background-color: var(--ds-color-accent-surface-default);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
-  }
-
-  .partner-icon {
-    font-size: 28px;
-    color: var(--ds-color-accent-text-default);
-  }
-
-  :global(.partner-name) {
-    margin: 0 0 var(--ds-size-1);
-  }
-
-  :global(.partner-fullname) {
-    margin: 0 0 var(--ds-size-3);
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  :global(.partner-description) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  /* Offerings */
-  .offerings-section {
-    padding: var(--ds-size-10) var(--ds-size-4) var(--ds-size-12);
-    background-color: var(--ds-color-neutral-surface-default);
-  }
-
-  .offerings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--ds-size-5);
-  }
-
-  .offering-card {
-    display: flex;
-    flex-direction: column;
-    padding: var(--ds-size-6);
-    background-color: var(--ds-color-neutral-background-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .offering-icon {
-    font-size: 32px;
-    color: var(--ds-color-accent-text-default);
-    margin-bottom: var(--ds-size-3);
-  }
-
-  :global(.offering-title) {
-    margin: 0 0 var(--ds-size-2);
-  }
-
-  :global(.offering-description) {
-    margin: 0 0 var(--ds-size-4);
-    color: var(--ds-color-neutral-text-subtle);
-    flex: 1;
-  }
-
-  .offering-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--ds-size-1);
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    color: var(--ds-color-accent-text-default);
-  }
-
-  .offering-arrow {
-    font-size: 16px;
-    transition: transform 0.2s ease;
-  }
-
-  .offering-card:hover .offering-arrow {
-    transform: translateX(4px);
-  }
-
-  /* CMS content */
-  .cms-section {
-    padding: var(--ds-size-10) var(--ds-size-4);
-  }
-
-  .cms-container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  :global(.content-blocks) {
-    line-height: 1.7;
-  }
-
-  :global(.content-blocks h2) {
-    margin-top: var(--ds-size-10);
-    margin-bottom: var(--ds-size-4);
-  }
-
-  :global(.content-blocks h3) {
-    margin-top: var(--ds-size-8);
-    margin-bottom: var(--ds-size-3);
-  }
-
-  :global(.content-blocks p) {
-    margin-bottom: var(--ds-size-4);
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  :global(.content-blocks ul),
-  :global(.content-blocks ol) {
-    margin-bottom: var(--ds-size-4);
-    padding-left: var(--ds-size-6);
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  :global(.content-blocks li) {
-    margin-bottom: var(--ds-size-2);
-  }
-
-  /* Contact CTA */
-  .contact-cta-section {
-    padding: 0 var(--ds-size-4) var(--ds-size-12);
-  }
-
-  .cta-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-10);
-    background-color: var(--ds-color-accent-surface-default);
-    border-radius: var(--ds-border-radius-lg);
+    padding: 24px;
     text-align: center;
+  }
+
+  .om-oss-hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: white;
+    margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  @media (min-width: 768px) {
+    .om-oss-hero-title {
+      font-size: 6rem;
+    }
+  }
+
+  .om-oss-hero-subtitle {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 48px 0 0;
+    letter-spacing: -0.0025em;
+  }
+
+  @media (min-width: 768px) {
+    .om-oss-hero-subtitle {
+      font-size: 1.5rem;
+    }
+  }
+
+  /* Intro */
+  .om-oss-intro {
+    padding: 54px 24px;
+  }
+
+  .om-oss-intro-inner {
+    max-width: 884px;
+    margin: 0 auto;
+  }
+
+  :global(.om-oss-intro-text) {
+    font-size: 1.5rem;
+    line-height: 1.7;
+    color: #000;
+    text-align: center;
+    letter-spacing: 0.005em;
+  }
+
+  :global(.om-oss-intro-text p) {
+    margin: 0;
+  }
+
+  /* Alternating stubs */
+  .om-oss-seksjoner {
     display: flex;
     flex-direction: column;
+    gap: 54px;
+    max-width: 930px;
+    margin: 0 auto;
+    padding: 0 24px 54px;
+  }
+
+  .om-oss-stub {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
     align-items: center;
-    gap: var(--ds-size-3);
   }
 
-  .cta-icon {
-    font-size: 40px;
-    color: var(--ds-color-accent-text-default);
+  @media (min-width: 768px) {
+    .om-oss-stub {
+      flex-direction: row;
+      gap: 99px;
+    }
+
+    .stub--image-right {
+      flex-direction: row-reverse;
+    }
   }
 
-  :global(.cta-title) {
+  .stub-image {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .stub-image img {
+    width: 100%;
+    height: 487px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+    background-color: var(--image-fallback-bg, #D9D9D9);
+  }
+
+  .stub-image-placeholder {
+    width: 100%;
+    height: 487px;
+    background-color: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 4px;
+  }
+
+  .stub-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    justify-content: center;
+  }
+
+  .stub-title {
+    font-size: 2rem;
+    font-weight: 400;
+    color: #000;
     margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
   }
 
-  :global(.cta-description) {
+  @media (min-width: 768px) {
+    .stub-title {
+      font-size: 3rem;
+    }
+  }
+
+  .stub-text {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: 1.3;
+    letter-spacing: -0.0025em;
+  }
+
+  :global(.stub-text p) {
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 500px;
-  }
-
-  .cta-container :global(a) {
-    text-decoration: none;
-    margin-top: var(--ds-size-2);
   }
 </style>

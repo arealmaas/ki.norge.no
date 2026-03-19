@@ -1,7 +1,14 @@
 ---
 import { Heading, Paragraph } from '@digdir/designsystemet-react';
+import type { EventItem } from '../../lib/umbraco';
 
-const events = [
+interface Props {
+  arrangementer?: EventItem[];
+}
+
+const { arrangementer } = Astro.props;
+
+const defaultEvents = [
   {
     date: 'Dato',
     title: 'Arrangement 1',
@@ -18,6 +25,21 @@ const events = [
     description: 'Call to a feature, benefit, or value that can hook readers to this.',
   },
 ];
+
+const useCms = arrangementer && arrangementer.length > 0;
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return 'Dato';
+  try {
+    return new Date(dateStr).toLocaleDateString('nb-NO', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
+}
 ---
 
 <section class="upcoming-events">
@@ -29,22 +51,45 @@ const events = [
       <a href="/arrangementer" class="upcoming-events-calendar-link">Se kalenderen</a>
     </div>
     <div class="upcoming-events-grid">
-      {events.map((event) => (
-        <div class="event-card">
-          <div class="event-card-content">
-            <Heading level={3} size="xsmall" className="event-title">
-              {event.title}
-            </Heading>
-            <span class="event-date">{event.date}</span>
-            <Paragraph size="small" className="event-description">
-              {event.description}
-            </Paragraph>
+      {useCms ? (
+        arrangementer.map((event) => (
+          <div class="event-card">
+            <div class="event-card-content">
+              <Heading level={3} size="xsmall" className="event-title">
+                {event.eventUrl ? (
+                  <a href={event.eventUrl}>{event.eventTittel}</a>
+                ) : (
+                  event.eventTittel
+                )}
+              </Heading>
+              <span class="event-date">{formatDate(event.eventDato)}</span>
+              {event.eventSted && (
+                <span class="event-location">{event.eventSted}</span>
+              )}
+            </div>
+            <div class="event-card-image">
+              <div class="event-card-placeholder"></div>
+            </div>
           </div>
-          <div class="event-card-image">
-            <div class="event-card-placeholder"></div>
+        ))
+      ) : (
+        defaultEvents.map((event) => (
+          <div class="event-card">
+            <div class="event-card-content">
+              <Heading level={3} size="xsmall" className="event-title">
+                {event.title}
+              </Heading>
+              <span class="event-date">{event.date}</span>
+              <Paragraph size="small" className="event-description">
+                {event.description}
+              </Paragraph>
+            </div>
+            <div class="event-card-image">
+              <div class="event-card-placeholder"></div>
+            </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </div>
   </div>
 </section>
@@ -113,6 +158,11 @@ const events = [
   .event-date {
     font-size: var(--ds-font-size-0);
     font-weight: var(--ds-font-weight-medium);
+    color: var(--ds-color-neutral-text-subtle);
+  }
+
+  .event-location {
+    font-size: var(--ds-font-size-0);
     color: var(--ds-color-neutral-text-subtle);
   }
 

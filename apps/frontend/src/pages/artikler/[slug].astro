@@ -83,13 +83,7 @@ const articleJsonLd = articleSchema({
 
 <style>
   .article-page {
-    padding-top: var(--ds-size-6);
-  }
-
-  @media (min-width: 768px) {
-    .article-page {
-      padding-top: var(--ds-size-10);
-    }
+    padding-top: var(--ds-size-4);
   }
 
   .article-container {
@@ -163,7 +157,14 @@ const articleJsonLd = articleSchema({
   /* Two-column layout */
   .article-layout {
     display: flex;
+    flex-direction: column;
     gap: var(--ds-size-10);
+  }
+
+  @media (min-width: 1024px) {
+    .article-layout {
+      flex-direction: row;
+    }
   }
 
   .article-content {
@@ -183,14 +184,13 @@ const articleJsonLd = articleSchema({
 
   /* Sidebar */
   .article-sidebar {
-    display: none;
-    width: 300px;
-    flex-shrink: 0;
+    width: 100%;
   }
 
   @media (min-width: 1024px) {
     .article-sidebar {
-      display: block;
+      width: 300px;
+      flex-shrink: 0;
       position: sticky;
       top: 100px;
       align-self: flex-start;

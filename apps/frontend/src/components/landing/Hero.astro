@@ -1,4 +1,18 @@
 ---
+import type { UmbracoBlock, UmbracoMedia } from '../../lib/umbraco';
+import { getMediaUrl, getPlainText } from '../../lib/umbraco';
+
+interface Props {
+  overskrift?: string;
+  tekst?: UmbracoBlock[];
+  bilde?: UmbracoMedia;
+}
+
+const { overskrift, tekst, bilde } = Astro.props;
+
+const heroImageUrl = bilde ? getMediaUrl(bilde) : '/frontpage-ai_robot-alpha.png';
+const heroImageAlt = bilde?.alternativeText || 'Illustrasjon av en robot';
+const subtitleText = tekst ? getPlainText(tekst) : '';
 ---
 
 <section class="hero">
@@ -10,17 +24,26 @@
   />
   <div class="hero-container">
     <div class="hero-content">
-      <h1 class="hero-title">
-        <span class="hero-title-small">Norge satser på</span>
-        <span class="hero-title-large">trygg og verdiskapende</span>
-        <span class="hero-title-large">bruk av <strong>kunstig intelligens</strong></span>
-      </h1>
+      {overskrift ? (
+        <h1 class="hero-title">
+          <span class="hero-title-large">{overskrift}</span>
+        </h1>
+      ) : (
+        <h1 class="hero-title">
+          <span class="hero-title-small">Norge satser på</span>
+          <span class="hero-title-large">trygg og verdiskapende</span>
+          <span class="hero-title-large">bruk av <strong>kunstig intelligens</strong></span>
+        </h1>
+      )}
+      {subtitleText && (
+        <p class="hero-subtitle">{subtitleText}</p>
+      )}
     </div>
     <div class="hero-visual">
       <img
         class="hero-robot"
-        src="/frontpage-ai_robot-alpha.png"
-        alt="Illustrasjon av en robot"
+        src={heroImageUrl}
+        alt={heroImageAlt}
         width="500"
         height="500"
       />
@@ -32,6 +55,7 @@
   .hero {
     position: relative;
     overflow: hidden;
+    margin-top: -72px;
     padding: var(--ds-size-12) var(--ds-size-4);
     padding-top: 100px;
     min-height: 400px;
@@ -124,6 +148,20 @@
 
   .hero-title-large strong {
     font-weight: 900;
+  }
+
+  .hero-subtitle {
+    margin: var(--ds-size-4) 0 0;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.75);
+    max-width: 600px;
+  }
+
+  @media (min-width: 768px) {
+    .hero-subtitle {
+      font-size: 1.25rem;
+    }
   }
 
   .hero-visual {

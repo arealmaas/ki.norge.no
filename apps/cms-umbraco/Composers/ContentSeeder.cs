@@ -49,6 +49,10 @@ public class ContentSeeder : IAsyncComponent
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
 
+            // Create root-level content nodes
+            SeedForside();
+            var omOssNode = SeedOmOss();
+
             // Seed merkelapper FIRST so we can reference them from other content
             var merkelappMap = SeedMerkelapper(merkelapperFolder.Id);
 
@@ -91,6 +95,62 @@ public class ContentSeeder : IAsyncComponent
     {
         _contentService.Save(content);
         _contentService.Publish(content, new[] { "*" });
+    }
+
+    // ── Forside ─────────────────────────────────────────────
+
+    private void SeedForside()
+    {
+        var ct = _contentTypeService.Get("forside")
+            ?? throw new InvalidOperationException("Content type 'forside' not found");
+        var forside = _contentService.Create("Forside", -1, ct.Alias);
+        forside.SetValue("heroOverskrift", "Bruk av kunstig intelligens i Norge");
+        forside.SetValue("raadTittel", "Tre råd før du går i gang med KI");
+        forside.SetValue("sandkasseTittel", "Regulatorisk sandkasse for KI");
+        forside.SetValue("sandkasseTekst", "<p>Den regulatoriske sandkassen gir virksomheter mulighet til å teste KI-løsninger i et kontrollert miljø med veiledning fra relevante tilsynsmyndigheter.</p>");
+        forside.SetValue("sandkasseUrl", "/sandkasse");
+        forside.SetValue("seoTittel", "KI Norge – Kunstig intelligens i norsk offentlig sektor");
+        forside.SetValue("seoBeskrivelse", "KI Norge er en nasjonal satsing for ansvarlig bruk av kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.");
+        SaveAndPublish(forside);
+    }
+
+    // ── Om Oss ──────────────────────────────────────────────
+
+    private IContent SeedOmOss()
+    {
+        var ct = _contentTypeService.Get("omOss")
+            ?? throw new InvalidOperationException("Content type 'omOss' not found");
+        var omOss = _contentService.Create("Om oss", -1, ct.Alias);
+        omOss.SetValue("heroTittel", "KI Norge");
+        omOss.SetValue("heroUndertittel", "Verdigrunnlag");
+        omOss.SetValue("introTekst", "<p>KI Norge er en nasjonal satsing under Digitaliseringsdirektoratet (Digdir). Formålet er å gjøre det enklere for norske virksomheter å ta i bruk KI på en måte som er trygg, lovlig og verdiskapende, enten du driver en liten privat bedrift eller jobber i en offentlig virksomhet.</p>");
+        omOss.SetValue("seoTittel", "Om oss – KI Norge");
+        omOss.SetValue("seoBeskrivelse", "Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.");
+        SaveAndPublish(omOss);
+
+        // Seed child sections
+        var s1 = Create("omOssSeksjon", "Hvorfor KI Norge?", omOss.Id);
+        s1.SetValue("tittel", "Hvorfor KI Norge?");
+        s1.SetValue("slug", "hvorfor-ki-norge");
+        s1.SetValue("tekst", "<p>Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig. Det er der KI Norge kommer inn.</p>");
+        s1.SetValue("rekkefolge", 0);
+        SaveAndPublish(s1);
+
+        var s2 = Create("omOssSeksjon", "Veiledning", omOss.Id);
+        s2.SetValue("tittel", "Veiledning");
+        s2.SetValue("slug", "veiledning");
+        s2.SetValue("tekst", "<p>Sammen med Datatilsynet og Nasjonal kommunikasjonsmyndighet (Nkom) gir vi praktisk veiledning, særlig for deg som ikke har et eget juridisk team eller KI-eksperter i staben. Vi hjelper deg å forstå hvilke krav som gjelder, identifisere risiko og finne ut hva du faktisk trenger å forholde deg til.</p>");
+        s2.SetValue("rekkefolge", 1);
+        SaveAndPublish(s2);
+
+        var s3 = Create("omOssSeksjon", "Den regulatoriske KI-sandkassen", omOss.Id);
+        s3.SetValue("tittel", "Den regulatoriske KI-sandkassen");
+        s3.SetValue("slug", "den-regulatoriske-ki-sandkassen");
+        s3.SetValue("tekst", "<p>I KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.</p>");
+        s3.SetValue("rekkefolge", 2);
+        SaveAndPublish(s3);
+
+        return omOss;
     }
 
     // ── Artikler ──────────────────────────────────────────────
@@ -292,20 +352,6 @@ som SHAP-verdier og kontrafaktiske forklaringer.</p>
 
     private void SeedPages(int parentId)
     {
-        var omOss = Create("side", "Om KI Norge", parentId);
-        omOss.SetValue("tittel", "Om KI Norge");
-        omOss.SetValue("slug", "om-oss");
-        omOss.SetValue("innhold", @"<p>KI Norge er en nasjonal ressurs for kunstig intelligens i offentlig sektor.
-Vi jobber for at norske virksomheter skal ta i bruk KI på en ansvarlig og
-verdiskapende måte.</p>
-<h2>Vår rolle</h2>
-<p>Vi tilbyr veiledning, deler gode eksempler og fasiliterer samarbeid mellom
-offentlige virksomheter som ønsker å utforske og ta i bruk kunstig intelligens.</p>
-<h2>Kontakt oss</h2>
-<p>E-post: post@ki.norge.no</p>");
-        omOss.SetValue("seoBeskrivelse", "KI Norge er en nasjonal ressurs for kunstig intelligens i offentlig sektor.");
-        SaveAndPublish(omOss);
-
         var kontakt = Create("side", "Kontakt", parentId);
         kontakt.SetValue("tittel", "Kontakt oss");
         kontakt.SetValue("slug", "kontakt");

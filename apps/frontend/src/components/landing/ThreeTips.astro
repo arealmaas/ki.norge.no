@@ -1,7 +1,17 @@
 ---
 import { Paragraph } from '@digdir/designsystemet-react';
+import BlocksRenderer from '../shared/BlocksRenderer.astro';
+import type { TipItem } from '../../lib/umbraco';
+import { getPlainText } from '../../lib/umbraco';
 
-const tips = [
+interface Props {
+  tittel?: string;
+  tips?: TipItem[];
+}
+
+const { tittel, tips: cmsTips } = Astro.props;
+
+const defaultTips = [
   {
     title: 'Start med problemet',
     description: 'Definer klart hva du ønsker å oppnå før du velger teknologi. Gode KI-prosjekter starter med et tydelig behov, og en forståelse over hvordan verdien skapes, gi verdi.',
@@ -18,27 +28,46 @@ const tips = [
     image: '/frontpage-magnifying_glass-alpha.png',
   },
 ];
+
+const tipImages = ['/frontpage-target-alpha.png', '/frontpage-datacloud-alpha.png', '/frontpage-magnifying_glass-alpha.png'];
+
+const heading = tittel || 'Tre råd før du går i gang med KI';
+const useCms = cmsTips && cmsTips.length > 0;
 ---
 
 <section class="three-tips">
   <div class="three-tips-container">
     <div class="three-tips-header">
       <h2 class="three-tips-heading">
-        Tre råd før du går i gang med KI
+        {heading}
       </h2>
     </div>
     <div class="three-tips-grid">
-      {tips.map((tip) => (
-        <div class="tip-card">
-          <div class="tip-illustration">
-            <img src={tip.image} alt="" width="140" height="140" loading="lazy" />
+      {useCms ? (
+        cmsTips.map((tip, i) => (
+          <div class="tip-card">
+            <div class="tip-illustration">
+              <img src={tipImages[i % tipImages.length]} alt="" width="140" height="140" loading="lazy" />
+            </div>
+            <h3 class="tip-title">{tip.tipsTitle}</h3>
+            <div class="tip-description-rich">
+              <BlocksRenderer blocks={tip.tipsTekst} />
+            </div>
           </div>
-          <h3 class="tip-title">{tip.title}</h3>
-          <Paragraph size="small" className="tip-description">
-            {tip.description}
-          </Paragraph>
-        </div>
-      ))}
+        ))
+      ) : (
+        defaultTips.map((tip) => (
+          <div class="tip-card">
+            <div class="tip-illustration">
+              <img src={tip.image} alt="" width="140" height="140" loading="lazy" />
+            </div>
+            <h3 class="tip-title">{tip.title}</h3>
+            <Paragraph size="small" className="tip-description">
+              {tip.description}
+            </Paragraph>
+          </div>
+        ))
+      )}
     </div>
   </div>
 </section>
@@ -116,5 +145,16 @@ const tips = [
     margin: 0;
     line-height: 1.6;
     max-width: 340px;
+  }
+
+  .tip-description-rich {
+    color: var(--ds-color-neutral-text-subtle);
+    line-height: 1.6;
+    max-width: 340px;
+    font-size: var(--ds-font-size-1, 0.875rem);
+  }
+
+  .tip-description-rich :global(p) {
+    margin: 0;
   }
 </style>

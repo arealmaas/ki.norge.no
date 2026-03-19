@@ -71,7 +71,8 @@ export interface Eksempel {
   organisasjon?: string;
   beskrivelse?: UmbracoBlock[];
   verktoy?: string[];
-  resultater?: string;
+  resultater?: UmbracoBlock[];
+  accordionSeksjoner?: AccordionSection[];
   status?: 'i_utvikling' | 'pilot' | 'i_drift' | 'avsluttet';
   bilde?: UmbracoMedia;
   merkelapper?: Merkelapp[];
@@ -109,6 +110,73 @@ export interface FAQ {
   svar?: UmbracoBlock[];
   kategori?: Merkelapp;
   rekkefølge?: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  locale: string;
+}
+
+export interface AccordionSection {
+  title: string;
+  body: UmbracoBlock[];
+}
+
+export interface TipItem {
+  tipsTitle: string;
+  tipsTekst: UmbracoBlock[];
+}
+
+export interface EventItem {
+  eventTittel: string;
+  eventDato?: string;
+  eventSted?: string;
+  eventUrl?: string;
+}
+
+export interface Forside {
+  id: string;
+  documentId: string;
+  heroOverskrift?: string;
+  heroTekst?: UmbracoBlock[];
+  heroBilde?: UmbracoMedia;
+  raadTittel?: string;
+  tips?: TipItem[];
+  sandkasseTittel?: string;
+  sandkasseTekst?: UmbracoBlock[];
+  sandkasseUrl?: string;
+  arrangementer?: EventItem[];
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  locale: string;
+}
+
+export interface OmOssSeksjon {
+  id: string;
+  documentId: string;
+  tittel: string;
+  slug: string;
+  tekst: UmbracoBlock[];
+  bilde: UmbracoMedia;
+  rekkefolge?: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  locale: string;
+}
+
+export interface OmOss {
+  id: string;
+  documentId: string;
+  heroTittel?: string;
+  heroUndertittel?: string;
+  introTekst?: UmbracoBlock[];
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -345,7 +413,8 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         organisasjon: props.organisasjon as string || '',
         beskrivelse: mapRichText(props.beskrivelse),
         verktoy: parseJsonArray(props.verktoy as string),
-        resultater: props.resultater as string || '',
+        resultater: mapRichText(props.resultater),
+        accordionSeksjoner: mapAccordionSections(props.accordionSeksjoner),
         status: props.status as string || undefined,
         bilde: mapMedia(props.bilde),
         merkelapper: mapMerkelapper(props.merkelapper),
@@ -375,6 +444,44 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         svar: mapRichText(props.svar),
         kategori: mapKategori(props.kategori),
         rekkefølge: props.rekkefolge as number || 0,
+      } as T;
+
+    case 'forside':
+      return {
+        ...base,
+        heroOverskrift: props.heroOverskrift as string || undefined,
+        heroTekst: mapRichText(props.heroTekst),
+        heroBilde: mapMedia(props.heroBilde),
+        raadTittel: props.raadTittel as string || undefined,
+        tips: mapTipItems(props.tips),
+        sandkasseTittel: props.sandkasseTittel as string || undefined,
+        sandkasseTekst: mapRichText(props.sandkasseTekst),
+        sandkasseUrl: props.sandkasseUrl as string || undefined,
+        arrangementer: mapEventItems(props.arrangementer),
+        seoTittel: props.seoTittel as string || undefined,
+        seoBeskrivelse: props.seoBeskrivelse as string || undefined,
+        seoBilde: mapMedia(props.seoBilde),
+      } as T;
+
+    case 'omOssSeksjon':
+      return {
+        ...base,
+        tittel: props.tittel as string || item.name,
+        slug: props.slug as string || '',
+        tekst: mapRichText(props.tekst),
+        bilde: mapMedia(props.bilde),
+        rekkefolge: props.rekkefolge as number || 0,
+      } as T;
+
+    case 'omOss':
+      return {
+        ...base,
+        heroTittel: props.heroTittel as string || '',
+        heroUndertittel: props.heroUndertittel as string || '',
+        introTekst: mapRichText(props.introTekst),
+        seoTittel: props.seoTittel as string || '',
+        seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
       } as T;
 
     case 'merkelapp':
@@ -421,6 +528,44 @@ function mapRichText(value: unknown): UmbracoBlock[] | undefined {
   }
 
   return undefined;
+}
+
+function mapAccordionSections(value: unknown): AccordionSection[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((block: any) => {
+    const content = block.content || block;
+    const props = content.properties || content;
+    return {
+      title: (props.title as string) || '',
+      body: mapRichText(props.body) || [],
+    };
+  });
+}
+
+function mapTipItems(value: unknown): TipItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((block: any) => {
+    const content = block.content || block;
+    const props = content.properties || content;
+    return {
+      tipsTitle: (props.tipsTitle as string) || '',
+      tipsTekst: mapRichText(props.tipsTekst) || [],
+    };
+  });
+}
+
+function mapEventItems(value: unknown): EventItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((block: any) => {
+    const content = block.content || block;
+    const props = content.properties || content;
+    return {
+      eventTittel: (props.eventTittel as string) || '',
+      eventDato: (props.eventDato as string) || undefined,
+      eventSted: (props.eventSted as string) || undefined,
+      eventUrl: (props.eventUrl as string) || undefined,
+    };
+  });
 }
 
 function mapMedia(value: unknown): UmbracoMedia | undefined {
@@ -592,6 +737,13 @@ export async function getEksempel(slug: string, options: FetchOptions = {}) {
   return fetchBySlug<Eksempel>('eksempel', slug, options);
 }
 
+// ── Forside (Frontpage) API functions ───────────────────────────
+
+export async function getForside(options: FetchOptions = {}): Promise<Forside | null> {
+  const result = await fetchCollection<Forside>('forside', { ...options, take: 1 });
+  return result.data[0] || null;
+}
+
 // ── Veiledning (Guidance) API functions ─────────────────────────
 
 export async function getVeiledninger(options: FetchOptions = {}) {
@@ -622,6 +774,18 @@ export async function getFAQsByKategori(kategoriSlug: string, options: FetchOpti
 }
 
 // ── Merkelapp (Tag) API functions ───────────────────────────────
+
+export async function getOmOssSeksjoner(options: FetchOptions = {}) {
+  return fetchCollection<OmOssSeksjon>('omOssSeksjon', {
+    ...options,
+    sort: 'sortOrder:asc',
+  });
+}
+
+export async function getOmOss(options: FetchOptions = {}): Promise<OmOss | null> {
+  const result = await fetchCollection<OmOss>('omOss', { ...options, take: 1 });
+  return result.data[0] || null;
+}
 
 export async function getMerkelapper(options: FetchOptions = {}) {
   return fetchCollection<Merkelapp>('merkelapp', options);

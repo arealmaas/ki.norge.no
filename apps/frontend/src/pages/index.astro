@@ -6,46 +6,28 @@ import ExamplesShowcase from '../components/landing/ExamplesShowcase.astro';
 import ThreeTips from '../components/landing/ThreeTips.astro';
 import SandboxSection from '../components/landing/SandboxSection.astro';
 import UpcomingEvents from '../components/landing/UpcomingEvents.astro';
-import { getEksempler, getPlainText, getSide, type Eksempel } from '../lib/umbraco';
+import { getEksempler, getPlainText, getForside, type Eksempel } from '../lib/umbraco';
 import { websiteSchema } from '../lib/seo';
 
 // Fetch examples for ExamplesShowcase section
-let eksempler: Eksempel[] = [];
-try {
-  const eksemplerRes = await getEksempler();
-  eksempler = (eksemplerRes.data || []).slice(0, 3);
-} catch (error) {
-  console.error('Failed to fetch examples for homepage:', error);
-}
-
-// Demo example for showcasing the article page design
-const demoExample = {
-  title: 'Kunnskapsassistenten',
-  organization: 'Digitaliseringsdirektoratet',
-  slug: 'kunnskapsassistenten',
-  description: 'KI-assistent som hjelper med å finne og sammenstille kunnskap i utredningsprosesser.',
-  image: undefined,
-};
-
-// Transform examples for ExamplesShowcase component, prepend demo
-const cmsExamples = eksempler.map(e => ({
+const eksemplerRes = await getEksempler();
+const examples = eksemplerRes.data.map(e => ({
   title: e.tittel,
   organization: e.organisasjon || 'Offentlig sektor',
   slug: e.slug,
   description: e.beskrivelse ? getPlainText(e.beskrivelse, 120) : undefined,
   image: e.bilde?.url,
 }));
-const examples = [demoExample, ...cmsExamples].slice(0, 3);
 
 // Fetch homepage content from CMS (optional)
 let forside = null;
 try {
-  forside = await getSide('forside');
+  forside = await getForside();
 } catch (error) {
   // Homepage content is optional
 }
 
-const title = forside?.seoTittel || forside?.tittel || 'Hjem';
+const title = forside?.seoTittel || 'Hjem';
 const seoDescription = forside?.seoBeskrivelse || 'KI Norge - Norges nasjonale strategi for kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.';
 const seoImage = forside?.seoBilde?.url;
 
@@ -54,10 +36,10 @@ const websiteJsonLd = websiteSchema(seoDescription);
 
 <Layout title={title} description={seoDescription} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
-  <Hero />
+  <Hero overskrift={forside?.heroOverskrift} tekst={forside?.heroTekst} bilde={forside?.heroBilde} />
   <GuidanceCards />
   <ExamplesShowcase examples={examples} />
-  <ThreeTips />
-  <SandboxSection />
-  <UpcomingEvents />
+  <ThreeTips tittel={forside?.raadTittel} tips={forside?.tips} />
+  <SandboxSection tittel={forside?.sandkasseTittel} tekst={forside?.sandkasseTekst} url={forside?.sandkasseUrl} />
+  <UpcomingEvents arrangementer={forside?.arrangementer} />
 </Layout>

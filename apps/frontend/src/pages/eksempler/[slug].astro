@@ -4,81 +4,22 @@ import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import ContactCard from '../../components/shared/ContactCard.astro';
 import SidebarCard from '../../components/shared/SidebarCard.astro';
 
-import { getEksempel, getEksempler, getPlainText, getMediaUrl, type Eksempel, type UmbracoBlock } from '../../lib/umbraco';
-
-// Demo article for showcasing the page design
-const DEMO_EKSEMPEL: Record<string, Eksempel> = {
-  kunnskapsassistenten: {
-    id: 'demo-1',
-    documentId: 'demo-1',
-    tittel: 'Kunnskapsassistenten',
-    slug: 'kunnskapsassistenten',
-    organisasjon: 'Digitaliseringsdirektoratet',
-    beskrivelse: [
-      { contentType: 'tekst', content: { innhold: `
-        <p>Kunnskapsassistenten skal styrke – ikke erstatte – faglige vurderinger i staten. Piloten viser at den har størst verdi i starten av en kunnskapsprosess, og at vi må øke presisjonen, kunnskapsforberedelsen og kontrolltiltakene videre når oppgavene krever flere steg.</p>
-
-        <h2>Utfordringen vi skulle løse</h2>
-        <p>Målet har vært å undersøke hvordan KI kan støtte raske utredningsprosesser – på en trygg, åpen og faglig forsvarlig måte.</p>
-        <p>Kunnskapsproduksjon i staten er krevende og tidkrevende. Informasjon er fragmentert, spredt på tvers av mange kilder og i stadig endring. I tillegg utvikler vi ikke kunnskapsgrunnlaget godt nok, og det øker risikoen for feilaktige beslutninger. Samling av informasjonsinnhenting bidrar til effektivitet, kvalitet og transparens.</p>
-
-        <h2>Løsning</h2>
-        <p>Kunnskapsassistenten er et spesialisert KI-verktøy for kunnskapsarbeid i offentlig sektor. Den hjelper brukerne med å finne, sammenstille og vurdere informasjon fra store mengder kilder, og har innebygde mekanismer for kontroll og etterprøvelighet.</p>
-        <p>Kunnskapsassistenten skal støtte utforskende analyse, styrke menneskelig vurdering og faglig forankring slik at utredningsarbeidet og verifisering av informasjon blir bedre. I tråd med ansvarlig bruk fungerer den som et støtteverktøy – ikke en autonom beslutningstaker.</p>
-
-        <h2>Resultat</h2>
-        <p>Kunnskapsassistenten:</p>
-        <ul>
-          <li>Gir økt kunnskapstilgjengelighet for alle ansatte</li>
-          <li>Reduserer tid brukt på informasjonsinnhenting og databehandling</li>
-          <li>Økt kvalitet ved å presentere flere relevante datakilder</li>
-          <li>Redusert behov for manuell koordinering på tvers av virksomheter</li>
-          <li>Teknisk system som demonstrerer en ansvarlig, etterprøvelig og transparent bruk av KI</li>
-          <li>Fortsatt avhengig av menneskelig vurdering i alle steg</li>
-        </ul>
-      `}}
-    ] as UmbracoBlock[],
-    resultater: 'Den største utfordringen er ikke teknologisk, men institusjonell: KI må oppleves som trygg, etterprøvbar og tillitsvekkende.',
-    merkelapper: [
-      { id: 'm1', documentId: 'm1', navn: 'Pilot prosjekt', slug: 'pilot-prosjekt', locale: 'nb-NO' },
-      { id: 'm2', documentId: 'm2', navn: 'For ansatte i offentlig', slug: 'for-ansatte-i-offentlig', locale: 'nb-NO' },
-      { id: 'm3', documentId: 'm3', navn: 'LLM', slug: 'llm', locale: 'nb-NO' },
-    ],
-    status: 'pilot',
-    createdAt: '2026-01-15T10:00:00Z',
-    updatedAt: '2026-03-01T12:00:00Z',
-    publishedAt: '2026-01-20T08:00:00Z',
-    locale: 'nb-NO',
-  },
-};
+import { getEksempel, getEksempler, getPlainText, getMediaUrl, type Eksempel } from '../../lib/umbraco';
 
 const { slug } = Astro.params;
 const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
 
-// Try CMS first, fall back to demo article
-let caseItem: Eksempel | null = null;
-try {
-  caseItem = await getEksempel(slug!, { preview: isPreview });
-} catch {
-  // CMS unavailable, will try demo fallback
-}
-if (!caseItem) {
-  caseItem = DEMO_EKSEMPEL[slug!] || null;
-}
+const caseItem = await getEksempel(slug!, { preview: isPreview });
 if (!caseItem) return Astro.redirect('/eksempler');
 
 // Find next case for "Neste steg" sidebar card
+const allCases = await getEksempler();
+const currentIndex = allCases.data.findIndex(c => c.slug === slug);
 let nextCase: Eksempel | null = null;
-try {
-  const allCases = await getEksempler();
-  const currentIndex = allCases.data.findIndex(c => c.slug === slug);
-  if (currentIndex !== -1 && currentIndex < allCases.data.length - 1) {
-    nextCase = allCases.data[currentIndex + 1];
-  } else if (allCases.data.length > 1) {
-    nextCase = allCases.data[0]; // Wrap around to first
-  }
-} catch {
-  // Non-critical
+if (currentIndex !== -1 && currentIndex < allCases.data.length - 1) {
+  nextCase = allCases.data[currentIndex + 1];
+} else if (allCases.data.length > 1) {
+  nextCase = allCases.data[0];
 }
 
 const seoTitle = caseItem.seoTittel || caseItem.tittel;
@@ -133,33 +74,21 @@ const seoImage = caseItem.seoBilde?.url;
         </article>
 
         <aside class="article-sidebar">
-          {caseItem.resultater && (
-            <SidebarCard title="Dette lærte vi" variant="highlight" icon="learn">
-              <p>{caseItem.resultater}</p>
+          <SidebarCard title="Dette lærte vi" variant="highlight" icon="learn">
+            <BlocksRenderer blocks={caseItem.resultater} />
+            {caseItem.accordionSeksjoner?.map(section => (
               <details>
-                <summary>Brukerbehov vi avdekket i piloten</summary>
+                <summary>{section.title}</summary>
                 <div>
-                  <p>Piloten viste at kunnskapsassistenten gir størst verdi i tidlige faser av arbeidet – når brukeren skal orientere seg, oppsummere og finne relevante dokumenter. Brukerne var tydelige om hvordan KI kan være nyttig: KI må styrke faglige vurderinger – ikke gjøre dem mer sårbare.</p>
+                  <BlocksRenderer blocks={section.body} />
                 </div>
               </details>
-              <details>
-                <summary>Slik bygger vi tillit til KI</summary>
-                <div>
-                  <p>Gjennom åpenhet om hvordan modellen fungerer, tydelige begrensninger og mulighet for brukerne å etterprøve svarene. Tillit bygges over tid gjennom erfaring og transparens.</p>
-                </div>
-              </details>
-            </SidebarCard>
-          )}
+            ))}
+          </SidebarCard>
 
           {nextCase && (
             <SidebarCard title="Neste steg" icon="clock">
-              <p>Kunnskapsassistenten er en KI-chat i betaversjon. Kunnskapsgrunnlaget til chatten er et avgrenset utdrag av Kudos-databasen. Den er brukertestet av 89 brukere i departementer og direktorater.</p>
-              <details>
-                <summary>Neste steg/veien videre</summary>
-                <div>
-                  <p>Vi planlegger å utvide kunnskapsgrunnlaget, forbedre presisjonen og rulle ut til flere virksomheter i 2026.</p>
-                </div>
-              </details>
+              <p><a href={`/eksempler/${nextCase.slug}`}>{nextCase.tittel}</a></p>
             </SidebarCard>
           )}
         </aside>
@@ -172,13 +101,7 @@ const seoImage = caseItem.seoBilde?.url;
 
 <style>
   .article-page {
-    padding-top: var(--ds-size-6);
-  }
-
-  @media (min-width: 768px) {
-    .article-page {
-      padding-top: var(--ds-size-10);
-    }
+    padding-top: var(--ds-size-4);
   }
 
   .article-container {
@@ -320,7 +243,14 @@ const seoImage = caseItem.seoBilde?.url;
   /* Two-column layout */
   .article-layout {
     display: flex;
+    flex-direction: column;
     gap: var(--ds-size-10);
+  }
+
+  @media (min-width: 1024px) {
+    .article-layout {
+      flex-direction: row;
+    }
   }
 
   .article-content {
@@ -348,18 +278,16 @@ const seoImage = caseItem.seoBilde?.url;
 
   /* Sidebar */
   .article-sidebar {
-    display: none;
-    width: 340px;
-    flex-shrink: 0;
+    width: 100%;
   }
 
   @media (min-width: 1024px) {
     .article-sidebar {
-      display: block;
+      width: 340px;
+      flex-shrink: 0;
       position: sticky;
       top: 100px;
       align-self: flex-start;
     }
   }
-
 </style>

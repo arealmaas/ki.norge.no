@@ -18,6 +18,8 @@
   --ds-color-neutral-background-default: #ffffff;
   --ds-color-neutral-surface-default: #ffffff;
 
+  --image-fallback-bg: #D9D9D9;
+
   /* Stitch-specific custom properties */
   --stitch-primary: #136dec;
   --stitch-bg-light: #f6f7f8;
