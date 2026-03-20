@@ -1,309 +1,178 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
-import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
-import { getEksempler, getPlainText, type Eksempel } from '../../lib/umbraco';
+import ContactCard from '../../components/shared/ContactCard.astro';
+import { getEksempler, getPlainText, getMediaUrl, type Eksempel } from '../../lib/umbraco';
 
-// Status label mapping
-const statusLabels: Record<string, string> = {
-  i_utvikling: 'Under utvikling',
-  pilot: 'Pilot',
-  i_drift: 'I drift',
-  avsluttet: 'Avsluttet',
-};
-
-// Fetch examples from Umbraco
-let cases: Eksempel[] = [];
-try {
-  const response = await getEksempler();
-  cases = response.data;
-} catch (error) {
-  console.error('Failed to fetch examples:', error);
-}
-
-// Extract unique statuses for filter pills
-const availableStatuses = [...new Set(cases.map(c => c.status).filter(Boolean))] as string[];
+const eksemplerRes = await getEksempler();
+const cases = eksemplerRes.data;
 ---
 
-<Layout title="Gode eksempler" description="Lær av andre offentlige virksomheters suksesshistorier med kunstig intelligens.">
-  <section class="page-hero">
-    <div class="hero-container">
-      <span class="page-badge">Eksempler</span>
-      <Heading level={1} size="2xlarge" className="page-title">Gode eksempler</Heading>
-      <Paragraph size="large" className="page-lead">
-        Lær av andre offentlige virksomheters erfaringer med kunstig intelligens.
-        Her deler vi suksesshistorier, lærdommer og beste praksis.
-      </Paragraph>
+<Layout title="Gode eksempler" description="Lær av andre offentlige virksomheters erfaringer med kunstig intelligens.">
+  <div class="eksempler-page">
+    <div class="eksempler-title-bar">
+      <h1 class="eksempler-title">Gode eksempler</h1>
+      <p class="eksempler-lead">Lær av andre offentlige virksomheters erfaringer med kunstig intelligens. Her deler vi suksesshistorier, lærdommer og beste praksis.</p>
     </div>
-  </section>
 
-  <div class="page-content">
-    {availableStatuses.length > 1 && (
-      <nav class="filter-nav" aria-label="Filtrer etter status">
-        <div class="filter-pills">
-          <button class="filter-pill filter-pill--active" data-filter="alle">Alle</button>
-          {availableStatuses.map(status => (
-            <button class="filter-pill" data-filter={status}>
-              <span class={`status-dot status-dot--${status}`}></span>
-              {statusLabels[status] || status}
-            </button>
-          ))}
-        </div>
-      </nav>
-    )}
-
-    <div class="cases-grid">
-      {cases.length > 0 ? (
-        cases.map((case_) => (
-          <a href={`/eksempler/${case_.slug}`} class="case-card card-hover" data-status={case_.status || ''}>
-            <div class="card-header">
-              <span class="case-org">{case_.organisasjon}</span>
-              {case_.status && (
-                <span class={`status-badge status-badge--${case_.status}`}>
-                  {statusLabels[case_.status] || case_.status}
-                </span>
+    <div class="eksempler-content">
+      <div class="cases-grid">
+        {cases.map(c => (
+          <a href={`/eksempler/${c.slug}`} class="case-card">
+            <div class="case-card-image-wrapper">
+              {c.bilde ? (
+                <img src={getMediaUrl(c.bilde)} alt="" loading="lazy" class="case-card-img" />
+              ) : (
+                <div class="case-card-placeholder"></div>
               )}
             </div>
-            <Heading level={2} size="medium" className="case-title">{case_.tittel}</Heading>
-            <Paragraph size="small" className="case-description">{getPlainText(case_.beskrivelse, 200)}</Paragraph>
-            {case_.verktoy && case_.verktoy.length > 0 && (
-              <div class="case-tools">
-                {case_.verktoy.slice(0, 3).map(tool => (
-                  <span class="tool-tag">{tool}</span>
-                ))}
-                {case_.verktoy.length > 3 && (
-                  <span class="tool-more">+{case_.verktoy.length - 3}</span>
-                )}
-              </div>
-            )}
+            <div class="case-card-divider"></div>
+            <div class="case-card-content">
+              <span class="case-card-org">{c.organisasjon || 'Offentlig sektor'}</span>
+              <h2 class="case-card-title">{c.tittel}</h2>
+              {c.beskrivelse && (
+                <p class="case-card-description">{getPlainText(c.beskrivelse, 120)}</p>
+              )}
+            </div>
           </a>
-        ))
-      ) : (
-        <div class="empty-state-box">
-          <span class="material-symbols-outlined">lightbulb</span>
-          <Paragraph>Ingen eksempler funnet.</Paragraph>
-        </div>
+        ))}
+      </div>
+
+      {cases.length === 0 && (
+        <p class="empty-state">Ingen eksempler funnet.</p>
       )}
     </div>
 
-    <section class="submit-section">
-      <span class="material-symbols-outlined submit-icon">add_circle</span>
-      <Heading level={2} size="medium" className="submit-title">Har du et eksempel å dele?</Heading>
-      <Paragraph className="submit-description">
-        Vi ønsker å høre om hvordan din virksomhet bruker KI.
-        Del din historie og inspirer andre!
-      </Paragraph>
-      <Button asChild variant="primary" size="medium">
-        <a href="/eksempler/send-inn">Send inn eksempel</a>
-      </Button>
-    </section>
+    <ContactCard />
   </div>
 </Layout>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const pills = document.querySelectorAll<HTMLButtonElement>('.filter-pill');
-    const cards = document.querySelectorAll<HTMLElement>('.case-card');
-
-    if (pills.length === 0) return;
-
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const filter = pill.dataset.filter;
-
-        // Update active pill
-        pills.forEach(p => p.classList.remove('filter-pill--active'));
-        pill.classList.add('filter-pill--active');
-
-        // Show/hide cards
-        cards.forEach(card => {
-          if (filter === 'alle' || card.dataset.status === filter) {
-            card.style.display = '';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      });
-    });
-  });
-</script>
-
 <style>
-  .page-hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    padding: var(--ds-size-12) var(--ds-size-4);
+  .eksempler-page {
+    padding-top: var(--ds-size-4);
   }
 
-  .hero-container {
+  .eksempler-title-bar {
     max-width: 800px;
     margin: 0 auto;
-    text-align: center;
+    padding: 24px var(--ds-size-4) 24px;
+    border-bottom: 1px solid #b8bcc1;
   }
 
-  .page-badge {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
+  .eksempler-title {
+    font-size: 1.625rem;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: #000;
   }
 
-  :global(.page-title) {
-    margin: 0 0 var(--ds-size-4);
-  }
-
-  :global(.page-lead) {
+  .eksempler-lead {
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.65);
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
-  .page-content {
-    max-width: 1000px;
+  .eksempler-content {
+    max-width: 1280px;
     margin: 0 auto;
-    padding: var(--ds-size-10) var(--ds-size-4);
+    padding: var(--ds-size-8) var(--ds-size-4);
   }
-
-  .filter-nav {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  .status-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: var(--ds-border-radius-full);
-    margin-right: var(--ds-size-1);
-  }
-
-  .status-dot--i_utvikling { background-color: var(--ds-color-accent-base-default); }
-  .status-dot--pilot { background-color: var(--ds-color-warning-base-default, #e6a700); }
-  .status-dot--i_drift { background-color: var(--ds-color-success-base-default, #1e7e34); }
-  .status-dot--avsluttet { background-color: var(--ds-color-neutral-text-subtle); }
 
   .cases-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--ds-size-5);
-    margin-bottom: var(--ds-size-10);
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-6);
+  }
+
+  @media (min-width: 640px) {
+    .cases-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .cases-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   .case-card {
     display: flex;
     flex-direction: column;
-    padding: var(--ds-size-6);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
+    background-color: #E2F0FC;
+    border-radius: 8px;
+    overflow: hidden;
     text-decoration: none;
     color: inherit;
+    transition: box-shadow 0.2s ease;
   }
 
-  .card-header {
+  .case-card:hover {
+    box-shadow: var(--ds-shadow-md);
+  }
+
+  .case-card-image-wrapper {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: var(--ds-size-2);
-    margin-bottom: var(--ds-size-3);
+    justify-content: center;
+    padding: 24px;
+    padding-bottom: 0;
   }
 
-  .case-org {
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-medium);
-    color: var(--ds-color-accent-text-default);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+  .case-card-img {
+    width: 90%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    border-radius: 24px;
   }
 
-  :global(.case-title) {
-    margin: 0 0 var(--ds-size-3);
+  .case-card-placeholder {
+    width: 90%;
+    aspect-ratio: 16 / 9;
+    background-color: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 24px;
   }
 
-  :global(.case-description) {
-    margin: 0 0 var(--ds-size-4);
-    color: var(--ds-color-neutral-text-subtle);
-    flex: 1;
+  .case-card-divider {
+    width: 90%;
+    height: 1px;
+    background-color: #D9D9D9;
+    margin: 24px auto 0;
+    border-radius: 0.5px;
   }
 
-  .case-tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ds-size-1);
-    padding-top: var(--ds-size-3);
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
-  }
-
-  .tool-tag {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    padding: var(--ds-size-1) var(--ds-size-2);
-    background-color: var(--ds-color-neutral-background-default);
-    border-radius: var(--ds-border-radius-md);
-    color: var(--ds-color-neutral-text-default);
-  }
-
-  .tool-more {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    padding: var(--ds-size-1) var(--ds-size-2);
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  /* Empty state */
-  .empty-state-box {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: var(--ds-size-12);
-    background-color: var(--ds-color-neutral-surface-default);
-    border-radius: var(--ds-border-radius-lg);
-  }
-
-  .empty-state-box .material-symbols-outlined {
-    font-size: 48px;
-    color: var(--ds-color-neutral-text-subtle);
-    opacity: 0.5;
-    margin-bottom: var(--ds-size-4);
-  }
-
-  /* Submit CTA */
-  .submit-section {
-    padding: var(--ds-size-10);
-    background-color: var(--ds-color-accent-surface-default);
-    border-radius: var(--ds-border-radius-lg);
-    text-align: center;
+  .case-card-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--ds-size-3);
+    gap: var(--ds-size-1);
+    padding: var(--ds-size-5);
   }
 
-  .submit-icon {
-    font-size: 40px;
-    color: var(--ds-color-accent-text-default);
-  }
-
-  :global(.submit-title) {
-    margin: 0;
-  }
-
-  :global(.submit-description) {
-    margin: 0;
+  .case-card-org {
     color: var(--ds-color-neutral-text-subtle);
-    max-width: 500px;
+    font-size: var(--ds-font-size-0);
+    font-weight: var(--ds-font-weight-medium);
   }
 
-  .submit-section :global(a) {
-    text-decoration: none;
-    margin-top: var(--ds-size-2);
+  .case-card-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #000;
+  }
+
+  .case-card-description {
+    color: var(--ds-color-neutral-text-subtle);
+    margin: 0;
+    line-height: 1.5;
+    font-size: 0.8125rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--ds-size-12);
+    color: var(--ds-color-neutral-text-subtle);
+    font-size: 1rem;
   }
 </style>
