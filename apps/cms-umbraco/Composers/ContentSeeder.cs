@@ -60,7 +60,7 @@ public class ContentSeeder : IAsyncComponent
             SeedArticles(artiklerFolder.Id);
             SeedPages(siderFolder.Id);
             SeedExamples(eksemplerFolder.Id);
-            SeedVeiledninger(veiledningerFolder.Id, merkelappMap);
+            SeedVeiledninger(veiledningerFolder.Id);
             SeedFAQ(faqFolder.Id, merkelappMap);
 
             Console.WriteLine("ContentSeeder: Seeded all content under folder structure");
@@ -446,212 +446,193 @@ norsk, samisk, engelsk og de mest utbredte innvandrerspråkene.</p>");
 
     // ── Veiledninger ───────────────────────────────────────────
 
-    private void SeedVeiledninger(int parentId, Dictionary<string, IContent> merkelapper)
+    private void SeedVeiledninger(int parentId)
     {
-        var v1 = Create("veiledning", "Kom i gang med KI i din virksomhet", parentId);
-        v1.SetValue("tittel", "Kom i gang med KI i din virksomhet");
-        v1.SetValue("slug", "kom-i-gang-med-ki");
-        v1.SetValue("innhold", @"<p>Denne veiledningen hjelper offentlige virksomheter med å ta de første
-stegene mot å bruke kunstig intelligens. Vi dekker alt fra behovsanalyse
-til valg av teknologi og leverandør.</p>
-<h2>Steg 1: Identifiser behov</h2>
-<p>Start med å kartlegge prosesser som kan ha nytte av automatisering
-eller forbedring med KI. Fokuser på oppgaver som er repetitive,
-datadrevne eller tidkrevende.</p>
-<h2>Steg 2: Vurder modenhet</h2>
-<p>Kartlegg virksomhetens digitale modenhet. Har dere tilstrekkelig
-datakvalitet? Er organisasjonen klar for endring?</p>
-<h2>Steg 3: Velg riktig tilnærming</h2>
-<p>Vurder om dere skal kjøpe en ferdig løsning, tilpasse en eksisterende,
-eller utvikle noe helt nytt.</p>");
-        v1.SetValue("kategori", Udi(merkelapper["automatisering"]));
-        v1.SetValue("lenker", @"[{""tekst"": ""Digitaliseringsdirektoratets KI-guide"", ""url"": ""https://www.digdir.no/kunstig-intelligens"", ""ekstern"": true}, {""tekst"": ""Nasjonal KI-strategi"", ""url"": ""/artikler/ny-nasjonal-strategi-for-kunstig-intelligens"", ""ekstern"": false}]");
-        v1.SetValue("rekkefolge", 1);
-        SaveAndPublish(v1);
+        // Create guide
+        var guide = Create("veiledningGuide", "Bruk data rett når du lager KI", parentId);
+        guide.SetValue("tittel", "Bruk data rett når du lager KI");
+        guide.SetValue("slug", "bruk-data-rett");
+        guide.SetValue("introTekst", "<p>God dataforvaltning er avgjørende for at KI-systemer skal fungere ordentlig og bidra til at du når målet. KI-loven har krav om hvordan vi skal forvalte data både når vi bruker KI og utvikler KI-systemer.</p>");
+        guide.SetValue("seoTittel", "Bruk data rett når du lager KI – Veiledning");
+        guide.SetValue("seoBeskrivelse", "Lær hvordan du bruker data riktig når du utvikler KI-systemer. Steg-for-steg veiledning.");
+        SaveAndPublish(guide);
 
-        var v2 = Create("veiledning", "Ansvarlig bruk av KI", parentId);
-        v2.SetValue("tittel", "Ansvarlig bruk av KI");
-        v2.SetValue("slug", "ansvarlig-bruk-av-ki");
-        v2.SetValue("innhold", @"<p>Denne veiledningen gir praktiske råd for å sikre at KI-systemer
-brukes på en etisk og ansvarlig måte i offentlig sektor.</p>
-<h2>Grunnleggende prinsipper</h2>
-<ul>
-<li>Transparens: Forklar hvordan KI-systemet tar beslutninger</li>
-<li>Rettferdighet: Sikre at systemet ikke diskriminerer</li>
-<li>Personvern: Beskytt personopplysninger gjennom hele livssyklusen</li>
-<li>Sikkerhet: Beskytt mot misbruk og uønsket bruk</li>
-<li>Ansvarlighet: Tydelig ansvarslinje for KI-beslutninger</li>
-</ul>
-<h2>Risikovurdering</h2>
-<p>Gjennomfør en grundig risikovurdering før KI-systemer settes i produksjon.
-Vurder risiko for feil, bias, personvernbrudd og sikkerhetssvakheter.</p>");
-        v2.SetValue("kategori", Udi(merkelapper["etikk"]));
-        v2.SetValue("lenker", @"[{""tekst"": ""EUs retningslinjer for pålitelig KI"", ""url"": ""https://digital-strategy.ec.europa.eu/en/library/ethics-guidelines-trustworthy-ai"", ""ekstern"": true}]");
-        v2.SetValue("rekkefolge", 2);
-        SaveAndPublish(v2);
+        // Step 1.1
+        var s = Create("veiledningSteg", "Forstå informasjonskrav", parentId);
+        s.SetValue("tittel", "Finn ut hvilken informasjon du trenger");
+        s.SetValue("slug", "forsta-informasjonskrav");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 1);
+        s.SetValue("understeg", 1);
+        s.SetValue("innhold", "<p>Når vi lager et KI-system, har vi et mål for hva vi skal oppnå med det. Å forstå informasjonskravet til KI-systemet handler om å finne ut hvilken informasjon det trenger for å nå målet.</p><p>Ta utgangspunkt i problemet KI-systemet skal løse eller behovet det skal dekke. Hvilke data trenger du for å at det du lager når målet?</p>");
+        s.SetValue("eksempelTittel", "Eksempel: Den smarte insulinpumpen");
+        s.SetValue("eksempelTekst", "<p>Først må vi analysere løsningen vi vil lage og målet vi vil nå – i dette tilfellet å bestemme hvor mye insulin en diabetiker trenger til enhver tid. Da må vi samle inn data som blodsukkernivå, puls og oksygennivå i blodet.</p>");
+        SaveAndPublish(s);
 
-        var v3 = Create("veiledning", "Datakvalitet for KI-prosjekter", parentId);
-        v3.SetValue("tittel", "Datakvalitet for KI-prosjekter");
-        v3.SetValue("slug", "datakvalitet-for-ki-prosjekter");
-        v3.SetValue("innhold", @"<p>God datakvalitet er en forutsetning for vellykkede KI-prosjekter.
-Denne veiledningen gir praktiske råd for å sikre at dataene dine
-er egnet for maskinlæring og andre KI-teknikker.</p>
-<h2>Vanlige datakvalitetsproblemer</h2>
-<ul>
-<li>Manglende verdier og inkonsistente formater</li>
-<li>Utdaterte eller feilaktige data</li>
-<li>Skjevheter (bias) i treningsdata</li>
-<li>Manglende dokumentasjon av datakilder</li>
-</ul>
-<h2>Beste praksis</h2>
-<p>Etabler rutiner for datavask, dokumentasjon og kvalitetskontroll
-tidlig i prosjektet. Bruk verktøy for automatisk dataprofilering.</p>");
-        v3.SetValue("kategori", Udi(merkelapper["maskinlaering"]));
-        v3.SetValue("rekkefolge", 3);
-        SaveAndPublish(v3);
+        // Step 1.2
+        s = Create("veiledningSteg", "Sensitive personopplysninger", parentId);
+        s.SetValue("tittel", "Forstå behandling av spesielle kategorier av personopplysninger");
+        s.SetValue("slug", "sensitive-personopplysninger");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 1);
+        s.SetValue("understeg", 2);
+        s.SetValue("innhold", "<p>Når vi utvikler KI-systemer må vi følge regelverket om vern av personopplysninger. Noen kategorier av opplysninger kan innebære en særlig risiko for enkeltpersoners rettigheter og friheter. Det er regler for når vi kan bruke slik data i KI-systemer?</p>");
+        s.SetValue("infoKortTittel", "Slik kan du verne om personopplysninger");
+        s.SetValue("infoKortInnhold", "<p>Vurder hvilke tiltak som er relevante for ditt prosjekt.</p>");
+        SaveAndPublish(s);
 
-        var v4 = Create("veiledning", "Risikovurdering av KI-systemer", parentId);
-        v4.SetValue("tittel", "Risikovurdering av KI-systemer");
-        v4.SetValue("slug", "risikovurdering-av-ki-systemer");
-        v4.SetValue("innhold", @"<p>Denne veiledningen gir en praktisk steg-for-steg-tilnærming til
-risikovurdering av KI-systemer i offentlig sektor, i tråd med
-kravene i AI Act og Datatilsynets anbefalinger.</p>
-<h2>Steg 1: Kartlegg systemet</h2>
-<p>Beskriv KI-systemets formål, datakilder, beslutningslogikk og
-hvem som påvirkes av systemets output. Inkluder en vurdering
-av systemets autonomi — tar det beslutninger alene, eller
-støtter det en menneskelig beslutningstaker?</p>
-<h2>Steg 2: Klassifiser risikonivå</h2>
-<p>Bruk AI Acts risikoklasser (uakseptabel, høy, begrenset, minimal)
-som utgangspunkt. Systemer i offentlig saksbehandling vil ofte
-falle i kategorien høy risiko.</p>
-<h2>Steg 3: Identifiser trusler</h2>
-<p>Vurder risiko for feil, bias, personvernbrudd, sikkerhetssårbarheter
-og misbruk. Bruk et tverrfaglig team med både teknisk og juridisk
-kompetanse.</p>
-<h2>Steg 4: Definer tiltak</h2>
-<p>For hver identifisert risiko: beskriv risikoreduserende tiltak,
-hvem som er ansvarlig, og hvordan effekten av tiltaket måles.</p>
-<h2>Steg 5: Overvåk og oppdater</h2>
-<p>Risikovurderingen er et levende dokument. Oppdater den ved
-vesentlige endringer i systemet, datagrunnlaget eller bruksmønsteret.</p>");
-        v4.SetValue("kategori", Udi(merkelapper["sikkerhet"]));
-        v4.SetValue("lenker", @"[{""tekst"": ""Datatilsynets veileder for KI og personvern"", ""url"": ""https://www.datatilsynet.no/kunstig-intelligens"", ""ekstern"": true}]");
-        v4.SetValue("rekkefolge", 4);
-        SaveAndPublish(v4);
+        // Step 2.1
+        s = Create("veiledningSteg", "Finn datakilder", parentId);
+        s.SetValue("tittel", "Finn datakilder");
+        s.SetValue("slug", "finn-datakilder");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 2);
+        s.SetValue("understeg", 1);
+        s.SetValue("innhold", "<ol><li>Finn ut hvilke kilder du kan hente data fra.</li><li>Finn ut hvilke metoder du skal bruke til å hente data</li></ol><p>Les om ulike metoder for å samle inn data (lenke til ny side)</p>");
+        s.SetValue("eksempelTittel", "Eksempel: Registrere fremmøte på jobb");
+        s.SetValue("eksempelTekst", "<p>Ta et AI-system for registrering av frammøte på jobb med biometrisk gjenkjenning som eksempel. Hvis du trener systemet med bilder som er skjeve når det gjelder kjønn og rase, er det stor risiko for at systemet også blir skjevt og diskriminerende.</p><p>Hvis du for eksempel hovedsakelig bruker bilder av hvite menn for å trene ansiktsgjenkjenningssystemet, vil systemet trolig slite med å gjenkjenne og klassifisere personer av andre kjønn og raser. Dette kan føre til at systemet gjør feil når det skal identifisere personer av visse raser eller kjønn, og dermed diskriminerer.</p>");
+        SaveAndPublish(s);
 
-        var v5 = Create("veiledning", "Personvernkonsekvensvurdering (DPIA) for KI", parentId);
-        v5.SetValue("tittel", "Personvernkonsekvensvurdering (DPIA) for KI");
-        v5.SetValue("slug", "personvernkonsekvensvurdering-dpia-for-ki");
-        v5.SetValue("innhold", @"<p>Når KI-systemer behandler personopplysninger, er det ofte påkrevd å
-gjennomføre en personvernkonsekvensvurdering (DPIA) etter GDPR artikkel 35.
-Denne veiledningen forklarer når DPIA er nødvendig og hvordan den gjennomføres.</p>
-<h2>Når kreves DPIA?</h2>
-<p>DPIA er påkrevd når behandlingen sannsynligvis medfører høy risiko
-for personers rettigheter. For KI gjelder dette typisk ved:</p>
-<ul>
-<li>Profilering eller automatiserte beslutninger med rettsvirkning</li>
-<li>Systematisk overvåking av offentlig tilgjengelig område</li>
-<li>Behandling av særlige kategorier personopplysninger i stor skala</li>
-</ul>
-<h2>Gjennomføring</h2>
-<p>En DPIA bør inkludere: beskrivelse av behandlingen og formålet,
-vurdering av nødvendighet og proporsjonalitet, identifisering av
-risikoer, og beskrivelse av tiltak for å håndtere risikoene.</p>
-<h2>Involvering av Datatilsynet</h2>
-<p>Dersom risikovurderingen viser at risikoen forblir høy etter tiltak,
-plikter virksomheten å forhåndsdrøfte behandlingen med Datatilsynet.</p>");
-        v5.SetValue("kategori", Udi(merkelapper["personvern"]));
-        v5.SetValue("lenker", @"[{""tekst"": ""Datatilsynets DPIA-mal"", ""url"": ""https://www.datatilsynet.no/rettigheter-og-plikter/virksomhetenes-plikter/vurdere-personvernkonsekvenser"", ""ekstern"": true}]");
-        v5.SetValue("rekkefolge", 5);
-        SaveAndPublish(v5);
+        // Step 2.2
+        s = Create("veiledningSteg", "Samle inn data", parentId);
+        s.SetValue("tittel", "Samle inn data");
+        s.SetValue("slug", "samle-inn-data");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 2);
+        s.SetValue("understeg", 2);
+        s.SetValue("innhold", "<ol><li>Hent data fra de identifiserte kildene</li><li>Dokumenter hvor dataene kommer fra</li></ol>");
+        SaveAndPublish(s);
 
-        var v6 = Create("veiledning", "Anskaffelse av KI-løsninger i offentlig sektor", parentId);
-        v6.SetValue("tittel", "Anskaffelse av KI-løsninger i offentlig sektor");
-        v6.SetValue("slug", "anskaffelse-av-ki-losninger-i-offentlig-sektor");
-        v6.SetValue("innhold", @"<p>Innkjøp av KI-løsninger skiller seg fra tradisjonelle IT-anskaffelser.
-Denne veiledningen hjelper offentlige innkjøpere med å stille de
-riktige kravene og velge riktig anskaffelsesform.</p>
-<h2>Forberedelse</h2>
-<p>Kartlegg behovet grundig. Definer problemet dere ønsker å løse,
-ikke teknologien. Involver fageksperter, IT og juridisk kompetanse
-fra starten.</p>
-<h2>Kravspesifikasjon</h2>
-<p>Still krav til:</p>
-<ul>
-<li>Forklarbarhet: Leverandøren må kunne forklare modellens virkemåte</li>
-<li>Dataeierskap: Virksomheten bør eie data og trente modeller</li>
-<li>Testbarhet: Mulighet for uavhengig testing av modellen</li>
-<li>Driftskostnader: Inkluder kostnader til oppdatering og overvåking</li>
-</ul>
-<h2>Anskaffelsesform</h2>
-<p>Vurder innovasjonspartnerskap eller konkurransepreget dialog for
-komplekse KI-anskaffelser der behovet ikke kan spesifiseres presist
-på forhånd.</p>
-<h2>Evaluering og oppfølging</h2>
-<p>Etabler målbare kriterier for suksess. Avtal jevnlige evalueringspunkter
-og mulighet for å justere kursen underveis.</p>");
-        v6.SetValue("kategori", Udi(merkelapper["innkjop"]));
-        v6.SetValue("lenker", @"[{""tekst"": ""Difis veileder for innovative anskaffelser"", ""url"": ""https://anskaffelser.no/innovasjon"", ""ekstern"": true}]");
-        v6.SetValue("rekkefolge", 6);
-        SaveAndPublish(v6);
+        // Step 3.1
+        s = Create("veiledningSteg", "Måle og forbedre datakvalitet", parentId);
+        s.SetValue("tittel", "Måle og forbedre datakvalitet");
+        s.SetValue("slug", "male-og-forbedre-datakvalitet");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 3);
+        s.SetValue("understeg", 1);
+        s.SetValue("innhold", "<p>Å vurdere kvaliteten på dataene handler om å finne ut hvor godt dataene passer til formålet. Det gjør vi ved å analysere aspekter ved dataene. Analysen forteller oss hva vi må justere for å forbedre dataene.</p><p>Dette må du gjøre for hvert datasett.</p>");
+        s.SetValue("infoKortTittel", "Slik måler du datakvalitet");
+        s.SetValue("infoKortInnhold", "<ol><li>Velg hvilke aspekter av datane du skal måle kvaliteten på.</li><li>Finn ut hvordan du skal måle kvaliteten.</li><li>Implementer kontrollen teknisk.</li><li>Lag en rapport med resultatene fra kontrollen.</li><li>Lag tiltak og plan for å forbedre dataene.</li></ol>");
+        s.SetValue("eksempelTittel", "Eksempel: Implementere kontrollen teknisk");
+        s.SetValue("eksempelTekst", "<p>La oss anta at vi har definert kvalitetskontrollene fra forrige eksempel for de tre punktene i datalivssyklusen. Nå må vi implementere disse kontrollene, og som vi har forklart vil hvordan vi gjør det avhenge av hver plattform.</p>");
+        SaveAndPublish(s);
 
-        var v7 = Create("veiledning", "Etiske retningslinjer for bruk av KI", parentId);
-        v7.SetValue("tittel", "Etiske retningslinjer for bruk av KI");
-        v7.SetValue("slug", "etiske-retningslinjer-for-bruk-av-ki");
-        v7.SetValue("innhold", @"<p>Etisk bruk av KI i offentlig sektor handler om mer enn å følge loven.
-Det handler om å ivareta tillit, rettferdighet og menneskeverd. Denne
-veiledningen hjelper virksomheter med å utarbeide egne etiske retningslinjer.</p>
-<h2>Grunnleggende etiske prinsipper</h2>
-<ul>
-<li>Menneskesentrert: KI skal tjene mennesker, ikke omvendt</li>
-<li>Rettferdig: Systemene skal ikke diskriminere eller forsterke ulikhet</li>
-<li>Transparent: Beslutninger skal kunne forklares og etterprøves</li>
-<li>Ansvarlig: Det skal alltid være klart hvem som er ansvarlig</li>
-<li>Privat: Personvern skal ivaretas gjennom hele livssyklusen</li>
-</ul>
-<h2>Fra prinsipper til praksis</h2>
-<p>Etiske prinsipper må omsettes til konkrete vurderingspunkter i
-prosjektets ulike faser: utvikling, testing, utrulling og drift.
-Bruk sjekklister og tverrfaglige vurderingsmøter.</p>
-<h2>Etisk råd</h2>
-<p>Vurder å opprette et internt etisk råd eller forum som kan gi
-veiledning i vanskelige avveininger. Inkluder perspektiver fra
-brukere, fageksperter og sivilsamfunn.</p>");
-        v7.SetValue("kategori", Udi(merkelapper["etikk"]));
-        v7.SetValue("lenker", @"[{""tekst"": ""EUs retningslinjer for pålitelig KI"", ""url"": ""https://digital-strategy.ec.europa.eu/en/library/ethics-guidelines-trustworthy-ai"", ""ekstern"": true}]");
-        v7.SetValue("rekkefolge", 7);
-        SaveAndPublish(v7);
+        // Step 3.2
+        s = Create("veiledningSteg", "Datatransformasjon", parentId);
+        s.SetValue("tittel", "Datatransformasjon");
+        s.SetValue("slug", "datatransformasjon");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 3);
+        s.SetValue("understeg", 2);
+        s.SetValue("innhold", "<p>Å endre dataene slik at de har likt format, er ekstra viktig når dataene kommer fra ulike kilder. Ulikt format kan for eksempel være at dataene bruker ulike måleenheter eller har indekser på ulike skalaer.</p>");
+        s.SetValue("infoKortTittel", "Slik gir du datene likt format");
+        s.SetValue("infoKortInnhold", "<p>1. Identifiser data som ikke er ensartede, og finn ut hvorfor de er ulike. Sjekk om data</p><ul><li>har ulike formater, for eksempel datoformater</li><li>bruker ulike måleenheter</li><li>har ulike skalaer eller indekser</li></ul><p>2. Gjør data ensartede.</p><ul><li>Normalisere - justere verdier til en felles skala</li><li>Skalere - tilpasse størrelsesorden</li><li>Konvertere - endre format eller enhet</li></ul>");
+        s.SetValue("eksempelTittel", "Konkret eksempel på transformasjon");
+        s.SetValue("eksempelTekst", "<ul><li>Konverter valuta (f.eks. Yen → Euro)</li><li>Konverter måleenheter (f.eks. miles → kilometer)</li><li>Standardiser datoformater (f.eks. DD/MM/ÅÅÅÅ → ÅÅÅÅ-MM-DD)</li><li>Konverter kategoriske verdier (f.eks. \"Ja/Nei\" → 1/0)</li></ul>");
+        SaveAndPublish(s);
 
-        var v8 = Create("veiledning", "Krav til transparens og forklarbarhet", parentId);
-        v8.SetValue("tittel", "Krav til transparens og forklarbarhet");
-        v8.SetValue("slug", "krav-til-transparens-og-forklarbarhet");
-        v8.SetValue("innhold", @"<p>Transparens og forklarbarhet er juridiske krav, men også en forutsetning
-for tillit til KI i offentlig sektor. Denne veiledningen dekker
-gjeldende regelverk og praktiske tilnærminger.</p>
-<h2>Juridisk rammeverk</h2>
-<p>Forvaltningsloven krever begrunnelse av vedtak. GDPR gir rett til
-informasjon om automatisert behandling. AI Act stiller krav til
-dokumentasjon og brukerinformasjon for høyrisiko-systemer. Til sammen
-skaper dette et sterkt krav om forklarbarhet.</p>
-<h2>Nivåer av forklarbarhet</h2>
-<ul>
-<li>Systemdokumentasjon: Teknisk beskrivelse av modellens virkemåte</li>
-<li>Beslutningsforklaring: Hvorfor ble akkurat dette resultatet gitt?</li>
-<li>Brukerinformasjon: Forenklet informasjon tilpasset den berørte</li>
-</ul>
-<h2>Tekniske verktøy</h2>
-<p>SHAP-verdier, LIME, kontrafaktiske forklaringer og beslutningstrær
-er eksempler på teknikker som kan gjøre KI-modeller mer tolkbare.
-Valg av teknikk avhenger av modelltype og brukerkontekst.</p>
-<h2>Organisatoriske grep</h2>
-<p>Dokumenter modellens virkemåte under utvikling. Etabler rutiner
-for å gi forklaringer til berørte parter, og tren saksbehandlere
-i å tolke og kommunisere KI-output.</p>");
-        v8.SetValue("kategori", Udi(merkelapper["transparens"]));
-        v8.SetValue("lenker", @"[{""tekst"": ""Nasjonal strategi for kunstig intelligens"", ""url"": ""/artikler/ny-nasjonal-strategi-for-kunstig-intelligens"", ""ekstern"": false}]");
-        v8.SetValue("rekkefolge", 8);
-        SaveAndPublish(v8);
+        // Step 3.3
+        s = Create("veiledningSteg", "Aggregere data", parentId);
+        s.SetValue("tittel", "Aggregere data");
+        s.SetValue("slug", "aggregere-data");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 3);
+        s.SetValue("understeg", 3);
+        s.SetValue("innhold", "<p>Hvis du trenger å vite egenskaper ved grupper av dataene, må du gruppere dem for å kunne analysere dem og trekke konklusjoner.</p>");
+        s.SetValue("infoKortTittel", "Slik går du frem");
+        s.SetValue("infoKortInnhold", "<ol><li>Finn ut om du trenger å analysere data på gruppenivå.</li><li>Velg egenskaper du vil gruppere data etter (f.eks. per ansatt, per avdeling, per dato)</li><li>Bestem hvordan du vil oppsummere dataene, for eksempel gjennomsnitt, sum eller antall.</li><li>Endre de originale dataene: grupper dem etter karakteristikkene du har valgt, beregn aggregeringsfunksjon for hver gruppe, lag nytt aggregert datasett.</li></ol>");
+        s.SetValue("eksempelTittel", "Konkret eksempel på transformasjon");
+        s.SetValue("eksempelTekst", "<ul><li>Konverter valuta (f.eks. Yen → Euro)</li><li>Konverter måleenheter (f.eks. miles → kilometer)</li><li>Standardiser datoformater (f.eks. DD/MM/ÅÅÅÅ → ÅÅÅÅ-MM-DD)</li><li>Konverter kategoriske verdier (f.eks. \"Ja/Nei\" → 1/0)</li></ul>");
+        SaveAndPublish(s);
+
+        // Step 3.4
+        s = Create("veiledningSteg", "Trekke ut data", parentId);
+        s.SetValue("tittel", "Trekke ut data");
+        s.SetValue("slug", "trekke-ut-data");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 3);
+        s.SetValue("understeg", 4);
+        s.SetValue("innhold", "<p>Det kan i noen tilfeller være nødvendig å trekke ut data fra et datasett. Det kan for eksempel være hvis du vil teste AI-systemet raskt uten å bruke hele datasettet eller skal dele data i treningssett, valideringssett og testsett.</p>");
+        s.SetValue("infoKortTittel", "Velg metode for å trekke ut data");
+        s.SetValue("infoKortInnhold", "<p>Forskjellen på tilfeldig og stratifisert uttrekk er at ved tilfeldig utvalg har alle datapunkter like stor sjanse for å bli valgt, mens ved stratifisert utvalg deler du først dataene i undergrupper og velger deretter fra hver gruppe for å sikre at alle grupper er representert.</p>");
+        s.SetValue("eksempelTittel", "Konkret eksempel på transformasjon");
+        s.SetValue("eksempelTekst", "<ul><li>Konverter valuta (f.eks. Yen → Euro)</li><li>Konverter måleenheter (f.eks. miles → kilometer)</li><li>Standardiser datoformater (f.eks. DD/MM/ÅÅÅÅ → ÅÅÅÅ-MM-DD)</li><li>Konverter kategoriske verdier (f.eks. \"Ja/Nei\" → 1/0)</li></ul>");
+        SaveAndPublish(s);
+
+        // Steps 4.1-4.3 (placeholder)
+        s = Create("veiledningSteg", "Tilgang", parentId);
+        s.SetValue("tittel", "Tilgang");
+        s.SetValue("slug", "tilgang");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 4);
+        s.SetValue("understeg", 1);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        s = Create("veiledningSteg", "Dokumentasjon", parentId);
+        s.SetValue("tittel", "Dokumentasjon");
+        s.SetValue("slug", "dokumentasjon");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 4);
+        s.SetValue("understeg", 2);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        s = Create("veiledningSteg", "Personvern og sikkerhet", parentId);
+        s.SetValue("tittel", "Personvern og sikkerhet");
+        s.SetValue("slug", "personvern-og-sikkerhet");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 4);
+        s.SetValue("understeg", 3);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        // Steps 5.1-5.4 (placeholder)
+        s = Create("veiledningSteg", "Før du sletter", parentId);
+        s.SetValue("tittel", "Før du sletter");
+        s.SetValue("slug", "for-du-sletter");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 5);
+        s.SetValue("understeg", 1);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        s = Create("veiledningSteg", "Når du sletter", parentId);
+        s.SetValue("tittel", "Når du sletter");
+        s.SetValue("slug", "nar-du-sletter");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 5);
+        s.SetValue("understeg", 2);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        s = Create("veiledningSteg", "Dokumentasjon av sletting", parentId);
+        s.SetValue("tittel", "Dokumentasjon av sletting");
+        s.SetValue("slug", "dokumentasjon-sletting");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 5);
+        s.SetValue("understeg", 3);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        s = Create("veiledningSteg", "Slett deler av dataen", parentId);
+        s.SetValue("tittel", "Slett deler av dataen");
+        s.SetValue("slug", "slett-deler-av-dataen");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 5);
+        s.SetValue("understeg", 4);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
+
+        // Merke data (step 3 sub-step)
+        s = Create("veiledningSteg", "Merke data", parentId);
+        s.SetValue("tittel", "Merke data");
+        s.SetValue("slug", "merke-data");
+        s.SetValue("guideSlug", "bruk-data-rett");
+        s.SetValue("steg", 3);
+        s.SetValue("understeg", 5);
+        s.SetValue("innhold", "<p>Innhold kommer snart.</p>");
+        SaveAndPublish(s);
     }
 
     // ── FAQ ────────────────────────────────────────────────────

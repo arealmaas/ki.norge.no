@@ -67,6 +67,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateAccordionSectionElement();
             if (_contentTypeService.Get("tipItem") == null)
                 CreateTipItemElement();
+            else
+                MigrateTipItemElement();
             if (_contentTypeService.Get("eventItem") == null)
                 CreateEventItemElement();
 
@@ -85,8 +87,10 @@ public class ContentTypeComponent : IAsyncComponent
             else
                 eksempel = _contentTypeService.Get("eksempel");
 
-            if (_contentTypeService.Get("veiledning") == null)
-                CreateVeiledning();
+            if (_contentTypeService.Get("veiledningGuide") == null)
+                CreateVeiledningGuide();
+            if (_contentTypeService.Get("veiledningSteg") == null)
+                CreateVeiledningSteg();
             if (_contentTypeService.Get("faq") == null)
                 CreateFAQ();
             if (_contentTypeService.Get("forside") == null)
@@ -100,7 +104,27 @@ public class ContentTypeComponent : IAsyncComponent
             CreateContainerIfMissing("artikler", "Artikler", "icon-newspaper-alt", "artikkel");
             CreateContainerIfMissing("sider", "Sider", "icon-document", "side");
             CreateContainerIfMissing("eksempler", "Eksempler", "icon-science", "eksempel");
-            CreateContainerIfMissing("veiledninger", "Veiledninger", "icon-book-alt", "veiledning");
+            if (_contentTypeService.Get("veiledninger") == null)
+            {
+                var guideType = _contentTypeService.Get("veiledningGuide");
+                var stegType = _contentTypeService.Get("veiledningSteg");
+                if (guideType != null && stegType != null)
+                {
+                    var ct = new ContentType(_shortStringHelper, -1)
+                    {
+                        Alias = "veiledninger",
+                        Name = "Veiledninger",
+                        Icon = "icon-book-alt",
+                        AllowedAsRoot = true,
+                    };
+                    ct.AllowedContentTypes = new[]
+                    {
+                        new ContentTypeSort(guideType.Key, 0, guideType.Alias),
+                        new ContentTypeSort(stegType.Key, 1, stegType.Alias)
+                    };
+                    _contentTypeService.Save(ct);
+                }
+            }
             CreateContainerIfMissing("faqSamling", "FAQ", "icon-help-alt", "faq");
             CreateContainerIfMissing("merkelapper", "Merkelapper", "icon-tags", "merkelapp");
         }
@@ -175,8 +199,18 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tipsTitle", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("tipsTekst", "Tekst", _richTextDt), "innhold");
+        ct.AddPropertyType(Prop("tipsBilde", "Bilde", _mediaPickerDt), "innhold");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateTipItemElement()
+    {
+        var ct = _contentTypeService.Get("tipItem");
+        if (ct == null) return;
+        if (ct.PropertyTypeExists("tipsBilde")) return;
+        ct.AddPropertyType(Prop("tipsBilde", "Bilde", _mediaPickerDt), "innhold");
+        _contentTypeService.Save(ct);
     }
 
     private IContentType CreateEventItemElement()
@@ -371,28 +405,51 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
-    private IContentType CreateVeiledning()
+    private IContentType CreateVeiledningGuide()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
-            Alias = "veiledning",
-            Name = "Veiledning",
-            Description = "Veiledningsressurser",
+            Alias = "veiledningGuide",
+            Name = "Veiledning Guide",
+            Description = "Oversiktsside for en veiledningsguide",
             Icon = "icon-book-alt",
             AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt), "innhold");
-        ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt, description: "Velg merkelapp-kategori"), "innhold");
-        ct.AddPropertyType(Prop("lenker", "Relaterte lenker", _textAreaDt, description: "JSON: [{\"tekst\": \"\", \"url\": \"\", \"ekstern\": false}]"), "innhold");
-        ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
+        ct.AddPropertyType(Prop("introTekst", "Intro-tekst", _richTextDt), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
-        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
-        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
-        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt), "seo");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateVeiledningSteg()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "veiledningSteg",
+            Name = "Veiledning Steg",
+            Description = "Et steg i en veiledningsguide",
+            Icon = "icon-document",
+            AllowedAsRoot = false,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("guideSlug", "Guide-slug", _textStringDt, mandatory: true, description: "Slug til overordnet guide"), "innhold");
+        ct.AddPropertyType(Prop("steg", "Steg", _numericDt, mandatory: true, description: "Stegnummer (1, 2, 3...)"), "innhold");
+        ct.AddPropertyType(Prop("understeg", "Understeg", _numericDt, mandatory: true, description: "Understeg-nummer (1, 2, 3...)"), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, description: "Hovedinnhold"), "innhold");
+        ct.AddPropertyType(Prop("infoKortTittel", "Infokort-tittel", _textStringDt, description: "Tittel på informasjonskort (valgfritt)"), "innhold");
+        ct.AddPropertyType(Prop("infoKortInnhold", "Infokort-innhold", _richTextDt, description: "Innhold i informasjonskort (valgfritt)"), "innhold");
+        ct.AddPropertyType(Prop("accordionSeksjoner", "Accordion-seksjoner", _blockListAccordionDt, description: "Trekkspill-seksjoner (valgfritt)"), "innhold");
+        ct.AddPropertyType(Prop("eksempelTittel", "Eksempel-tittel", _textStringDt, description: "Tittel på eksempelkort (valgfritt)"), "innhold");
+        ct.AddPropertyType(Prop("eksempelTekst", "Eksempel-tekst", _richTextDt, description: "Tekst i eksempelkort (valgfritt)"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }

@@ -2,7 +2,7 @@
 import { Paragraph } from '@digdir/designsystemet-react';
 import BlocksRenderer from '../shared/BlocksRenderer.astro';
 import type { TipItem } from '../../lib/umbraco';
-import { getPlainText } from '../../lib/umbraco';
+import { getPlainText, getMediaUrl } from '../../lib/umbraco';
 
 interface Props {
   tittel?: string;
@@ -47,7 +47,7 @@ const useCms = cmsTips && cmsTips.length > 0;
         cmsTips.map((tip, i) => (
           <div class="tip-card">
             <div class="tip-illustration">
-              <img src={tipImages[i % tipImages.length]} alt="" width="140" height="140" loading="lazy" />
+              <img src={tip.tipsBilde ? getMediaUrl(tip.tipsBilde) : tipImages[i % tipImages.length]} alt="" width="140" height="140" loading="lazy" />
             </div>
             <h3 class="tip-title">{tip.tipsTitle}</h3>
             <div class="tip-description-rich">

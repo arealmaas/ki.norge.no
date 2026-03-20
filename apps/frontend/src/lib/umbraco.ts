@@ -1,4 +1,5 @@
 const UMBRACO_URL = process.env.UMBRACO_URL || import.meta.env.UMBRACO_URL || 'http://localhost:5000';
+const UMBRACO_PUBLIC_URL = process.env.UMBRACO_PUBLIC_URL || import.meta.env.UMBRACO_PUBLIC_URL || UMBRACO_URL;
 const API_KEY = process.env.UMBRACO_API_KEY || import.meta.env.UMBRACO_API_KEY;
 
 // Preview mode options
@@ -85,18 +86,35 @@ export interface Eksempel {
   locale: string;
 }
 
-export interface Veiledning {
+export interface VeiledningGuide {
   id: string;
   documentId: string;
   tittel: string;
   slug: string;
-  innhold?: UmbracoBlock[];
-  kategori?: Merkelapp;
-  lenker?: { tekst: string; url: string; ekstern?: boolean }[];
-  rekkefølge?: number;
+  introTekst?: UmbracoBlock[];
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  locale: string;
+}
+
+export interface VeiledningSteg {
+  id: string;
+  documentId: string;
+  tittel: string;
+  slug: string;
+  guideSlug: string;
+  steg: number;
+  understeg: number;
+  innhold?: UmbracoBlock[];
+  infoKortTittel?: string;
+  infoKortInnhold?: UmbracoBlock[];
+  accordionSeksjoner?: AccordionSection[];
+  eksempelTittel?: string;
+  eksempelTekst?: UmbracoBlock[];
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
@@ -124,6 +142,7 @@ export interface AccordionSection {
 export interface TipItem {
   tipsTitle: string;
   tipsTekst: UmbracoBlock[];
+  tipsBilde?: UmbracoMedia;
 }
 
 export interface EventItem {
@@ -423,18 +442,31 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         seoBilde: mapMedia(props.seoBilde),
       } as T;
 
-    case 'veiledning':
+    case 'veiledningGuide':
       return {
         ...base,
         tittel: props.tittel as string || item.name,
         slug: props.slug as string || '',
-        innhold: mapRichText(props.innhold),
-        kategori: mapKategori(props.kategori),
-        lenker: mapLenker(props.lenker),
-        rekkefølge: props.rekkefolge as number || 0,
+        introTekst: mapRichText(props.introTekst),
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
         seoBilde: mapMedia(props.seoBilde),
+      } as T;
+
+    case 'veiledningSteg':
+      return {
+        ...base,
+        tittel: props.tittel as string || item.name,
+        slug: props.slug as string || '',
+        guideSlug: props.guideSlug as string || '',
+        steg: props.steg as number || 0,
+        understeg: props.understeg as number || 0,
+        innhold: mapRichText(props.innhold),
+        infoKortTittel: props.infoKortTittel as string || undefined,
+        infoKortInnhold: mapRichText(props.infoKortInnhold),
+        accordionSeksjoner: mapAccordionSections(props.accordionSeksjoner),
+        eksempelTittel: props.eksempelTittel as string || undefined,
+        eksempelTekst: mapRichText(props.eksempelTekst),
       } as T;
 
     case 'faq':
@@ -531,8 +563,9 @@ function mapRichText(value: unknown): UmbracoBlock[] | undefined {
 }
 
 function mapAccordionSections(value: unknown): AccordionSection[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((block: any) => {
+  const items = Array.isArray(value) ? value : (value as any)?.items;
+  if (!Array.isArray(items)) return [];
+  return items.map((block: any) => {
     const content = block.content || block;
     const props = content.properties || content;
     return {
@@ -543,20 +576,23 @@ function mapAccordionSections(value: unknown): AccordionSection[] {
 }
 
 function mapTipItems(value: unknown): TipItem[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((block: any) => {
+  const items = Array.isArray(value) ? value : (value as any)?.items;
+  if (!Array.isArray(items)) return [];
+  return items.map((block: any) => {
     const content = block.content || block;
     const props = content.properties || content;
     return {
       tipsTitle: (props.tipsTitle as string) || '',
       tipsTekst: mapRichText(props.tipsTekst) || [],
+      tipsBilde: mapMedia(props.tipsBilde),
     };
   });
 }
 
 function mapEventItems(value: unknown): EventItem[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((block: any) => {
+  const items = Array.isArray(value) ? value : (value as any)?.items;
+  if (!Array.isArray(items)) return [];
+  return items.map((block: any) => {
     const content = block.content || block;
     const props = content.properties || content;
     return {
@@ -619,29 +655,6 @@ function mapKategori(value: unknown): Merkelapp | undefined {
   };
 }
 
-function mapLenker(value: unknown): { tekst: string; url: string; ekstern?: boolean }[] {
-  if (!value) return [];
-  // Block list of lenke items
-  if (Array.isArray(value)) {
-    return value.map((block: any) => {
-      const content = block.content || block;
-      return {
-        tekst: content.tekst || '',
-        url: content.url || '',
-        ekstern: content.ekstern || false,
-      };
-    });
-  }
-  // JSON string fallback
-  if (typeof value === 'string') {
-    try {
-      return JSON.parse(value);
-    } catch {
-      return [];
-    }
-  }
-  return [];
-}
 
 function parseJsonArray(value: string | undefined): string[] {
   if (!value) return [];
@@ -657,7 +670,7 @@ function parseJsonArray(value: string | undefined): string[] {
 export function getMediaUrl(media?: UmbracoMedia): string | undefined {
   if (!media?.url) return undefined;
   if (media.url.startsWith('http')) return media.url;
-  return `${UMBRACO_URL}${media.url}`;
+  return `${UMBRACO_PUBLIC_URL}${media.url}`;
 }
 
 /**
@@ -744,17 +757,26 @@ export async function getForside(options: FetchOptions = {}): Promise<Forside | 
   return result.data[0] || null;
 }
 
-// ── Veiledning (Guidance) API functions ─────────────────────────
+// ── Veiledning Guide/Step API functions ─────────────────────────
 
-export async function getVeiledninger(options: FetchOptions = {}) {
-  return fetchCollection<Veiledning>('veiledning', {
-    ...options,
-    sort: 'sortOrder:asc',
-  });
+export async function getVeiledningGuider(options: FetchOptions = {}) {
+  return fetchCollection<VeiledningGuide>('veiledningGuide', options);
 }
 
-export async function getVeiledning(slug: string, options: FetchOptions = {}) {
-  return fetchBySlug<Veiledning>('veiledning', slug, options);
+export async function getVeiledningGuide(slug: string, options: FetchOptions = {}) {
+  return fetchBySlug<VeiledningGuide>('veiledningGuide', slug, options);
+}
+
+export async function getVeiledningSteg(guideSlug: string, options: FetchOptions = {}) {
+  const result = await fetchCollection<VeiledningSteg>('veiledningSteg', { ...options, take: 100 });
+  return result.data
+    .filter(s => s.guideSlug === guideSlug)
+    .sort((a, b) => a.steg !== b.steg ? a.steg - b.steg : a.understeg - b.understeg);
+}
+
+export async function getVeiledningStegBySlug(guideSlug: string, stepSlug: string, options: FetchOptions = {}) {
+  const steps = await getVeiledningSteg(guideSlug, options);
+  return steps.find(s => s.slug === stepSlug) || null;
 }
 
 // ── FAQ API functions ───────────────────────────────────────────
@@ -834,7 +856,7 @@ export async function searchContent(query: string, options: FetchOptions = {}): 
     const data: UmbracoResponse<SearchResult> = await res.json();
 
     const results: SearchResult[] = data.items
-      .filter(item => ['artikkel', 'eksempel', 'veiledning', 'side', 'faq'].includes(item.contentType))
+      .filter(item => ['artikkel', 'eksempel', 'veiledningGuide', 'veiledningSteg', 'side', 'faq'].includes(item.contentType))
       .map(item => {
         const props = item.properties;
         const tittel = (props.tittel as string) || (props.sporsmal as string) || item.name;
@@ -876,10 +898,10 @@ export async function searchContent(query: string, options: FetchOptions = {}): 
     const lowerQuery = query.toLowerCase();
 
     try {
-      const [artikler, eksempler, veiledninger] = await Promise.all([
+      const [artikler, eksempler, guides] = await Promise.all([
         fetchCollection<Artikkel>('artikkel', { take: 100 }),
         fetchCollection<Eksempel>('eksempel', { take: 100 }),
-        fetchCollection<Veiledning>('veiledning', { take: 100 }),
+        fetchCollection<VeiledningGuide>('veiledningGuide', { take: 100 }),
       ]);
 
       for (const a of artikler.data) {
@@ -892,9 +914,9 @@ export async function searchContent(query: string, options: FetchOptions = {}): 
           allResults.push({ id: e.id, tittel: e.tittel, slug: e.slug, contentType: 'eksempel', excerpt: getPlainText(e.beskrivelse, 200), publishedAt: e.publishedAt });
         }
       }
-      for (const v of veiledninger.data) {
-        if (v.tittel.toLowerCase().includes(lowerQuery) || getPlainText(v.innhold, 500).toLowerCase().includes(lowerQuery)) {
-          allResults.push({ id: v.id, tittel: v.tittel, slug: v.slug, contentType: 'veiledning', excerpt: getPlainText(v.innhold, 200), publishedAt: v.publishedAt });
+      for (const g of guides.data) {
+        if (g.tittel.toLowerCase().includes(lowerQuery) || getPlainText(g.introTekst, 500).toLowerCase().includes(lowerQuery)) {
+          allResults.push({ id: g.id, tittel: g.tittel, slug: g.slug, contentType: 'veiledningGuide', excerpt: getPlainText(g.introTekst, 200), publishedAt: g.publishedAt });
         }
       }
     } catch { /* return empty if fallback also fails */ }

@@ -1,382 +1,53 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
-import { Heading, Paragraph, Link, Button } from '@digdir/designsystemet-react';
-import { getVeiledninger, getMerkelapper, getPlainText, type Veiledning, type Merkelapp } from '../../lib/umbraco';
+import { getVeiledningGuider } from '../../lib/umbraco';
 
-// Fetch veiledninger and categories from Umbraco
-let veiledninger: Veiledning[] = [];
-let merkelapper: Merkelapp[] = [];
-try {
-  const [veiledningerRes, merkelapperRes] = await Promise.all([
-    getVeiledninger(),
-    getMerkelapper(),
-  ]);
-  veiledninger = veiledningerRes.data || [];
-  merkelapper = merkelapperRes.data || [];
-} catch (error) {
-  console.error('Failed to fetch veiledninger:', error);
-}
-
-// Group veiledninger by kategori
-const groupedVeiledninger = veiledninger.reduce((acc, v) => {
-  const kategoriNavn = v.kategori?.navn || 'Annet';
-  const kategoriSlug = v.kategori?.slug || 'annet';
-  if (!acc[kategoriSlug]) {
-    acc[kategoriSlug] = { navn: kategoriNavn, items: [] };
-  }
-  acc[kategoriSlug].items.push(v);
-  return acc;
-}, {} as Record<string, { navn: string; items: Veiledning[] }>);
-
-const categories = Object.entries(groupedVeiledninger).map(([slug, group]) => ({
-  slug,
-  title: group.navn,
-  items: group.items,
-  icon: getCategoryIcon(slug),
-}));
-
-function getCategoryIcon(slug: string): string {
-  const icons: Record<string, string> = {
-    'etikk': 'balance',
-    'data': 'database',
-    'sikkerhet': 'shield',
-    'personvern': 'lock',
-    'innkjop': 'shopping_cart',
-    'implementering': 'rocket_launch',
-    'strategi': 'target',
-    'annet': 'lightbulb',
-  };
-  return icons[slug] || 'menu_book';
-}
-
-const hasContent = veiledninger.length > 0;
+const guidesRes = await getVeiledningGuider();
+const guides = guidesRes.data;
 ---
-
-<Layout title="Veiledning" description="Veiledningsressurser for ansvarlig bruk av kunstig intelligens i offentlig sektor.">
-  <section class="page-hero">
-    <div class="hero-container">
-      <span class="page-badge">Veiledning</span>
-      <Heading level={1} size="2xlarge" className="hero-title">Ressursbibliotek</Heading>
-      <Paragraph size="large" className="hero-lead">
-        Praktisk veiledning for ansvarlig bruk av kunstig intelligens i offentlig sektor.
-      </Paragraph>
-      <form class="search-form" action="/sok" method="get">
-        <div class="search-input-wrapper">
-          <span class="material-symbols-outlined search-icon">search</span>
-          <input
-            type="search"
-            name="q"
-            placeholder="Søk i veiledninger..."
-            class="search-input"
-            autocomplete="off"
-          />
-          <Button type="submit" variant="primary" size="small">Søk</Button>
-        </div>
-      </form>
+<Layout title="Veiledning">
+  <div class="guide-listing">
+    <h1>Veiledning</h1>
+    <div class="guide-list">
+      {guides.map(guide => (
+        <a href={`/veiledning/${guide.slug}`} class="guide-card">
+          <h2>{guide.tittel}</h2>
+        </a>
+      ))}
     </div>
-  </section>
-
-  {hasContent ? (
-    <>
-      <section class="categories-section">
-        <div class="section-container">
-          <Heading level={2} size="large" className="section-title">Kategorier</Heading>
-          <div class="category-grid">
-            {categories.map((cat) => (
-              <a href={`#kategori-${cat.slug}`} class="category-card card-hover">
-                <span class="material-symbols-outlined category-icon">{cat.icon}</span>
-                <Heading level={3} size="small" className="category-card-title">{cat.title}</Heading>
-                <Paragraph size="small" className="category-card-count">
-                  {cat.items.length} {cat.items.length === 1 ? 'veiledning' : 'veiledninger'}
-                </Paragraph>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section class="resources-section">
-        <div class="section-container">
-          <Heading level={2} size="large" className="section-title">Alle veiledninger</Heading>
-          {categories.map((cat) => (
-            <div class="resource-group" id={`kategori-${cat.slug}`}>
-              <Heading level={3} size="medium" className="group-title">{cat.title}</Heading>
-              <div class="resource-list">
-                {cat.items.map((v) => (
-                  <a href={`/veiledning/${v.slug}`} class="resource-item card-hover">
-                    <div class="resource-content">
-                      <Heading level={4} size="xsmall" className="resource-title">{v.tittel}</Heading>
-                      <Paragraph size="small" className="resource-excerpt">
-                        {getPlainText(v.innhold, 120)}
-                      </Paragraph>
-                    </div>
-                    <span class="material-symbols-outlined resource-arrow">arrow_forward</span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </>
-  ) : (
-    <div class="empty-section">
-      <div class="empty-state-box">
-        <span class="material-symbols-outlined">menu_book</span>
-        <Paragraph>Ingen veiledninger er publisert ennå.</Paragraph>
-        <Link href="/">Gå til forsiden</Link>
-      </div>
-    </div>
-  )}
-
-  <section class="chat-cta-section">
-    <div class="cta-container">
-      <span class="material-symbols-outlined cta-icon">smart_toy</span>
-      <Heading level={2} size="medium" className="cta-title">Trenger du mer hjelp?</Heading>
-      <Paragraph className="cta-description">
-        Vi jobber med en KI-veilederen som kan svare på spørsmål om ansvarlig bruk av kunstig intelligens.
-      </Paragraph>
-      <Button variant="secondary" size="medium" disabled>Kommer snart</Button>
-    </div>
-  </section>
+  </div>
 </Layout>
-
 <style>
-  /* Hero */
-  .page-hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    padding: var(--ds-size-12) var(--ds-size-4) var(--ds-size-10);
-  }
-
-  .hero-container {
+  .guide-listing {
     max-width: 800px;
     margin: 0 auto;
-    text-align: center;
+    padding: var(--ds-size-8) var(--ds-size-4);
   }
-
-  .page-badge {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
+  .guide-listing h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 var(--ds-size-8);
   }
-
-  :global(.hero-title) {
-    margin: 0 0 var(--ds-size-4);
-  }
-
-  :global(.hero-lead) {
-    margin: 0 0 var(--ds-size-6);
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .search-form {
-    max-width: 500px;
-    margin: 0 auto;
-  }
-
-  .search-input-wrapper {
-    display: flex;
-    align-items: center;
-    gap: var(--ds-size-2);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    padding: var(--ds-size-2) var(--ds-size-3);
-  }
-
-  .search-icon {
-    color: var(--ds-color-neutral-text-subtle);
-    font-size: 20px;
-  }
-
-  .search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    font-size: var(--ds-font-size-1);
-    font-family: var(--ds-font-family);
-    color: var(--ds-color-neutral-text-default);
-    outline: none;
-  }
-
-  .search-input::placeholder {
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  /* Category cards */
-  .categories-section {
-    padding: var(--ds-size-10) var(--ds-size-4);
-  }
-
-  .section-container {
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-
-  :global(.section-title) {
-    margin: 0 0 var(--ds-size-6);
-  }
-
-  .category-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--ds-size-4);
-  }
-
-  .category-card {
+  .guide-list {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    gap: var(--ds-size-4);
+  }
+  .guide-card {
+    display: block;
     padding: var(--ds-size-6);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     text-decoration: none;
     color: inherit;
+    transition: border-color 0.15s;
   }
-
-  .category-icon {
-    font-size: 32px;
-    color: var(--ds-color-accent-text-default);
-    margin-bottom: var(--ds-size-3);
+  .guide-card:hover {
+    border-color: #7c3aed;
   }
-
-  :global(.category-card-title) {
-    margin: 0 0 var(--ds-size-1);
-  }
-
-  :global(.category-card-count) {
+  .guide-card h2 {
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  /* Resources list */
-  .resources-section {
-    padding: var(--ds-size-2) var(--ds-size-4) var(--ds-size-10);
-  }
-
-  .resource-group {
-    margin-bottom: var(--ds-size-8);
-    scroll-margin-top: 80px;
-  }
-
-  :global(.group-title) {
-    margin: 0 0 var(--ds-size-4);
-    padding-bottom: var(--ds-size-2);
-    border-bottom: 2px solid var(--ds-color-accent-border-default);
-  }
-
-  .resource-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ds-size-3);
-  }
-
-  .resource-item {
-    display: flex;
-    align-items: center;
-    gap: var(--ds-size-4);
-    padding: var(--ds-size-5);
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .resource-content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  :global(.resource-title) {
-    margin: 0 0 var(--ds-size-1);
-    color: var(--ds-color-accent-text-default);
-  }
-
-  :global(.resource-excerpt) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-  }
-
-  .resource-arrow {
-    color: var(--ds-color-neutral-text-subtle);
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-  }
-
-  .resource-item:hover .resource-arrow {
-    transform: translateX(4px);
-    color: var(--ds-color-accent-text-default);
-  }
-
-  /* Empty state */
-  .empty-section {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-10) var(--ds-size-4);
-  }
-
-  /* Chat CTA */
-  .chat-cta-section {
-    padding: 0 var(--ds-size-4) var(--ds-size-12);
-  }
-
-  .cta-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--ds-size-10);
-    background-color: var(--ds-color-accent-surface-default);
-    border-radius: var(--ds-border-radius-lg);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ds-size-3);
-  }
-
-  .cta-icon {
-    font-size: 40px;
-    color: var(--ds-color-accent-text-default);
-  }
-
-  :global(.cta-title) {
-    margin: 0;
-  }
-
-  :global(.cta-description) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 500px;
-  }
-
-  @media (max-width: 640px) {
-    .category-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    .resource-item {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .resource-arrow {
-      display: none;
-    }
+    font-size: 1.25rem;
   }
 </style>

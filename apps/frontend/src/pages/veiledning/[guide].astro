@@ -1,0 +1,67 @@
+---
+import Layout from '../../components/layout/Layout.astro';
+import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
+import StepNavigator from '../../components/guide/StepNavigator.astro';
+import InfoBanner from '../../components/guide/InfoBanner.astro';
+import { getVeiledningGuide, getVeiledningSteg, getPlainText } from '../../lib/umbraco';
+
+const { guide: guideSlug } = Astro.params;
+const guideData = await getVeiledningGuide(guideSlug!);
+if (!guideData) return Astro.redirect('/veiledning');
+
+const allSteps = await getVeiledningSteg(guideSlug!);
+
+// Group steps by steg number
+const stepMap = new Map<number, { title: string; substeps: { title: string; slug: string }[] }>();
+for (const step of allSteps) {
+  if (!stepMap.has(step.steg)) {
+    // Use first sub-step's parent step title (the step group title comes from overview design)
+    stepMap.set(step.steg, { title: '', substeps: [] });
+  }
+  stepMap.get(step.steg)!.substeps.push({ title: step.tittel, slug: step.slug });
+}
+
+// The step group titles from the overview design
+const stepGroupTitles: Record<number, string> = {
+  1: 'Finn ut hvilke data du trenger',
+  2: 'Samle inn data',
+  3: 'Forberede data til bruk',
+  4: 'Gjøre data tilgjengelig for KI-systemet',
+  5: 'Slette data',
+};
+
+const steps = Array.from(stepMap.entries()).map(([num, data]) => ({
+  number: num,
+  title: stepGroupTitles[num] || `Steg ${num}`,
+  substeps: data.substeps,
+}));
+
+const seoTitle = guideData.seoTittel || guideData.tittel;
+const seoDesc = guideData.seoBeskrivelse || getPlainText(guideData.introTekst, 200);
+---
+<Layout title={seoTitle} description={seoDesc}>
+  <div class="guide-overview">
+    <h1 class="guide-title">{guideData.tittel}</h1>
+
+    {guideData.introTekst && (
+      <InfoBanner>
+        <BlocksRenderer blocks={guideData.introTekst} />
+      </InfoBanner>
+    )}
+
+    <StepNavigator steps={steps} guideSlug={guideSlug!} />
+  </div>
+</Layout>
+<style>
+  .guide-overview {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-8) var(--ds-size-4);
+  }
+  .guide-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 32px;
+    color: #000;
+  }
+</style>
