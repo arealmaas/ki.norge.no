@@ -1,53 +1,51 @@
 ---
+// TODO: Make this page CMS-driven. The omOss and omOssSeksjon content types
+// already exist in Umbraco. Replace hardcoded stubs with getOmOss() for
+// hero/intro and getOmOssSeksjoner() for the alternating stubs.
 import Layout from '../components/layout/Layout.astro';
-import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import PartnersSection from '../components/shared/PartnersSection.astro';
-import { getOmOss, getOmOssSeksjoner, getMediaUrl, getPlainText } from '../lib/umbraco';
 
-const omOss = await getOmOss();
-const seksjonerRes = await getOmOssSeksjoner();
-const seksjoner = seksjonerRes.data;
-
-const heroTittel = omOss?.heroTittel || 'KI Norge';
-const heroUndertittel = omOss?.heroUndertittel || 'Verdigrunnlag';
-
-const seoTitle = omOss?.seoTittel || 'Om oss';
-const seoDesc = omOss?.seoBeskrivelse || 'Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.';
+const stubs = [
+  {
+    tittel: 'Hvorfor KI Norge?',
+    tekst: 'Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig. Det er der KI Norge kommer inn.',
+  },
+  {
+    tittel: 'Veiledning',
+    tekst: 'Sammen med Datatilsynet og Nasjonal kommunikasjonsmyndighet (Nkom) gir vi praktisk veiledning, særlig for deg som ikke har et eget juridisk team eller KI-eksperter i staben. Vi hjelper deg å forstå hvilke krav som gjelder, identifisere risiko og finne ut hva du faktisk trenger å forholde deg til.',
+  },
+  {
+    tittel: 'Den regulatoriske KI-sandkassen',
+    tekst: 'I KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.',
+  },
+];
 ---
 
-<Layout title={seoTitle} description={seoDesc}>
+<Layout title="Om oss" description="Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.">
   <div class="om-oss-page">
     <!-- Hero -->
     <section class="om-oss-hero">
-      <h1 class="om-oss-hero-title">{heroTittel}</h1>
-      <p class="om-oss-hero-subtitle">{heroUndertittel}</p>
+      <h1 class="om-oss-hero-title">KI Norge</h1>
+      <p class="om-oss-hero-subtitle">Verdigrunnlag</p>
     </section>
 
     <!-- Intro -->
-    {omOss?.introTekst && (
-      <section class="om-oss-intro">
-        <div class="om-oss-intro-inner">
-          <BlocksRenderer blocks={omOss.introTekst} class="om-oss-intro-text" />
-        </div>
-      </section>
-    )}
+    <section class="om-oss-intro">
+      <div class="om-oss-intro-inner">
+        <p class="om-oss-intro-text">KI Norge er en nasjonal satsing under Digitaliseringsdirektoratet (Digdir). Formålet er å gjøre det enklere for norske virksomheter å ta i bruk KI på en måte som er trygg, lovlig og verdiskapende, enten du driver en liten privat bedrift eller jobber i en offentlig virksomhet.</p>
+      </div>
+    </section>
 
     <!-- Alternating stubs -->
     <div class="om-oss-seksjoner">
-      {seksjoner.map((seksjon, index) => (
+      {stubs.map((stub, index) => (
         <section class:list={['om-oss-stub', index % 2 === 0 ? 'stub--image-left' : 'stub--image-right']}>
           <div class="stub-image" aria-hidden="true">
-            {seksjon.bilde ? (
-              <img src={getMediaUrl(seksjon.bilde)} alt={seksjon.bilde.alternativeText || seksjon.tittel} loading="lazy" />
-            ) : (
-              <div class="stub-image-placeholder"></div>
-            )}
+            <div class="stub-image-placeholder"></div>
           </div>
           <div class="stub-content">
-            <h2 class="stub-title">{seksjon.tittel}</h2>
-            <div class="stub-text">
-              <BlocksRenderer blocks={seksjon.tekst} />
-            </div>
+            <h2 class="stub-title">{stub.tittel}</h2>
+            <p class="stub-text">{stub.tekst}</p>
           </div>
         </section>
       ))}
@@ -114,15 +112,12 @@ const seoDesc = omOss?.seoBeskrivelse || 'Om KI Norge – en nasjonal satsing fo
     margin: 0 auto;
   }
 
-  :global(.om-oss-intro-text) {
+  .om-oss-intro-text {
     font-size: 1.5rem;
     line-height: 1.7;
     color: #000;
     text-align: center;
     letter-spacing: 0.005em;
-  }
-
-  :global(.om-oss-intro-text p) {
     margin: 0;
   }
 
@@ -205,9 +200,6 @@ const seoDesc = omOss?.seoBeskrivelse || 'Om KI Norge – en nasjonal satsing fo
     color: rgba(0, 0, 0, 0.75);
     line-height: 1.3;
     letter-spacing: -0.0025em;
-  }
-
-  :global(.stub-text p) {
     margin: 0;
   }
 </style>

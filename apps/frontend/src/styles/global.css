@@ -26,8 +26,8 @@
   --stitch-bg-dark: #101822;
   --stitch-surface-dark: #1a2332;
 
-  /* Font family override for Public Sans */
-  --ds-font-family: 'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Font family */
+  --ds-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Dark mode */

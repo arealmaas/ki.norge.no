@@ -1,42 +1,12 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
-import { Heading, Paragraph, Link, Details, Button } from '@digdir/designsystemet-react';
-import { getFAQs, getMerkelapper, getPlainText, type FAQ, type Merkelapp } from '../lib/umbraco';
+import ContactCard from '../components/shared/ContactCard.astro';
+import { getFAQs, getPlainText, type FAQ } from '../lib/umbraco';
 import { faqPageSchema } from '../lib/seo';
 
-// Fetch FAQs and categories from Umbraco
-let faqs: FAQ[] = [];
-let merkelapper: Merkelapp[] = [];
-try {
-  const [faqRes, merkelapperRes] = await Promise.all([
-    getFAQs(),
-    getMerkelapper(),
-  ]);
-  faqs = faqRes.data;
-  merkelapper = merkelapperRes.data;
-} catch (error) {
-  console.error('Failed to fetch FAQs:', error);
-}
-
-// Group FAQs by category
-const groupedFaqs = faqs.reduce((acc, faq) => {
-  const kategoriNavn = faq.kategori?.navn || 'Annet';
-  const kategoriSlug = faq.kategori?.slug || 'annet';
-  if (!acc[kategoriSlug]) {
-    acc[kategoriSlug] = { navn: kategoriNavn, items: [] };
-  }
-  acc[kategoriSlug].items.push(faq);
-  return acc;
-}, {} as Record<string, { navn: string; items: FAQ[] }>);
-
-const faqCategories = Object.entries(groupedFaqs).map(([slug, group]) => ({
-  slug,
-  title: group.navn,
-  items: group.items,
-}));
-
-const hasCategories = faqCategories.length > 1;
+const faqRes = await getFAQs();
+const faqs = faqRes.data;
 
 const faqJsonLd = faqPageSchema(
   faqs.map(faq => ({ question: faq.sporsmal, answer: getPlainText(faq.svar) }))
@@ -45,169 +15,64 @@ const faqJsonLd = faqPageSchema(
 
 <Layout title="Vanlige spørsmål (FAQ)" description="Svar på vanlige spørsmål om KI Norge, den regulatoriske sandkassen og kunstig intelligens i offentlig sektor.">
   <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
-  <section class="page-hero">
-    <div class="hero-container">
-      <span class="page-badge">Hjelp</span>
-      <Heading level={1} size="2xlarge" className="page-title">Vanlige spørsmål</Heading>
-      <Paragraph size="large" className="page-lead">
-        Her finner du svar på de vanligste spørsmålene om KI Norge og våre tjenester.
-      </Paragraph>
-    </div>
-  </section>
 
-  <div class="page-content">
-    {hasCategories && (
-      <nav class="category-nav" aria-label="FAQ-kategorier">
-        <div class="filter-pills">
-          <button class="filter-pill filter-pill--active" data-category="alle">Alle</button>
-          {faqCategories.map(cat => (
-            <button class="filter-pill" data-category={cat.slug}>{cat.title}</button>
+  <div class="faq-page">
+    <div class="faq-title-bar">
+      <h1 class="faq-title">Vanlige spørsmål</h1>
+      <p class="faq-lead">Her finner du svar på de vanligste spørsmålene om KI Norge og våre tjenester.</p>
+    </div>
+
+    <div class="faq-content">
+      {faqs.length > 0 ? (
+        <div class="faq-list">
+          {faqs.map(faq => (
+            <details class="faq-item">
+              <summary class="faq-question">{faq.sporsmal}</summary>
+              <div class="faq-answer">
+                <BlocksRenderer blocks={faq.svar} />
+              </div>
+            </details>
           ))}
         </div>
-      </nav>
-    )}
-
-    <div class="faq-sections">
-      {faqCategories.length > 0 ? (
-        faqCategories.map((cat) => (
-          <section class="faq-category" data-faq-category={cat.slug}>
-            {hasCategories && (
-              <Heading level={2} size="medium" className="category-heading">{cat.title}</Heading>
-            )}
-            <div class="faq-list">
-              {cat.items.map((faq, index) => (
-                <Details client:load className="faq-item">
-                  <Details.Summary>
-                    <span class="faq-number">{String(index + 1).padStart(2, '0')}</span>
-                    <span class="faq-text">{faq.sporsmal}</span>
-                  </Details.Summary>
-                  <Details.Content>
-                    <div class="faq-answer">
-                      <BlocksRenderer blocks={faq.svar} />
-                    </div>
-                  </Details.Content>
-                </Details>
-              ))}
-            </div>
-          </section>
-        ))
       ) : (
-        <div class="empty-state-box">
-          <span class="material-symbols-outlined">help</span>
-          <Paragraph>Ingen ofte stilte spørsmål funnet.</Paragraph>
-        </div>
+        <p class="empty-state">Ingen ofte stilte spørsmål funnet.</p>
       )}
     </div>
 
-    <section class="contact-cta">
-      <div class="cta-icon-wrapper">
-        <span class="material-symbols-outlined cta-icon">support_agent</span>
-      </div>
-      <Heading level={2} size="medium" className="cta-title">Fant du ikke svar på spørsmålet ditt?</Heading>
-      <Paragraph className="cta-description">
-        Vi er her for å hjelpe deg. Ta kontakt med oss så svarer vi så raskt vi kan.
-      </Paragraph>
-      <Button asChild variant="primary" size="medium">
-        <a href="/kontakt">Kontakt oss</a>
-      </Button>
-    </section>
+    <ContactCard />
   </div>
 </Layout>
 
-<script>
-  // Category filter functionality
-  document.addEventListener('DOMContentLoaded', () => {
-    const pills = document.querySelectorAll<HTMLButtonElement>('.filter-pill');
-    const categories = document.querySelectorAll<HTMLElement>('.faq-category');
-
-    if (pills.length === 0) return;
-
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const category = pill.dataset.category;
-
-        // Update active pill
-        pills.forEach(p => p.classList.remove('filter-pill--active'));
-        pill.classList.add('filter-pill--active');
-
-        // Show/hide categories
-        categories.forEach(cat => {
-          if (category === 'alle' || cat.dataset.faqCategory === category) {
-            cat.style.display = '';
-          } else {
-            cat.style.display = 'none';
-          }
-        });
-      });
-    });
-  });
-</script>
-
 <style>
-  .page-hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    padding: var(--ds-size-12) var(--ds-size-4);
+  .faq-page {
+    padding-top: var(--ds-size-4);
   }
 
-  .hero-container {
+  .faq-title-bar {
     max-width: 800px;
     margin: 0 auto;
-    text-align: center;
+    padding: 24px var(--ds-size-4) 24px;
+    border-bottom: 1px solid #b8bcc1;
   }
 
-  .page-badge {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
+  .faq-title {
+    font-size: 1.625rem;
+    font-weight: 500;
+    margin: 0 0 8px;
+    color: #000;
   }
 
-  :global(.page-title) {
-    margin: 0 0 var(--ds-size-4);
-  }
-
-  :global(.page-lead) {
+  .faq-lead {
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: rgba(0, 0, 0, 0.65);
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
-  .page-content {
+  .faq-content {
     max-width: 800px;
     margin: 0 auto;
-    padding: var(--ds-size-10) var(--ds-size-4);
-  }
-
-  /* Category filter pills */
-  .category-nav {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  /* FAQ sections */
-  .faq-sections {
-    margin-bottom: var(--ds-size-12);
-  }
-
-  .faq-category {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  :global(.category-heading) {
-    margin: 0 0 var(--ds-size-4);
-    padding-bottom: var(--ds-size-2);
-    border-bottom: 2px solid var(--ds-color-accent-border-default);
+    padding: var(--ds-size-8) var(--ds-size-4);
   }
 
   .faq-list {
@@ -216,110 +81,71 @@ const faqJsonLd = faqPageSchema(
     gap: var(--ds-size-3);
   }
 
-  :global(.faq-item) {
-    background-color: var(--ds-color-neutral-surface-default);
-    border: 1px solid var(--ds-color-neutral-border-subtle);
-    border-radius: var(--ds-border-radius-lg);
-    transition: border-color 0.2s ease;
+  .faq-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s;
   }
 
-  :global(.faq-item:hover) {
-    border-color: var(--ds-color-accent-border-default);
+  .faq-item:hover {
+    border-color: #b8bcc1;
   }
 
-  :global(.faq-item summary) {
+  .faq-item[open] {
+    border-color: #b8bcc1;
+  }
+
+  .faq-question {
     display: flex;
     align-items: center;
-    gap: var(--ds-size-4);
-    padding: var(--ds-size-5);
+    gap: 12px;
+    padding: 20px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #000;
     cursor: pointer;
+    list-style: none;
+    background: white;
   }
 
-  .faq-number {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 32px;
-    height: 32px;
-    background-color: var(--ds-color-accent-surface-default);
-    color: var(--ds-color-accent-text-default);
-    border-radius: var(--ds-border-radius-md);
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-bold);
+  .faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-question::before {
+    content: '';
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    transition: transform 0.2s ease;
   }
 
-  .faq-text {
-    flex: 1;
-    font-weight: var(--ds-font-weight-medium);
-    color: var(--ds-color-neutral-text-default);
+  .faq-item[open] > .faq-question::before {
+    transform: rotate(180deg);
   }
 
   .faq-answer {
-    padding: 0 var(--ds-size-5) var(--ds-size-5);
-    padding-left: calc(var(--ds-size-5) + 32px + var(--ds-size-4));
-    color: var(--ds-color-neutral-text-subtle);
+    padding: 0 24px 20px 56px;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.7);
   }
 
-  /* Empty state */
-  .empty-state-box {
+  .faq-answer :global(p) {
+    margin: 0 0 12px;
+  }
+
+  .faq-answer :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  .empty-state {
     text-align: center;
     padding: var(--ds-size-12);
-    background-color: var(--ds-color-neutral-surface-default);
-    border-radius: var(--ds-border-radius-lg);
-  }
-
-  .empty-state-box .material-symbols-outlined {
-    font-size: 48px;
-    color: var(--ds-color-neutral-text-subtle);
-    opacity: 0.5;
-    margin-bottom: var(--ds-size-4);
-  }
-
-  /* Contact CTA */
-  .contact-cta {
-    padding: var(--ds-size-10);
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-accent-surface-default) 0%,
-      var(--ds-color-neutral-background-default) 50%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    border-radius: var(--ds-border-radius-lg);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--ds-size-3);
-  }
-
-  .cta-icon-wrapper {
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(--ds-color-accent-base-default);
-    border-radius: var(--ds-border-radius-full);
-  }
-
-  .cta-icon {
-    font-size: 32px;
-    color: white;
-  }
-
-  :global(.cta-title) {
-    margin: 0;
-  }
-
-  :global(.cta-description) {
-    margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    max-width: 400px;
-  }
-
-  .contact-cta :global(a) {
-    text-decoration: none;
-    margin-top: var(--ds-size-2);
+    color: rgba(0, 0, 0, 0.5);
   }
 </style>
