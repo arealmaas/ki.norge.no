@@ -1,178 +1,163 @@
 ---
-import { Link } from '@digdir/designsystemet-react';
-import Logo from '../shared/Logo.astro';
-
-const resourceLinks = [
-  { href: '/veiledning', label: 'Veiledning' },
-  { href: '/sandkasse', label: 'Regulatorisk sandkasse' },
-  { href: '/eksempler', label: 'Eksempler' },
-  { href: '/artikler', label: 'Artikler' },
-  { href: '/faq', label: 'Ofte stilte spørsmål' },
-  { href: '/sok', label: 'Søk' },
-];
-
-const aboutLinks = [
-  { href: '/om-oss', label: 'Om oss' },
-  { href: '/kontakt', label: 'Kontakt oss' },
-  { href: '/personvern', label: 'Personvern' },
-  { href: '/tilgjengelighet', label: 'Tilgjengelighet' },
-];
+// Footer — new design with two-column layout
 ---
 
 <footer class="footer">
-  <div class="footer-main">
-    <div class="footer-container">
-      <!-- Brand Column -->
-      <div class="footer-brand">
-        <div class="footer-logo">
-          <Logo />
-        </div>
-        <p class="footer-description">
-          Et tverrsektorielt samarbeid for å fremme ansvarlig og sikker bruk av kunstig intelligens i den norske forvaltningen.
-        </p>
-      </div>
-
-      <!-- Resources Column -->
-      <div class="footer-section">
-        <h4 class="footer-heading">Innhold</h4>
-        <ul class="footer-list">
-          {resourceLinks.map((link) => (
-            <li>
-              <Link href={link.href} className="footer-link">
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <!-- About Column -->
-      <div class="footer-section">
-        <h4 class="footer-heading">Om portalen</h4>
-        <ul class="footer-list">
-          {aboutLinks.map((link) => (
-            <li>
-              <Link href={link.href} className="footer-link">
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+  <div class="footer-inner">
+    <div class="footer-left">
+      <h3 class="footer-brand">KI Norge</h3>
+      <p class="footer-description">
+        Et tverrsektorielt samarbeid for å fremme ansvarlig og sikker bruk av kunstig intelligens i den norske forvaltningen.
+      </p>
+      <div class="footer-social">
+        <a href="#" class="footer-social-icon" aria-label="Instagram">
+          <div class="social-circle"><img class="social-icon" src="/Instagram.svg" alt="Instagram" /></div>
+        </a>
+        <a href="#" class="footer-social-icon" aria-label="LinkedIn">
+          <div class="social-circle"><img class="social-icon" src="/LinkenIn.svg" alt="LinkedIn" /></div>
+        </a>
+        <a href="#" class="footer-social-icon" aria-label="X">
+          <div class="social-circle"><img class="social-icon" src="/X.svg" alt="X" /></div>
+        </a>
       </div>
     </div>
-  </div>
-
-  <!-- Copyright -->
-  <div class="footer-bottom">
-    <div class="footer-container">
-      <p class="copyright">
-        {new Date().getFullYear()} Digitaliseringsdirektoratet
-      </p>
+    <div class="footer-right">
+      <div class="footer-nav-col">
+        <a href="/om-oss" class="footer-nav-link">Om KI Norge</a>
+        <a href="/kontakt" class="footer-nav-link">Kontakt</a>
+      </div>
+      <div class="footer-nav-col">
+        <a href="/personvern" class="footer-nav-link">Personvern og informasjonskapsler</a>
+        <a href="/tilgjengelighet" class="footer-nav-link">Tilgjengelighet</a>
+        <button type="button" class="footer-nav-link footer-nav-button">Endre samtykke for informasjonskapsler</button>
+      </div>
     </div>
   </div>
 </footer>
 
 <style>
   .footer {
-    background-color: var(--ds-color-neutral-surface-default);
-    border-top: 1px solid var(--ds-color-neutral-border-subtle);
+    background: linear-gradient(
+      135deg,
+      #cedbfb 0%,
+      #d8cef5 30%,
+      #e8d5f0 50%,
+      #d4c8eb 70%,
+      #cedbfb 100%
+    );
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
     margin-top: auto;
   }
 
-  .footer-container {
+  .footer-inner {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 0 var(--ds-size-4);
-  }
-
-  @media (min-width: 1024px) {
-    .footer-container {
-      padding: 0 var(--ds-size-10);
-    }
-  }
-
-  .footer-main {
-    padding: var(--ds-size-12) 0;
-  }
-
-  .footer-main .footer-container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--ds-size-10);
+    padding: 80px 64px 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
   }
 
   @media (min-width: 768px) {
-    .footer-main .footer-container {
-      grid-template-columns: 2fr 1fr 1fr;
-      gap: var(--ds-size-12);
+    .footer-inner {
+      flex-direction: row;
+      gap: 120px;
     }
   }
 
-  .footer-brand {
+  .footer-left {
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-6);
+    gap: 16px;
+    flex: 1;
   }
 
-  .footer-logo {
-    display: flex;
-    align-items: center;
-    gap: var(--ds-size-3);
-    color: var(--ds-color-accent-base-default);
+  .footer-brand {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    color: #000;
   }
 
   .footer-description {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
-    font-size: 0.875rem;
     line-height: 1.6;
-    max-width: 320px;
+    max-width: 360px;
   }
 
-  .footer-section {
+  .footer-social {
     display: flex;
-    flex-direction: column;
-    gap: var(--ds-size-4);
+    gap: 12px;
+    margin-top: 8px;
   }
 
-  .footer-heading {
-    margin: 0;
-    color: var(--ds-color-neutral-text-default);
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .footer-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--ds-size-2);
-  }
-
-  :global(.footer-link) {
-    color: var(--ds-color-neutral-text-subtle);
+  .footer-social-icon {
     text-decoration: none;
-    font-size: 0.875rem;
-    transition: color 0.2s ease;
   }
 
-  :global(.footer-link:hover) {
-    color: var(--ds-color-accent-text-default);
+  .social-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* Copyright */
-  .footer-bottom {
-    padding: var(--ds-size-6) 0;
+  .social-circle:hover {
+    background-color: rgba(0, 0, 0, 0.25);
+    transition: background-color 0.2s ease;
+    fill: #fff;
+    stroke: #fff;
   }
 
-  .copyright {
-    margin: 0;
-    text-align: center;
-    color: var(--ds-color-neutral-text-subtle);
-    font-size: 0.75rem;
+  .social-icon {
+    width: 24px;
+    height: 24px;
+    margin: 6px;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 768px) {
+    .footer-right {
+      gap: 64px;
+    }
+  }
+
+  .footer-nav-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-nav-link {
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .footer-nav-link:hover {
+    opacity: 0.7;
+  }
+
+  .footer-nav-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
   }
 </style>
