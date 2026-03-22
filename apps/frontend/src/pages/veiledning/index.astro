@@ -1,53 +1,317 @@
 ---
+/**
+ * Veiledning overview — "Lag et KI-system" landing page.
+ * Based on Figma design 564:9097.
+ * TODO: Make sections CMS-driven. Currently hardcoded.
+ * TODO: Clarify long-term card topics with design/content team.
+ */
 import Layout from '../../components/layout/Layout.astro';
-import { getVeiledningGuider } from '../../lib/umbraco';
 
-const guidesRes = await getVeiledningGuider();
-const guides = guidesRes.data;
+const forDuGarIGang = [
+  { title: 'Definer behovet og hva KI skal løse', desc: '', href: '#' },
+  { title: 'Finn ut hvilket risikonivå løsningen din har', desc: 'Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.', href: '#' },
+  { title: 'Forstå KI-loven og GDPR', desc: 'Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.', href: '#' },
+  { title: 'Forstå krav til data og hva du må gjøre', desc: '', href: '/veiledning/bruk-data-rett' },
+];
+
+const utvikleSystemet = [
+  { title: 'Dette er kravene du må følge for utforming', href: '#' },
+  { title: 'Valg av språkmodell – utvikle noe eget eller bruke en på markedet', href: '#' },
+  { title: 'Dokumentasjon og testing', href: '#' },
+  { title: 'Tiltak for sikkerhet og hindre misbruk', href: '#' },
+];
 ---
-<Layout title="Veiledning">
-  <div class="guide-listing">
-    <h1>Veiledning</h1>
-    <div class="guide-list">
-      {guides.map(guide => (
-        <a href={`/veiledning/${guide.slug}`} class="guide-card">
-          <h2>{guide.tittel}</h2>
-        </a>
-      ))}
-    </div>
+
+<Layout title="Veiledning" description="Vi veileder deg gjennom regler, krav og beste praksis for å lage et KI-system.">
+  <div class="veiledning-overview">
+    <!-- Hero -->
+    <section class="veil-hero">
+      <div class="veil-hero-inner">
+        <div class="veil-hero-text">
+          <span class="veil-hero-label">Veiledning</span>
+          <h1 class="veil-hero-title">Lag et KI-system</h1>
+          <p class="veil-hero-subtitle">Vi veileder deg gjennom regler, krav og beste praksis.</p>
+        </div>
+        <div class="veil-hero-image">
+          <div class="veil-hero-placeholder"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Før du går i gang -->
+    <section class="veil-section">
+      <div class="veil-section-inner">
+        <h2 class="veil-section-heading">Før du går i gang</h2>
+        <div class="veil-cards veil-cards--4">
+          {forDuGarIGang.map(card => (
+            <a href={card.href} class:list={['veil-card', { 'veil-card--disabled': card.href === '#' }]}>
+              <div class="veil-card-content">
+                <h3 class="veil-card-title">{card.title}</h3>
+                {card.desc && <p class="veil-card-desc">{card.desc}</p>}
+              </div>
+              <span class="veil-card-arrow">→</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Utvikle KI-systemet -->
+    <section class="veil-section">
+      <div class="veil-section-inner">
+        <h2 class="veil-section-heading">Utvikle KI-systemet</h2>
+        <div class="veil-cards veil-cards--4">
+          {utvikleSystemet.map(card => (
+            <a href={card.href} class:list={['veil-card', { 'veil-card--disabled': card.href === '#' }]}>
+              <div class="veil-card-content">
+                <h3 class="veil-card-title">{card.title}</h3>
+              </div>
+              <span class="veil-card-arrow">→</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Verktøy -->
+    <section class="veil-tools">
+      <div class="veil-section-inner">
+        <h2 class="veil-section-heading">Verktøy</h2>
+        <div class="veil-cards veil-cards--2">
+          <a href="#" class="veil-tool-card">
+            <div class="veil-tool-text">
+              <h3 class="veil-tool-title">Bias explorer</h3>
+              <p class="veil-tool-desc">Utforsk hvordan dataskjevheter blir til modellskjevheter</p>
+            </div>
+            <div class="veil-tool-image"></div>
+            <span class="veil-tool-link">Utforsk →</span>
+          </a>
+          <a href="#" class="veil-tool-card">
+            <div class="veil-tool-text">
+              <h3 class="veil-tool-title">Risikovurdering</h3>
+              <p class="veil-tool-desc">Modellen til Marie</p>
+            </div>
+            <div class="veil-tool-image"></div>
+            <span class="veil-tool-link">Utforsk →</span>
+          </a>
+        </div>
+      </div>
+    </section>
   </div>
 </Layout>
+
 <style>
-  .guide-listing {
-    max-width: 800px;
+  .veiledning-overview {
+    padding-top: var(--ds-size-4);
+  }
+
+  /* Hero */
+  .veil-hero {
+    padding: 48px 24px 64px;
+    background: #e8f4ec;
+  }
+
+  .veil-hero-inner {
+    max-width: 1120px;
     margin: 0 auto;
-    padding: var(--ds-size-8) var(--ds-size-4);
+    display: flex;
+    align-items: center;
+    gap: 48px;
   }
-  .guide-listing h1 {
-    font-size: 2rem;
+
+  .veil-hero-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .veil-hero-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  .veil-hero-title {
+    font-size: 40px;
+    font-weight: 400;
+    color: #000;
+    margin: 0 0 12px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .veil-hero-subtitle {
+    font-size: 18px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.65);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .veil-hero-image {
+    width: 300px;
+    flex-shrink: 0;
+  }
+
+  .veil-hero-placeholder {
+    width: 100%;
+    height: 200px;
+    background: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 8px;
+    opacity: 0.4;
+  }
+
+  @media (max-width: 768px) {
+    .veil-hero-image {
+      display: none;
+    }
+  }
+
+  /* Sections */
+  .veil-section {
+    padding: 48px 24px;
+  }
+
+  .veil-section-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .veil-section-heading {
+    font-size: 28px;
     font-weight: 700;
-    margin: 0 0 var(--ds-size-8);
+    font-style: italic;
+    color: #000;
+    margin: 0 0 24px;
+    line-height: 1.3;
   }
-  .guide-list {
+
+  /* Cards grid */
+  .veil-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .veil-cards--4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .veil-cards--2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .veil-cards--4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .veil-card {
     display: flex;
     flex-direction: column;
-    gap: var(--ds-size-4);
-  }
-  .guide-card {
-    display: block;
-    padding: var(--ds-size-6);
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    justify-content: space-between;
+    padding: 20px;
+    background: #e2f0fc;
     border-radius: 8px;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.15s;
+    min-height: 160px;
+    transition: box-shadow 0.15s;
   }
-  .guide-card:hover {
-    border-color: #7c3aed;
+
+  .veil-card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   }
-  .guide-card h2 {
+
+  .veil-card--disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  .veil-card-content {
+    flex: 1;
+  }
+
+  .veil-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    color: #000;
+    line-height: 1.4;
+  }
+
+  .veil-card-desc {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.6);
     margin: 0;
-    font-size: 1.25rem;
+    line-height: 1.5;
+  }
+
+  .veil-card-arrow {
+    font-size: 18px;
+    color: rgba(0, 0, 0, 0.4);
+    margin-top: 12px;
+    align-self: flex-end;
+  }
+
+  /* Tools section */
+  .veil-tools {
+    padding: 48px 24px 64px;
+    background: #e8f4ec;
+  }
+
+  .veil-tool-card {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s;
+    min-height: 200px;
+  }
+
+  .veil-tool-card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .veil-tool-text {
+    margin-bottom: 16px;
+  }
+
+  .veil-tool-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: #000;
+  }
+
+  .veil-tool-desc {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .veil-tool-image {
+    flex: 1;
+    background: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 8px;
+    min-height: 100px;
+    opacity: 0.4;
+  }
+
+  .veil-tool-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    margin-top: 12px;
+    align-self: flex-end;
   }
 </style>
