@@ -1,195 +1,71 @@
 ---
-import type { UmbracoBlock, UmbracoMedia } from '../../lib/umbraco';
-import { getMediaUrl, getPlainText } from '../../lib/umbraco';
-
-interface Props {
-  overskrift?: string;
-  tekst?: UmbracoBlock[];
-  bilde?: UmbracoMedia;
-}
-
-const { overskrift, tekst, bilde } = Astro.props;
-
-const heroImageUrl = bilde ? getMediaUrl(bilde) : '/frontpage-ai_robot-alpha.png';
-const heroImageAlt = bilde?.alternativeText || 'Illustrasjon av en robot';
-const subtitleText = tekst ? getPlainText(tekst) : '';
+// Hero — CSS gradient background (absolute, doesn't affect flow), centered bold headline
 ---
 
+<div class="hero-gradient" aria-hidden="true"></div>
 <section class="hero">
-  <img
-    class="hero-bg"
-    src="/frontend-top_gradient.png"
-    alt=""
-    aria-hidden="true"
-  />
   <div class="hero-container">
-    <div class="hero-content">
-      {overskrift ? (
-        <h1 class="hero-title">
-          <span class="hero-title-large">{overskrift}</span>
-        </h1>
-      ) : (
-        <h1 class="hero-title">
-          <span class="hero-title-small">Norge satser på</span>
-          <span class="hero-title-large">trygg og verdiskapende</span>
-          <span class="hero-title-large">bruk av <strong>kunstig intelligens</strong></span>
-        </h1>
-      )}
-      {subtitleText && (
-        <p class="hero-subtitle">{subtitleText}</p>
-      )}
-    </div>
-    <div class="hero-visual">
-      <img
-        class="hero-robot"
-        src={heroImageUrl}
-        alt={heroImageAlt}
-        width="500"
-        height="500"
-      />
-    </div>
+    <h1 class="hero-title">Innovativ og ansvarlig utvikling og bruk av kunstig intelligens</h1>
   </div>
 </section>
 
 <style>
-  .hero {
-    position: relative;
-    overflow: hidden;
-    margin-top: -72px;
-    padding: var(--ds-size-12) var(--ds-size-4);
-    padding-top: 100px;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-  }
-
-  @media (min-width: 768px) {
-    .hero {
-      padding: var(--ds-size-14) var(--ds-size-4);
-      padding-top: 120px;
-      min-height: 500px;
-    }
-  }
-
-  .hero-bg {
+  .hero-gradient {
     position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 55%;
+    pointer-events: none;
+    background: 
+      linear-gradient(135deg,#e8d5f5 0%,#f0c6d8 20%,#d4bce8 40%,#c9d0f0 60%,#b8cfe3 80%,#d5e3f5 100%);
     z-index: 0;
   }
 
-  .hero-container {
+  .hero {
     position: relative;
     z-index: 1;
-    max-width: 1280px;
-    margin: 0 auto;
-    width: 100%;
+    margin-top: -72px;
+    height: 537px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--ds-size-8);
+    justify-content: center;
   }
 
-  @media (min-width: 1024px) {
-    .hero-container {
-      flex-direction: row;
-      align-items: center;
-    }
-  }
-
-  .hero-content {
-    flex: 1;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-content {
-      max-width: 65%;
-    }
+  .hero-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
   }
 
   .hero-title {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 68px;
     color: #000000;
+    margin: 0;
+    margin-top: 80px;
+    letter-spacing: -0.02em;
   }
 
-  .hero-title-small {
-    font-size: 24px;
-    font-weight: 700;
+  @media (max-width: 1024px) {
+    .hero-title {
+      font-size: 48px;
+      line-height: 52px;
+    }
   }
 
-  @media (min-width: 768px) {
-    .hero-title-small {
+  @media (max-width: 640px) {
+    .hero {
+      height: 400px;
+    }
+    .hero-gradient {
+      height: 500px;
+    }
+    .hero-title {
       font-size: 32px;
-    }
-  }
-
-  .hero-title-large {
-    font-size: 40px;
-    font-weight: 700;
-  }
-
-  @media (min-width: 768px) {
-    .hero-title-large {
-      font-size: 56px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .hero-title-large {
-      font-size: 64px;
-    }
-  }
-
-  .hero-title-large strong {
-    font-weight: 900;
-  }
-
-  .hero-subtitle {
-    margin: var(--ds-size-4) 0 0;
-    font-size: 1.125rem;
-    line-height: 1.6;
-    color: rgba(0, 0, 0, 0.75);
-    max-width: 600px;
-  }
-
-  @media (min-width: 768px) {
-    .hero-subtitle {
-      font-size: 1.25rem;
-    }
-  }
-
-  .hero-visual {
-    flex-shrink: 0;
-  }
-
-  @media (min-width: 1024px) {
-    .hero-visual {
-      flex: 0 0 auto;
-    }
-  }
-
-  .hero-robot {
-    width: 280px;
-    height: auto;
-    display: block;
-    filter: contrast(1.3);
-  }
-
-  @media (min-width: 768px) {
-    .hero-robot {
-      width: 380px;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .hero-robot {
-      width: 440px;
+      line-height: 38px;
     }
   }
 </style>

@@ -1,45 +1,616 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import Hero from '../components/landing/Hero.astro';
-import GuidanceCards from '../components/landing/GuidanceCards.astro';
-import ExamplesShowcase from '../components/landing/ExamplesShowcase.astro';
-import ThreeTips from '../components/landing/ThreeTips.astro';
-import SandboxSection from '../components/landing/SandboxSection.astro';
-import UpcomingEvents from '../components/landing/UpcomingEvents.astro';
-import { getEksempler, getPlainText, getForside, type Eksempel } from '../lib/umbraco';
 import { websiteSchema } from '../lib/seo';
 
-// Fetch examples for ExamplesShowcase section
-const eksemplerRes = await getEksempler();
-const examples = eksemplerRes.data.map(e => ({
-  title: e.tittel,
-  organization: e.organisasjon || 'Offentlig sektor',
-  slug: e.slug,
-  description: e.beskrivelse ? getPlainText(e.beskrivelse, 120) : undefined,
-  image: e.bilde?.url,
-}));
-
-// Fetch homepage content from CMS (optional)
-let forside = null;
-try {
-  forside = await getForside();
-} catch (error) {
-  // Homepage content is optional
-}
-
-const title = forside?.seoTittel || 'Hjem';
-const seoDescription = forside?.seoBeskrivelse || 'KI Norge - Norges nasjonale strategi for kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.';
-const seoImage = forside?.seoBilde?.url;
-
+const title = 'Hjem';
+const seoDescription = 'KI Norge - Norges nasjonale strategi for kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.';
 const websiteJsonLd = websiteSchema(seoDescription);
 ---
 
-<Layout title={title} description={seoDescription} ogImage={seoImage}>
+<Layout title={title} description={seoDescription}>
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
-  <Hero overskrift={forside?.heroOverskrift} tekst={forside?.heroTekst} bilde={forside?.heroBilde} />
-  <GuidanceCards />
-  <ExamplesShowcase examples={examples} />
-  <ThreeTips tittel={forside?.raadTittel} tips={forside?.tips} />
-  <SandboxSection tittel={forside?.sandkasseTittel} tekst={forside?.sandkasseTekst} url={forside?.sandkasseUrl} />
-  <UpcomingEvents arrangementer={forside?.arrangementer} />
+  <Hero />
+
+  <!-- Veiledning -->
+  <section class="veiledning">
+    <div class="veiledning-container">
+      <h2 class="section-heading">Veiledning</h2>
+      <div class="veiledning-grid">
+        <a href="/veiledning" class="veiledning-card">
+          <span class="veiledning-card-top">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path fill="#111d46" fill-rule="evenodd" d="M14.525 2.167c-.754-.12-1.61.093-2.525.826-.914-.732-1.768-.947-2.522-.829-.835.132-1.354.65-1.503.8l-.005.006-.006.006c-.15.149-.668.667-.8 1.502-.141.898.19 1.937 1.306 3.052l3 3a.75.75 0 0 0 1.06 0l3-3c1.116-1.116 1.445-2.158 1.303-3.055-.133-.836-.651-1.354-.797-1.5l-.011-.01c-.146-.147-.664-.665-1.5-.798M9.03 4.03c.113-.112.341-.33.682-.384.289-.046.873 0 1.758.884a.75.75 0 0 0 1.06 0c.884-.884 1.47-.928 1.76-.881.343.054.572.273.68.381.107.108.327.337.381.68.047.29.003.876-.881 1.76L12 8.94 9.53 6.47C8.645 5.584 8.6 5 8.646 4.712c.053-.34.272-.57.384-.682M21.75 15.22c0-1.797-1.918-2.943-3.5-2.092l-2.633 1.416a2.48 2.48 0 0 0-.668-1.513c-.466-.49-1.138-.78-1.949-.78h-3c-.095 0-.259-.045-.535-.178-.105-.05-.208-.104-.321-.164l-.084-.044a6 6 0 0 0-.456-.22c-.563-.238-1.386-.394-2.604-.394-1.754 0-2.753.755-3.268 1.614a3.47 3.47 0 0 0-.482 1.614v.021L3 14.5h-.75V19c0 .323.207.61.513.712l3 1A.8.8 0 0 0 6 20.75h9.298a2.75 2.75 0 0 0 1.718-.603l3.843-3.073c.563-.451.891-1.134.891-1.855M13 17.25c.518 0 .98-.118 1.366-.331l4.595-2.47a.875.875 0 0 1 .96 1.453l-3.842 3.074a1.25 1.25 0 0 1-.78.274H6.121l-2.372-.79v-3.958l.003-.045a1.968 1.968 0 0 1 .265-.82c.235-.392.736-.887 1.982-.887 1.11 0 1.711.145 2.02.276.097.04.207.096.346.168l.073.038c.114.06.245.129.375.192.303.146.729.326 1.186.326h3c.439 0 .705.148.863.314a1 1 0 0 1 .262.686c0 .263-.094.51-.262.686-.158.166-.424.314-.863.314h-3a.75.75 0 0 0 0 1.5z" clip-rule="evenodd"/>
+            </svg>
+            <span class="veiledning-card-title">Vi skal ta i bruk KI</span>
+          </span>
+          <div class="veiledning-card-illustration"></div>
+          <span class="veiledning-card-desc">For deg som vil ta i bruk ferdig trent KI &rarr;</span>
+        </a>
+        <a href="/veiledning/bruk-data-rett" class="veiledning-card">
+          <span class="veiledning-card-top">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 7L12 3L4 7V17L12 21L20 17V7Z" stroke="#111d46" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 12L20 7" stroke="#111d46" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M12 12V21" stroke="#111d46" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M12 12L4 7" stroke="#111d46" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="veiledning-card-title">Vi skal lage et KI-system</span>
+          </span>
+          <div class="veiledning-card-illustration"></div>
+          <span class="veiledning-card-desc">For deg som ønsker å bygge en KI-løsning selv &rarr;</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Aktuelt -->
+  <section class="aktuelt">
+    <div class="aktuelt-container">
+      <h2 class="section-heading">Aktuelt</h2>
+      <div class="aktuelt-grid">
+        <a href="/eksempler/kunnskapsassistenten" class="aktuelt-card">
+          <h3 class="aktuelt-card-title">Kunnskapsassistenten</h3>
+          <span class="aktuelt-tag">Lær av andre</span>
+          <div class="aktuelt-card-image"></div>
+        </a>
+        <a href="#" class="aktuelt-card">
+          <h3 class="aktuelt-card-title">Innbyggerne kan chatte med kommunen på 90 ulike språk</h3>
+          <span class="aktuelt-tag">Lær av andre</span>
+          <div class="aktuelt-card-image"></div>
+        </a>
+        <a href="#" class="aktuelt-card">
+          <h3 class="aktuelt-card-title">KI-regnekraft i Norge: Status, utvikling og behov fremover</h3>
+          <span class="aktuelt-tag">Nyhet</span>
+          <div class="aktuelt-card-image"></div>
+        </a>
+      </div>
+      <a href="/eksempler" class="aktuelt-link">
+        <span class="aktuelt-link-circle">→</span>
+        Finn inspirasjon og lær av andre
+      </a>
+    </div>
+  </section>
+
+  <!-- Tre råd -->
+  <section class="tre-raad">
+    <div class="tre-raad-container">
+      <h2 class="tre-raad-heading">Tre råd før du går i gang med KI</h2>
+      <div class="tre-raad-grid">
+        <div class="tre-raad-card">
+          <div class="tre-raad-illustration"></div>
+          <h3 class="tre-raad-card-title">Start med problemet</h3>
+          <p class="tre-raad-card-desc">Definer klart hva du ønsker å oppnå før du velger teknologi. Gode KI-prosjekter starter med et tydelig behov.</p>
+        </div>
+        <div class="tre-raad-card">
+          <div class="tre-raad-illustration"></div>
+          <h3 class="tre-raad-card-title">Forstå dataene dine</h3>
+          <p class="tre-raad-card-desc">Kartlegg hvilke data du har tilgang til, kvaliteten på dem, og om de er egnet for formålet.</p>
+        </div>
+        <div class="tre-raad-card">
+          <div class="tre-raad-illustration"></div>
+          <h3 class="tre-raad-card-title">Sjekk rammer og ansvar</h3>
+          <p class="tre-raad-card-desc">Forstå regelverket som gjelder for ditt bruksområde. Sørg for at løsningen ivaretar personvern og etikk.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sandkasse -->
+  <section class="sandkasse">
+    <div class="sandkasse-container">
+      <a href="/sandkasse" class="sandkasse-card">
+        <h2 class="sandkasse-title">Regulatorisk sandkasse for kunstig intelligens</h2>
+        <div class="sandkasse-bottom">
+          <p class="sandkasse-desc">I den regulatoriske sandkassen får du råd og veiledning som hjelper deg å utvikle et KI-system som følger loven.</p>
+          <span class="sandkasse-arrow">→</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Arrangement -->
+  <section class="arrangement">
+    <div class="arrangement-container">
+      <h2 class="section-heading">Arrangement</h2>
+      <div class="arrangement-list">
+        <a href="#" class="arrangement-card">
+          <div class="arrangement-date-box">
+            <span class="arrangement-day">13</span>
+            <span class="arrangement-month">august</span>
+            <span class="arrangement-year">2025</span>
+          </div>
+          <div class="arrangement-info">
+            <h3 class="arrangement-title">Hvem har makten til å digitalisere Norge?</h3>
+            <div class="arrangement-meta">
+              <span class="arrangement-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                09:00–11:00
+              </span>
+              <span class="arrangement-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+                Vitensenteret Arendal
+              </span>
+              <span class="arrangement-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Digitalisering og samordning
+              </span>
+            </div>
+          </div>
+        </a>
+        <a href="#" class="arrangement-card">
+          <div class="arrangement-date-box">
+            <span class="arrangement-day">25</span>
+            <span class="arrangement-month">august</span>
+            <span class="arrangement-year">2025</span>
+          </div>
+          <div class="arrangement-info">
+            <h3 class="arrangement-title">Modernisering Altinn - Webinar om samtykketjenesten</h3>
+            <div class="arrangement-meta">
+              <span class="arrangement-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><path d="M12 7V12L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                10:00–11:00
+              </span>
+              <span class="arrangement-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="9" r="2.5" stroke="currentColor" stroke-width="1.5"/></svg>
+                Teams
+              </span>
+              <span class="arrangement-meta-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Fellesløsninger Altinn
+              </span>
+            </div>
+          </div>
+        </a>
+      </div>
+      <div class="arrangement-links">
+        <a href="/arrangementer" class="arrangement-bottom-link">
+          <span class="arrangement-link-circle" style="background-color: #B8CFE3;">→</span>
+          Se kommende arrangement
+        </a>
+        <a href="/arrangementer/avholdte" class="arrangement-bottom-link">
+          <span class="arrangement-link-circle" style="background-color: #FFD7E9;">→</span>
+          Se avholdte arrangement
+        </a>
+      </div>
+    </div>
+  </section>
 </Layout>
+
+<style>
+  /* Shared */
+  .section-heading {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.3;
+    margin: 0 0 32px;
+    color: #000;
+  }
+
+  /* Veiledning */
+  .veiledning {
+    position: relative;
+    z-index: 1;
+    padding: 0 24px 64px;
+  }
+  .veiledning-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 96px;
+  }
+  .veiledning-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  @media (min-width: 768px) {
+    .veiledning-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .veiledning-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    background-color: #e2f0fc;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease;
+    aspect-ratio: 504 / 357;
+    justify-content: space-between;
+  }
+  .veiledning-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .veiledning-card-top {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .veiledning-card-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #111d46;
+  }
+  .veiledning-card-illustration {
+    width: 100%;
+    height: 180px;
+    background-color: #d9d9d9;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+  .veiledning-card-desc {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(35, 44, 60, 0.75);
+  }
+
+  /* Aktuelt */
+  .aktuelt {
+    padding: 64px 24px;
+  }
+  .aktuelt-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 96px;
+  }
+  .aktuelt-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    margin-bottom: 32px;
+  }
+  @media (min-width: 768px) {
+    .aktuelt-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .aktuelt-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #e2f0fc;
+    border-radius: 8px;
+    padding: 24px;
+    height: 384px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease;
+  }
+  .aktuelt-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .aktuelt-card-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: #000;
+    line-height: 1.3;
+  }
+  .aktuelt-tag {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #ffffff;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.7);
+    margin-bottom: 16px;
+    width: fit-content;
+  }
+  .aktuelt-card-image {
+    height: 185px;
+    background-color: #d9d9d9;
+    border-radius: 8px;
+    margin-top: auto;
+  }
+  .aktuelt-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.7);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .aktuelt-link:hover {
+    color: #000;
+  }
+  .aktuelt-link-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 37px;
+    height: 37px;
+    border-radius: 50%;
+    background-color: #B8CFE3;
+    font-size: 18px;
+    font-weight: 500;
+    color: #474747;
+    flex-shrink: 0;
+  }
+
+  /* Tre råd */
+  .tre-raad {
+    background-color: #eef7ff;
+    padding: 64px 24px;
+  }
+  .tre-raad-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 176px;
+    text-align: center;
+  }
+  .tre-raad-heading {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1a2a6d;
+    margin: 0 0 48px;
+  }
+  .tre-raad-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  @media (min-width: 768px) {
+    .tre-raad-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  .tre-raad-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+  }
+  .tre-raad-illustration {
+    width: 206px;
+    height: 218px;
+    background-color: #d9d9d9;
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  .tre-raad-card-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: #000;
+  }
+  .tre-raad-card-desc {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.55);
+    margin: 0;
+    line-height: 1.5;
+    max-width: 340px;
+  }
+
+  /* Sandkasse */
+  .sandkasse {
+    padding: 64px 24px;
+  }
+  .sandkasse-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 96px;
+  }
+  .sandkasse-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #f1e8d0;
+    border-radius: 8px;
+    padding: 24px 24px 32px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease;
+  }
+  .sandkasse-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .sandkasse-title {
+    font-size: 32px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    color: #000;
+    line-height: 1.3;
+  }
+  .sandkasse-bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .sandkasse-desc {
+    font-size: 24px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.7);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .sandkasse-arrow {
+    font-size: 24px;
+    color: rgba(0,0,0,0.7);
+    flex-shrink: 0;
+  }
+
+  /* Arrangement */
+  .arrangement {
+    padding: 56px 24px;
+  }
+  .arrangement-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 96px;
+  }
+  .arrangement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .arrangement-card {
+    display: flex;
+    height: 150px;
+    border: 1px solid #b8bcc1;
+    border-radius: 8px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s ease;
+  }
+  .arrangement-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .arrangement-date-box {
+    width: 152px;
+    min-width: 152px;
+    background-color: #ffd7e9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .arrangement-day {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+    color: #000;
+  }
+  .arrangement-month {
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
+  }
+  .arrangement-year {
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.6);
+  }
+  .arrangement-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 24px;
+    flex: 1;
+    min-width: 0;
+  }
+  .arrangement-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: #000;
+    line-height: 1.3;
+  }
+  .arrangement-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .arrangement-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(0,0,0,0.6);
+  }
+  .arrangement-meta-item svg {
+    flex-shrink: 0;
+  }
+  .arrangement-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+  .arrangement-bottom-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0,0,0,0.55);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .arrangement-bottom-link:hover {
+    color: #000;
+  }
+  .arrangement-link-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 37px;
+    height: 37px;
+    border-radius: 50%;
+    font-size: 18px;
+    font-weight: 500;
+    color: #474747;
+    flex-shrink: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .veiledning-container,
+    .aktuelt-container,
+    .sandkasse-container,
+    .arrangement-container {
+      padding: 0;
+    }
+    .tre-raad-container {
+      padding: 0;
+    }
+  }
+  @media (max-width: 640px) {
+    .section-heading {
+      font-size: 24px;
+    }
+    .veiledning-card-title {
+      font-size: 20px;
+    }
+    .aktuelt-card {
+      height: auto;
+      min-height: 280px;
+    }
+    .aktuelt-card-title {
+      font-size: 20px;
+    }
+    .tre-raad-heading {
+      font-size: 24px;
+    }
+    .tre-raad-illustration {
+      width: 160px;
+      height: 170px;
+    }
+    .sandkasse-title {
+      font-size: 24px;
+    }
+    .sandkasse-desc {
+      font-size: 18px;
+    }
+    .arrangement-card {
+      height: auto;
+      flex-direction: column;
+    }
+    .arrangement-date-box {
+      width: 100%;
+      min-width: auto;
+      padding: 12px;
+      flex-direction: row;
+      gap: 8px;
+    }
+    .arrangement-day {
+      font-size: 28px;
+    }
+    .arrangement-title {
+      font-size: 18px;
+    }
+  }
+</style>
