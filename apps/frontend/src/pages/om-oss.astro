@@ -8,25 +8,31 @@ import PartnersSection from '../components/shared/PartnersSection.astro';
 const stubs = [
   {
     tittel: 'Hvorfor KI Norge?',
-    tekst: 'Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig. Det er der KI Norge kommer inn.',
+    tekst: 'KI Norge gir en nasjonal inngang til offentlig informasjon og veiledning om ansvarlig utvikling og bruk av KI. Portalen skal gjøre det enklere for norske virksomheter, særlig små og mellomstore, å forstå regleverket, finne relevante verktøy og komme i gang på en trygg måte.',
   },
   {
     tittel: 'Veiledning',
-    tekst: 'Sammen med Datatilsynet og Nasjonal kommunikasjonsmyndighet (Nkom) gir vi praktisk veiledning, særlig for deg som ikke har et eget juridisk team eller KI-eksperter i staben. Vi hjelper deg å forstå hvilke krav som gjelder, identifisere risiko og finne ut hva du faktisk trenger å forholde deg til.',
+    tekst: 'KI Norge gir veiledning til norske virksomheter som vil utvikle eller ta i bruk ansvarlig kunstig intelligens. Her kan lære mer om hva KI-loven, personvernregelverket og annet lovverk krever for å utvikle KI. KI-verktøy og peke i riktig retning som gjelder. Vi veileder for at alle virksomheter skal ha mulighet og grunnlag for å gjøre gode beslutninger om KI.',
   },
   {
     tittel: 'Den regulatoriske KI-sandkassen',
-    tekst: 'I KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.',
+    tekst: 'KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.',
   },
+];
+
+const aktueltItems = [
+  { title: 'Artikkel 1', date: 'Dato', lead: 'Call out a feature, benefit, or value that can stand on its own.' },
+  { title: 'Artikkel 2', date: 'Dato', lead: 'Call out a feature, benefit, or value that can stand on its own.' },
+  { title: 'Artikkel 3', date: 'Dato', lead: 'Call out a feature, benefit, or value that can stand on its own.' },
 ];
 ---
 
-<Layout title="Om oss" description="Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.">
+<Layout title="Om oss" description="Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens." headerTheme="dark">
   <div class="om-oss-page">
     <!-- Hero -->
     <section class="om-oss-hero">
-      <h1 class="om-oss-hero-title">KI Norge</h1>
-      <p class="om-oss-hero-subtitle">Verdigrunnlag</p>
+      <h1 class="om-oss-hero-title">Om KI Norge</h1>
+      <p class="om-oss-hero-subtitle">Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig.</p>
     </section>
 
     <!-- Intro -->
@@ -51,8 +57,34 @@ const stubs = [
       ))}
     </div>
 
+    <!-- Mission banner -->
+    <section class="om-oss-mission">
+      <div class="om-oss-mission-inner">
+        <p class="om-oss-mission-text">KI Norge kobler virksomheter på tvers av offentlig sektor, næringsliv, akademia og forskning. Vi samler kunnskap gjennom kartlegginger, og gir den tilgjengelig for deg som trenger et solid grunnlag for å ta gode beslutninger.</p>
+      </div>
+    </section>
+
     <!-- Partners -->
     <PartnersSection />
+
+    <!-- Aktuelt -->
+    <section class="om-oss-aktuelt">
+      <div class="om-oss-aktuelt-inner">
+        <h2 class="om-oss-aktuelt-heading">Aktuelt</h2>
+        <div class="om-oss-aktuelt-grid">
+          {aktueltItems.map(item => (
+            <div class="om-oss-aktuelt-card">
+              <div class="om-oss-aktuelt-text">
+                <h3 class="om-oss-aktuelt-title">{item.title}</h3>
+                <span class="om-oss-aktuelt-date">{item.date}</span>
+                <p class="om-oss-aktuelt-lead">{item.lead}</p>
+              </div>
+              <div class="om-oss-aktuelt-image"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   </div>
 </Layout>
 
@@ -63,7 +95,7 @@ const stubs = [
 
   /* Hero */
   .om-oss-hero {
-    background-color: #8bc9ce;
+    background: linear-gradient(180deg, #281ea8 0%, #20199a 40%, #1a1490 100%);
     height: 584px;
     display: flex;
     flex-direction: column;
@@ -89,16 +121,17 @@ const stubs = [
   }
 
   .om-oss-hero-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.75);
     margin: 48px 0 0;
-    letter-spacing: -0.0025em;
+    max-width: 600px;
+    line-height: 1.4;
   }
 
   @media (min-width: 768px) {
     .om-oss-hero-subtitle {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
     }
   }
 
@@ -154,15 +187,6 @@ const stubs = [
     min-width: 0;
   }
 
-  .stub-image img {
-    width: 100%;
-    height: 487px;
-    object-fit: cover;
-    border-radius: 4px;
-    display: block;
-    background-color: var(--image-fallback-bg, #D9D9D9);
-  }
-
   .stub-image-placeholder {
     width: 100%;
     height: 487px;
@@ -201,5 +225,103 @@ const stubs = [
     line-height: 1.3;
     letter-spacing: -0.0025em;
     margin: 0;
+  }
+
+  /* Mission banner */
+  .om-oss-mission {
+    background-color: #C5E8FF;
+    padding: 80px 24px;
+  }
+
+  .om-oss-mission-inner {
+    max-width: 884px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .om-oss-mission-text {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #000;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* Aktuelt */
+  .om-oss-aktuelt {
+    padding: 64px 24px;
+  }
+
+  .om-oss-aktuelt-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .om-oss-aktuelt-heading {
+    font-size: 40px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 32px;
+    line-height: 1.2;
+  }
+
+  .om-oss-aktuelt-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  @media (min-width: 768px) {
+    .om-oss-aktuelt-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .om-oss-aktuelt-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 24px;
+    height: 384px;
+    overflow: hidden;
+  }
+
+  .om-oss-aktuelt-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .om-oss-aktuelt-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .om-oss-aktuelt-date {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    line-height: 1.45;
+  }
+
+  .om-oss-aktuelt-lead {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .om-oss-aktuelt-image {
+    flex: 1;
+    background: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 24px;
+    min-height: 120px;
   }
 </style>
