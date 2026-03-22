@@ -1,198 +1,152 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
-import ArticleCard from '../../components/shared/ArticleCard.astro';
-import { Heading, Paragraph, Button } from '@digdir/designsystemet-react';
 import { getArtikler, getPlainText, type Artikkel } from '../../lib/umbraco';
 
-// Fetch articles from Umbraco
-let articles: Artikkel[] = [];
-try {
-  const response = await getArtikler();
-  articles = response.data;
-} catch (error) {
-  console.error('Failed to fetch articles:', error);
-}
-
-// Extract unique categories from article content (using simple keyword detection)
-// In a real setup these would come from article metadata/merkelapper
-const categoryKeywords: Record<string, string[]> = {
-  'Nyhet': ['nyhet', 'lansering', 'oppdatering'],
-  'Analyse': ['analyse', 'rapport', 'undersøkelse', 'studie'],
-  'Veiledning': ['veiledning', 'guide', 'hvordan', 'tips'],
-};
-
-function getArticleCategory(article: Artikkel): string {
-  const text = (article.tittel + ' ' + getPlainText(article.innhold, 200)).toLowerCase();
-  for (const [category, keywords] of Object.entries(categoryKeywords)) {
-    if (keywords.some(kw => text.includes(kw))) return category;
-  }
-  return 'Nyhet';
-}
-
-const articlesWithCategory = articles.map(a => ({
-  ...a,
-  category: getArticleCategory(a),
-}));
-
-const availableCategories = [...new Set(articlesWithCategory.map(a => a.category))].sort();
+const artiklerRes = await getArtikler();
+const articles = artiklerRes.data;
 ---
 
-<Layout title="Artikler" description="Nyheter, analyser og veiledning om kunstig intelligens i offentlig sektor.">
-  <section class="page-hero">
-    <div class="hero-container">
-      <span class="page-badge">Artikler</span>
-      <Heading level={1} size="2xlarge" className="page-title">Siste nytt</Heading>
-      <Paragraph size="large" className="page-lead">
-        Hold deg oppdatert på nyheter, analyser og veiledning om kunstig intelligens i norsk offentlig sektor.
-      </Paragraph>
+<Layout title="Aktuelt" description="Nyheter, analyser og artikler om kunstig intelligens i norsk offentlig sektor.">
+  <div class="artikler-page">
+    <div class="artikler-header">
+      <h1 class="artikler-title">Aktuelt</h1>
+      <p class="artikler-lead">Hold deg oppdatert på nyheter, analyser og artikler om kunstig intelligens i norsk offentlig sektor.</p>
     </div>
-  </section>
 
-  <div class="page-content">
-    {availableCategories.length > 1 && (
-      <nav class="filter-nav" aria-label="Artikkelkategorier">
-        <div class="filter-pills">
-          <button class="filter-pill filter-pill--active" data-filter="alle">Alle</button>
-          {availableCategories.map(cat => (
-            <button class="filter-pill" data-filter={cat}>{cat}</button>
+    <div class="artikler-content">
+      {articles.length > 0 ? (
+        <div class="artikler-grid">
+          {articles.map(article => (
+            <a href={`/artikler/${article.slug}`} class="artikel-card">
+              <div class="artikel-card-text">
+                <h2 class="artikel-card-title">{article.tittel}</h2>
+                <span class="artikel-card-date">
+                  {new Date(article.publishedAt).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </span>
+                <p class="artikel-card-lead">{getPlainText(article.innhold, 100)}</p>
+              </div>
+              <div class="artikel-card-image"></div>
+            </a>
           ))}
         </div>
-      </nav>
-    )}
-
-    <div class="articles-grid">
-      {articlesWithCategory.length > 0 ? (
-        articlesWithCategory.map((article) => (
-          <div class="article-wrapper" data-category={article.category}>
-            <ArticleCard
-              title={article.tittel}
-              excerpt={getPlainText(article.innhold, 200)}
-              slug={article.slug}
-              publishedAt={article.publishedAt}
-              category={article.category}
-            />
-          </div>
-        ))
       ) : (
-        <div class="empty-state-box">
-          <span class="material-symbols-outlined">article</span>
-          <Paragraph>Ingen artikler funnet.</Paragraph>
-        </div>
+        <p class="empty-state">Ingen artikler funnet.</p>
       )}
     </div>
   </div>
 </Layout>
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const pills = document.querySelectorAll<HTMLButtonElement>('.filter-pill');
-    const articles = document.querySelectorAll<HTMLElement>('.article-wrapper');
-
-    if (pills.length === 0) return;
-
-    pills.forEach(pill => {
-      pill.addEventListener('click', () => {
-        const filter = pill.dataset.filter;
-
-        // Update active pill
-        pills.forEach(p => p.classList.remove('filter-pill--active'));
-        pill.classList.add('filter-pill--active');
-
-        // Show/hide articles
-        articles.forEach(article => {
-          if (filter === 'alle' || article.dataset.category === filter) {
-            article.style.display = '';
-          } else {
-            article.style.display = 'none';
-          }
-        });
-      });
-    });
-  });
-</script>
-
 <style>
-  .page-hero {
-    background: linear-gradient(
-      135deg,
-      var(--ds-color-neutral-background-default) 0%,
-      var(--ds-color-accent-surface-default) 100%
-    );
-    padding: var(--ds-size-12) var(--ds-size-4);
+  .artikler-page {
+    padding-top: var(--ds-size-4);
   }
 
-  .hero-container {
-    max-width: 800px;
+  .artikler-header {
+    max-width: 1120px;
     margin: 0 auto;
-    text-align: center;
+    padding: 24px 24px 48px;
   }
 
-  .page-badge {
-    display: inline-flex;
-    font-size: var(--ds-font-size-0);
-    font-weight: var(--ds-font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--ds-color-accent-text-default);
-    background-color: var(--ds-color-neutral-surface-default);
-    padding: var(--ds-size-1) var(--ds-size-3);
-    border-radius: var(--ds-border-radius-full);
-    margin-bottom: var(--ds-size-4);
+  .artikler-title {
+    font-size: 40px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 12px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
   }
 
-  :global(.page-title) {
-    margin: 0 0 var(--ds-size-4);
-  }
-
-  :global(.page-lead) {
+  .artikler-lead {
+    font-size: 18px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.6);
     margin: 0;
-    color: var(--ds-color-neutral-text-subtle);
+    line-height: 1.5;
     max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
   }
 
-  .page-content {
-    max-width: 1200px;
+  .artikler-content {
+    max-width: 1120px;
     margin: 0 auto;
-    padding: var(--ds-size-10) var(--ds-size-4);
+    padding: 0 24px 120px;
   }
 
-  .filter-nav {
-    margin-bottom: var(--ds-size-8);
-  }
-
-  .articles-grid {
+  .artikler-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: var(--ds-size-6);
-    margin-bottom: var(--ds-size-10);
+    gap: 32px;
   }
 
   @media (min-width: 640px) {
-    .articles-grid {
+    .artikler-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
   @media (min-width: 1024px) {
-    .articles-grid {
+    .artikler-grid {
       grid-template-columns: repeat(3, 1fr);
     }
   }
 
-  .empty-state-box {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: var(--ds-size-12);
-    background-color: var(--ds-color-neutral-surface-default);
-    border-radius: var(--ds-border-radius-lg);
+  .artikel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 24px;
+    height: 384px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s;
   }
 
-  .empty-state-box .material-symbols-outlined {
-    font-size: 48px;
-    color: var(--ds-color-neutral-text-subtle);
-    opacity: 0.5;
-    margin-bottom: var(--ds-size-4);
+  .artikel-card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .artikel-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .artikel-card-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .artikel-card-date {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    line-height: 1.45;
+  }
+
+  .artikel-card-lead {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .artikel-card-image {
+    flex: 1;
+    background: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 24px;
+    min-height: 120px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--ds-size-12);
+    color: rgba(0, 0, 0, 0.5);
   }
 </style>
