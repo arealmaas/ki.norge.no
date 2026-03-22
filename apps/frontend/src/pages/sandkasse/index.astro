@@ -1,292 +1,450 @@
 ---
 /**
  * Regulatorisk sandkasse landing page.
- * Layout based on Figma design 438:5900 (info.altinn.no pattern).
- * Currently hardcoded — planned to be CMS-driven later.
- * Feature cards will be CMS-editable (image + title + description + link).
- * Category links and CTA link will point to real destinations in time.
+ * Based on Figma design 561:1761.
+ * TODO: Make CMS-driven later. Currently hardcoded.
  */
 import Layout from '../../components/layout/Layout.astro';
-import ContactCard from '../../components/shared/ContactCard.astro';
 
-const title = 'Regulatorisk sandkasse for KI';
-const seoDescription = 'Den regulatoriske KI-sandkassen gir virksomheter mulighet til å teste KI-løsninger i trygge og kontrollerte omgivelser.';
-
-const featureCards = [
-  {
-    title: 'Utforsk KI i trygge rammer',
-    description: 'Test og utvikle KI-løsninger i et kontrollert miljø med veiledning fra relevante tilsynsmyndigheter.',
-    image: undefined as string | undefined,
-    href: '#',
-  },
-  {
-    title: 'Regulatorisk veiledning',
-    description: 'Få juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet for dine KI-løsninger.',
-    image: undefined as string | undefined,
-    href: '#',
-  },
+const processSteps = [
+  { number: '1', title: 'Søknad', desc: 'Potensielle deltagere sender en søknad til sandkassen. De vil få svar på sin søknad, eventuell beskjed om klargjøring/retting av søknaden innen rimelig tid.' },
+  { number: '2', title: 'Opptak', desc: 'Skal skissere sandkasseforløpet. Det vil inneholde spesifisering av hvilke spørsmål som skal behandles, hvor lang tid det er tenkt til å ta, mv.' },
+  { number: '3', title: 'Planlegging', desc: 'Når sandkasseforløpet er ferdigstilt vil deltageren få et skriftlig bevis og sluttbevis.' },
+  { number: '4', title: 'Sluttbevis', desc: 'Når sandkasseforløpet er ferdigstilt vil deltageren få et skriftlig bevis og sluttbevis.' },
 ];
 
-const categories = [
-  { icon: 'calculator', label: 'Personvern og GDPR' },
-  { icon: 'office', label: 'KI-forordningen (AI Act)' },
-  { icon: 'social', label: 'Etikk og ansvarlig KI' },
-  { icon: 'family', label: 'Sikkerhet og risiko' },
+const faqItems = [
+  'Hvem kan søke om deltakelse i sandkassen?',
+  'Hvor lang tid tar et sandkasseforløp?',
+  'Hva koster det å delta?',
+  'Hvilke krav stilles til KI-systemet?',
+  'Hva skjer etter sandkasseforløpet?',
 ];
 ---
 
-<Layout title={title} description={seoDescription}>
+<Layout title="Regulatorisk sandkasse for KI" description="KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger." headerTheme="dark">
   <div class="sandkasse-page">
-    <!-- Title bar -->
-    <div class="sandkasse-title-bar">
-      <h1 class="sandkasse-title">{title}</h1>
-    </div>
-
-    <div class="sandkasse-content">
-      <!-- Intro text -->
-      <p class="sandkasse-intro">
-        I KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.
-      </p>
-
-      <!-- CTA link (future: leads to Altinn) -->
-      <a href="#" class="sandkasse-cta">
-        Søk om deltakelse i sandkassen
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
-        </svg>
-      </a>
-
-      <!-- Feature cards -->
-      <div class="feature-cards">
-        {featureCards.map(card => (
-          <a href={card.href} class="feature-card">
-            <div class="feature-card-image">
-              {card.image ? (
-                <img src={card.image} alt="" loading="lazy" />
-              ) : (
-                <div class="feature-card-placeholder"></div>
-              )}
-            </div>
-            <div class="feature-card-text">
-              <span class="feature-card-title">
-                {card.title}
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="chevron">
-                  <path d="m9 18 6-6-6-6"/>
-                </svg>
-              </span>
-              <p class="feature-card-desc">{card.description}</p>
-            </div>
-          </a>
-        ))}
+    <!-- Hero -->
+    <section class="sandkasse-hero">
+      <div class="sandkasse-hero-inner">
+        <h1 class="sandkasse-hero-title">Den regulatoriske KI-sandkassen</h1>
+        <p class="sandkasse-hero-body">
+          KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger. Gjennom tett oppfølging og veiledning fra myndighetene får virksomhetene hjelp til å vurdere risiko og forstå relevant regelverk. Målet er at flere norske virksomheter skal lykkes med kunstig intelligens, og at KI-systemene følger lovverket.
+        </p>
+        <p class="sandkasse-hero-countdown">120 dager til du kan søke!</p>
+        <div class="sandkasse-hero-illustrations">
+          <img src="/sandkasse/sandkasse%20bucket.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--bucket" aria-hidden="true" />
+          <div class="sandkasse-hero-img-group">
+            <img src="/sandkasse/sandkasse%20sandcastle.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--sandcastle" aria-hidden="true" />
+            <img src="/sandkasse/sandkasse%20shovel.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--shovel" aria-hidden="true" />
+          </div>
+        </div>
       </div>
+    </section>
 
-      <!-- Category list -->
-      <div class="category-section">
-        <h2 class="category-heading">Sandkassen innenfor:</h2>
-        <div class="category-list">
-          {categories.map(cat => (
-            <button type="button" class="category-item" disabled>
-              <span class="category-icon" aria-hidden="true">
-                {cat.icon === 'calculator' && (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>
-                )}
-                {cat.icon === 'office' && (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18"/><path d="M2 22h20"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/></svg>
-                )}
-                {cat.icon === 'social' && (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                )}
-                {cat.icon === 'family' && (
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                )}
-              </span>
-              <span class="category-label">{cat.label}</span>
-            </button>
+    <!-- Hvem er det til for? -->
+    <section class="sandkasse-section sandkasse-section--white">
+      <div class="sandkasse-section-inner sandkasse-row">
+        <div class="sandkasse-image-col">
+          <img src="/sandkasse/sandkasse%20sandkasse.png" alt="" class="sandkasse-illustration" aria-hidden="true" />
+        </div>
+        <div class="sandkasse-text-col">
+          <h2 class="sandkasse-section-title">Hvem er det til for?</h2>
+          <div class="sandkasse-section-body">
+            <p>Sandkassen er åpen for alle leverandører og fremtidige leverandører av KI-systemer. Den skal fortrinnsvis støtte små og mellomstore bedrifter og oppstartsbedrifter, men større aktører kan også søke.</p>
+            <p>Vi velger sandkasseprosjekter basert på om KI-systemet</p>
+            <ul>
+              <li>er innovativt</li>
+              <li>kan bidra til å understøtte offentlige hensyn og interesser</li>
+              <li>har rettslige utfordringer som gjelder for resten av sektoren.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Slik foregår prosessen -->
+    <section class="sandkasse-process">
+      <div class="sandkasse-process-inner">
+        <h2 class="sandkasse-process-title">Slik foregår prosessen</h2>
+        <div class="sandkasse-process-grid">
+          {processSteps.map(step => (
+            <div class="process-step">
+              <span class="process-step-number">{step.number}</span>
+              <h3 class="process-step-title">{step.title}</h3>
+              <p class="process-step-desc">{step.desc}</p>
+            </div>
           ))}
         </div>
-
-        <a href="#" class="see-all-link">Se alle områder</a>
       </div>
+    </section>
 
-      <!-- Contact card -->
-      <ContactCard />
-    </div>
+    <!-- Hva får du ut av det? -->
+    <section class="sandkasse-section sandkasse-section--white">
+      <div class="sandkasse-section-inner sandkasse-row sandkasse-row--reverse">
+        <div class="sandkasse-text-col">
+          <h2 class="sandkasse-section-title">Hva får du ut av det?</h2>
+          <div class="sandkasse-section-body">
+            <p>Deltagere i sandkassen får tett oppfølging og veiledning i å vurdere risiko og forstå relevant regelverk.</p>
+            <p>Når sandkasseforløpet er fullført, får deltakerne et skriftlig bevis og en sluttrapport. Sandkassedeltakeren kan bruke dokumentasjonen til å vise at de følger KI-loven.</p>
+            <p>Det vil gjøre det lettere og raskere å få KI-systemet godkjent eller kontrollert.</p>
+          </div>
+        </div>
+        <div class="sandkasse-image-col">
+          <img src="/sandkasse/sandkasse%20sandkasse%202.png" alt="" class="sandkasse-illustration" aria-hidden="true" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Ofte stilte spørsmål -->
+    <section class="sandkasse-faq">
+      <div class="sandkasse-faq-inner">
+        <h2 class="sandkasse-faq-title">Ofte stilte spørsmål</h2>
+        <div class="sandkasse-faq-list">
+          {faqItems.map(q => (
+            <details class="sandkasse-faq-item">
+              <summary class="sandkasse-faq-question">
+                <span>{q}</span>
+                <span class="sandkasse-faq-icon">+</span>
+              </summary>
+              <div class="sandkasse-faq-answer">
+                <p>Innhold kommer snart.</p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   </div>
 </Layout>
 
 <style>
   .sandkasse-page {
-    padding-top: var(--ds-size-4);
+    margin-top: -72px;
   }
 
-  .sandkasse-title-bar {
-    max-width: 800px;
+  .sandkasse-page :global(.logo-link),
+  .sandkasse-page :global(.nav-link),
+  .sandkasse-page :global(.mobile-menu-toggle),
+  .sandkasse-page :global(.menu-label) {
+    color: white;
+  }
+
+  /* Hero */
+  .sandkasse-hero {
+    background: linear-gradient(180deg, #281ea8 0%, #20199a 40%, #1a1490 100%);
+    padding: 140px 24px 80px;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  .sandkasse-hero-inner {
+    max-width: 860px;
     margin: 0 auto;
-    padding: 24px var(--ds-size-4) 24px;
-    border-bottom: 1px solid #b8bcc1;
   }
 
-  .sandkasse-title {
-    font-size: 1.625rem;
+  .sandkasse-hero-title {
+    font-size: 64px;
+    font-weight: 700;
+    color: white;
+    margin: 0 0 48px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .sandkasse-hero-body {
+    font-size: 20px;
     font-weight: 500;
-    margin: 0;
-    color: #000;
+    color: white;
+    margin: 0 0 32px;
+    line-height: 1.3;
+    letter-spacing: -0.0025em;
   }
 
-  .sandkasse-content {
-    max-width: 800px;
+  .sandkasse-hero-countdown {
+    font-size: 20px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0 0 48px;
+    line-height: 1.3;
+  }
+
+  .sandkasse-hero-illustrations {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 148px;
+    max-width: 700px;
     margin: 0 auto;
-    padding: 0 var(--ds-size-4);
   }
 
-  .sandkasse-intro {
-    font-size: 1.125rem;
-    line-height: 1.5;
-    color: #232c3c;
-    margin: 24px 0;
+  .sandkasse-hero-img {
+    object-fit: contain;
   }
 
-  .sandkasse-cta {
-    display: inline-flex;
+  .sandkasse-hero-img-group {
+    position: relative;
+    width: 136.4px;
+    height: 100px;
+  }
+
+  .sandkasse-hero-img--sandcastle {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 130px;
+    width: 190px;
+  }
+
+  .sandkasse-hero-img--shovel {
+    position: absolute;
+    bottom: 62%;
+    left: 39%;
+    z-index: 1;
+    height: 120px;
+    width: 190px;
+  }
+
+  .sandkasse-hero-img--bucket {
+    height: 150px;
+  }
+
+  @media (max-width: 768px) {
+    .sandkasse-hero-title {
+      font-size: 40px;
+    }
+    .sandkasse-hero-body {
+      font-size: 16px;
+    }
+
+  }
+
+  @media (max-width: 480px) {
+    .sandkasse-hero-title {
+      font-size: 32px;
+    }
+    .sandkasse-hero-illustrations {
+      gap: 12px;
+      margin-left: -80px;
+    }
+
+  }
+
+  /* White content sections */
+  .sandkasse-section--white {
+    padding: 80px 24px;
+  }
+
+  .sandkasse-section-inner {
+    max-width: 930px;
+    margin: 0 auto;
+  }
+
+  .sandkasse-row {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
     align-items: center;
-    gap: 8px;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #23262a;
-    text-decoration: underline;
-    margin-bottom: 32px;
   }
 
-  .sandkasse-cta:hover {
-    color: #7c3aed;
+  @media (min-width: 768px) {
+    .sandkasse-row {
+      flex-direction: row;
+      gap: 48px;
+    }
+    .sandkasse-row--reverse {
+      flex-direction: row-reverse;
+    }
   }
 
-  /* Feature cards */
-  .feature-cards {
+  .sandkasse-image-col {
+    flex-shrink: 0;
+    width: 280px;
+  }
+
+  .sandkasse-illustration {
+    width: 100%;
+    height: auto;
+    border-radius: 4px;
+    mix-blend-mode: darken;
+  }
+
+  .sandkasse-text-col {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sandkasse-section-title {
+    font-size: 36px;
+    font-weight: 400;
+    color: #000;
+    margin: 0 0 32px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .sandkasse-section-body {
+    font-size: 20px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: 1.3;
+    letter-spacing: -0.0025em;
+  }
+
+  .sandkasse-section-body p {
+    margin: 0 0 16px;
+  }
+
+  .sandkasse-section-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .sandkasse-section-body ul {
+    margin: 8px 0 0;
+    padding-left: 24px;
+  }
+
+  .sandkasse-section-body li {
+    margin-bottom: 4px;
+  }
+
+  /* Process section */
+  .sandkasse-process {
+    background: #20199a;
+    padding: 80px 24px;
+  }
+
+  .sandkasse-process-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .sandkasse-process-title {
+    font-size: 36px;
+    font-weight: 400;
+    color: white;
+    margin: 0 0 48px;
+    line-height: 1.3;
+  }
+
+  .sandkasse-process-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 24px;
-    margin-bottom: 32px;
+    gap: 48px;
   }
 
   @media (min-width: 640px) {
-    .feature-cards {
+    .sandkasse-process-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
 
-  .feature-card {
-    background: #fff2f5;
-    border-radius: 12px;
-    overflow: hidden;
-    padding: 24px;
+  @media (min-width: 1024px) {
+    .sandkasse-process-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .process-step {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow 0.15s;
   }
 
-  .feature-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  .process-step-number {
+    font-size: 128px;
+    font-weight: 600;
+    color: white;
+    line-height: 1;
+    margin-bottom: 8px;
   }
 
-  .feature-card-image {
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .feature-card-image img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-
-  .feature-card-placeholder {
-    width: 100%;
-    height: 100%;
-    background: var(--image-fallback-bg, #D9D9D9);
-    border-radius: 8px;
-    opacity: 0.3;
-  }
-
-  .feature-card-title {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 1.625rem;
+  .process-step-title {
+    font-size: 24px;
     font-weight: 500;
-    color: #232c3c;
-    line-height: 1.4;
+    color: white;
+    margin: 0 0 16px;
+    line-height: 1.3;
   }
 
-  .chevron {
-    flex-shrink: 0;
-  }
-
-  .feature-card-desc {
-    font-size: 1.125rem;
-    line-height: 1.5;
-    color: #232c3c;
+  .process-step-desc {
+    font-size: 18px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.7);
     margin: 0;
+    line-height: 1.3;
   }
 
-  /* Category section */
-  .category-section {
-    margin-bottom: 32px;
+  @media (max-width: 640px) {
+    .process-step-number {
+      font-size: 80px;
+    }
   }
 
-  .category-heading {
-    font-size: 1.625rem;
-    font-weight: 500;
-    color: #232c3c;
-    margin: 0 0 24px;
+  /* FAQ section */
+  .sandkasse-faq {
+    background: #20199a;
+    padding: 80px 24px;
   }
 
-  .category-list {
+  .sandkasse-faq-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .sandkasse-faq-title {
+    font-size: 32px;
+    font-weight: 400;
+    color: white;
+    margin: 0 0 32px;
+    line-height: 1.3;
+  }
+
+  .sandkasse-faq-list {
     display: flex;
     flex-direction: column;
-    gap: 24px;
   }
 
-  .category-item {
+  .sandkasse-faq-item {
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    margin-bottom: -1px;
+  }
+
+  .sandkasse-faq-question {
     display: flex;
     align-items: center;
-    gap: 12px;
-    width: 100%;
+    justify-content: space-between;
     padding: 28px 16px;
-    background: #f2f1f1;
-    border: none;
-    border-radius: 8px;
-    cursor: default;
-    font-family: inherit;
+    cursor: pointer;
+    list-style: none;
+    font-size: 21px;
+    font-weight: 700;
+    color: white;
   }
 
-  .category-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
+  .sandkasse-faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .sandkasse-faq-icon {
+    font-size: 24px;
+    color: rgba(255, 255, 255, 0.7);
     flex-shrink: 0;
-    color: #111d46;
+    transition: transform 0.2s;
   }
 
-  .category-label {
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #111d46;
+  .sandkasse-faq-item[open] .sandkasse-faq-icon {
+    transform: rotate(45deg);
   }
 
-  .see-all-link {
-    display: inline-block;
-    font-size: 1.625rem;
-    font-weight: 500;
-    color: #232c3c;
-    text-decoration: underline;
-    margin-top: 24px;
+  .sandkasse-faq-answer {
+    padding: 0 16px 28px 16px;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.5;
+  }
+
+  .sandkasse-faq-answer p {
+    margin: 0;
   }
 </style>

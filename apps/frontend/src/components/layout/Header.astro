@@ -299,4 +299,21 @@ const currentPath = Astro.url.pathname;
     background-color: var(--ds-color-accent-surface-default);
     color: var(--ds-color-accent-text-default);
   }
+
+  /* Dark header theme — for pages with dark hero backgrounds */
+  :global([data-header-theme="dark"]) :global(.logo-link) {
+    color: white;
+  }
+
+  :global([data-header-theme="dark"]) :global(.nav-link) {
+    color: white;
+  }
+
+  :global([data-header-theme="dark"]) .mobile-menu-toggle {
+    color: white;
+  }
+
+  :global([data-header-theme="dark"]) .menu-label {
+    color: white;
+  }
 </style>
