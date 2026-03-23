@@ -144,8 +144,8 @@ public class ContentSeeder : IAsyncComponent
         s2.SetValue("rekkefolge", 1);
         SaveAndPublish(s2);
 
-        var s3 = Create("omOssSeksjon", "Den regulatoriske KI-sandkassen", omOss.Id);
-        s3.SetValue("tittel", "Den regulatoriske KI-sandkassen");
+        var s3 = Create("omOssSeksjon", "KI-sandkassen", omOss.Id);
+        s3.SetValue("tittel", "KI-sandkassen");
         s3.SetValue("slug", "den-regulatoriske-ki-sandkassen");
         s3.SetValue("tekst", "<p>I KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.</p>");
         s3.SetValue("rekkefolge", 2);
