@@ -346,6 +346,46 @@ som SHAP-verdier og kontrafaktiske forklaringer.</p>
 <li>Test forklaringene med reelle brukere — gir de faktisk mening?</li>
 </ul>");
         SaveAndPublish(a10);
+
+        // Full-featured article using all CMS fields
+        var aFull = Create("artikkel", "KI-regnekraft i Norge: Status, utvikling og behov fremover", parentId);
+        aFull.SetValue("tittel", "KI-regnekraft i Norge: Status, utvikling og behov fremover");
+        aFull.SetValue("slug", "ki-regnekraft-i-norge");
+        aFull.SetValue("innhold", @"<p>Regnekraft er en grunnleggende forutsetning for utvikling, tilpasning og bruk av moderne kunstig intelligens. Etter hvert som avanserte KI-modeller blir større, mer komplekse og mer datakrevende, øker også behovet for nasjonal kapasitet til å trene, kjøre og videreutvikle dem.</p>
+
+<h2>Hva menes med KI-infrastruktur?</h2>
+<p>KI-infrastruktur omfatter både teknologiske og organisatoriske ressurser som gjør det mulig å utvikle og anvende kunstig intelligens på en trygg og effektiv måte. En sentral komponent er tungregning (High Performance Computing, HPC), hvor CPU- og GPU-ressurser brukes til tungregneoppgaver.</p>
+<p>I tillegg består KI-infrastruktur av andre ressurser:</p>
+<ul>
+<li>Dataressurser, inkludert tilgjengelige datasett og ordnede prosesser for datadeling.</li>
+<li>Programvare og verktøy, som rammeverk og plattformer for modelltrening og drift.</li>
+<li>Organisatoriske strukturer, som sikrer kompetanseutvikling, forvaltning og sikker drift.</li>
+<li>Regulatoriske mekanismer, inkludert tilsyn, sandkasser og ansvarlig bruk av KI.</li>
+</ul>
+<p>Samlet skal infrastrukturen støtte forskning, innovasjon og bruk av KI i Norge.</p>
+
+<h2>Status for KI-infrastruktur i Norge</h2>
+<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
+
+<h3>Nasjonal KI-fabrikk og superdatamaskinen Olivia</h3>
+<p>Sigma2 er den nasjonale leverandøren for e-infrastruktur og tilhørende tjenester, og eies av Sikt. Sigma2 åpnet i 2025 en ny nasjonal KI-fabrikk som huser Norges kraftigste superdatamaskin, Olivia. Maskinen inngår i det europeiske LUMI AI Factory-nettverket og er tilgjengelig for forskningsmiljøer, offentlig sektor og deler av næringslivet.</p>
+<p>Til tross for kapasitetstilførselen rapporterer flere fagmiljøer at etterspørselen raskt overstiger det tilgjengelige tilbudet. Olivia ble fullbooket kort tid etter oppstart, og behovet for flere GPU-ressurser er betydelig.</p>
+
+<h3>Nasjonale språkmodeller og datagrunnlag</h3>
+<p>Nasjonalbiblioteket har fått et utvidet mandat til å klargjøre norske og samiske data for KI-trening. Dette inkluderer blant annet en nasjonal lisensordning for bruk av avisinnhold, inngått i samarbeid med Kopinor. Målet er å sikre tilgang til kvalitetsdata som gjenspeiler norske forhold.</p>
+
+<h2>Behovsvurderinger og kapasitetsutfordringer</h2>
+<p>Utredningene fra Forskningsrådet peker på at dagens kapasitet ikke er tilstrekkelig for behovene i forskning, forvaltning og næringsliv. Arbeidet med en konseptvalgutredning i 2025 anslo at behovet for GPU-kapasitet vil øke med 40–50 % årlig frem mot 2030.</p>
+
+<h2>Internasjonalt samarbeid: EuroHPC og nordisk kapasitet</h2>
+<p>Som deltaker i EuroHPC får Norge tilgang til europeisk toppkapasitet, deriblant LUMI-superdatamaskinen i Finland. Deltakelsen gir også mulighet for å påvirke europeiske investeringer og delta i forsknings- og innovasjonsprosjekter.</p>
+<p>Flere europeiske land, inkludert nordiske naboer, investerer tungt i KI-infrastruktur. Dette bidrar til økt samlet kapasitet, men illustrerer også viktigheten av at Norge selv bygger og opprettholder nasjonalt kontrollert regnekraft.</p>
+
+<h2>Hvorfor nasjonal kapasitet er viktig</h2>
+<p>Uten tilstrekkelig nasjonal kapasitet blir Norge i større grad avhengig av globale skyleverandører, hvor reguleringsmuligheter, tilgangskontroll og databehandling foregår utenfor landets jurisdiksjon.</p>");
+        aFull.SetValue("seoTittel", "KI-regnekraft i Norge: Status, utvikling og behov fremover");
+        aFull.SetValue("seoBeskrivelse", "En oversikt over norsk KI-infrastruktur, regnekraft og kapasitetsbehov frem mot 2030.");
+        SaveAndPublish(aFull);
     }
 
     // ── Sider ──────────────────────────────────────────────────
@@ -442,6 +482,39 @@ norsk, samisk, engelsk og de mest utbredte innvandrerspråkene.</p>");
         e4.SetValue("status", "i_utvikling");
         e4.SetValue("merkelapper", "[\"naturlig-sprak\", \"automatisering\"]");
         SaveAndPublish(e4);
+
+        // Full-featured example using all CMS fields
+        var eFull = Create("eksempel", "Kunnskapsassistenten", parentId);
+        eFull.SetValue("tittel", "Kunnskapsassistenten");
+        eFull.SetValue("slug", "kunnskapsassistenten");
+        eFull.SetValue("organisasjon", "Digitaliseringsdirektoratet");
+        eFull.SetValue("beskrivelse", @"<p>Kunnskapsassistenten skal styrke – ikke erstatte – faglige vurderinger i staten. Piloten viser at den har størst verdi i starten av en kunnskapsprosess, og at vi må øke presisjonen, kunnskapsforberedelsen og kontrolltiltakene videre når oppgavene krever flere steg.</p>
+
+<h2>Utfordringen vi skulle løse</h2>
+<p>Målet har vært å undersøke hvordan KI kan støtte raske utredningsprosesser – på en trygg, åpen og faglig forsvarlig måte.</p>
+<p>Kunnskapsproduksjon i staten er krevende og tidkrevende. Informasjon er fragmentert, spredt på tvers av mange kilder og i stadig endring. I tillegg utvikler vi ikke kunnskapsgrunnlaget godt nok, og det øker risikoen for feilaktige beslutninger.</p>
+
+<h2>Løsning</h2>
+<p>Kunnskapsassistenten er et spesialisert KI-verktøy for kunnskapsarbeid i offentlig sektor. Den hjelper brukerne med å finne, sammenstille og vurdere informasjon fra store mengder kilder, og har innebygde mekanismer for kontroll og etterprøvelighet.</p>
+<p>Kunnskapsassistenten skal støtte utforskende analyse, styrke menneskelig vurdering og faglig forankring slik at utredningsarbeidet og verifisering av informasjon blir bedre.</p>
+
+<h2>Resultat</h2>
+<p>Kunnskapsassistenten:</p>
+<ul>
+<li>Gir økt kunnskapstilgjengelighet for alle ansatte</li>
+<li>Reduserer tid brukt på informasjonsinnhenting og databehandling</li>
+<li>Økt kvalitet ved å presentere flere relevante datakilder</li>
+<li>Redusert behov for manuell koordinering på tvers av virksomheter</li>
+<li>Teknisk system som demonstrerer en ansvarlig, etterprøvelig og transparent bruk av KI</li>
+</ul>");
+        eFull.SetValue("verktoy", "[\"Azure OpenAI\", \"RAG\", \"Kudos-databasen\", \"LangChain\"]");
+        eFull.SetValue("resultater", @"<p>Den største utfordringen er ikke teknologisk, men institusjonell: KI må oppleves som trygg, etterprøvbar og tillitsvekkende.</p>
+<p>Piloten viste at kunnskapsassistenten gir størst verdi i tidlige faser av arbeidet – når brukeren skal orientere seg, oppsummere og finne relevante dokumenter.</p>");
+        eFull.SetValue("status", "pilot");
+        eFull.SetValue("merkelapper", "[\"naturlig-sprak\", \"automatisering\", \"etikk\"]");
+        eFull.SetValue("seoTittel", "Kunnskapsassistenten – KI for kunnskapsarbeid i staten");
+        eFull.SetValue("seoBeskrivelse", "Kunnskapsassistenten er et KI-verktøy som støtter faglige vurderinger og utredningsprosesser i offentlig sektor.");
+        SaveAndPublish(eFull);
     }
 
     // ── Veiledninger ───────────────────────────────────────────
