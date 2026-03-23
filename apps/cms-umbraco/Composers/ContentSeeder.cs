@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Models;
@@ -155,234 +156,259 @@ public class ContentSeeder : IAsyncComponent
 
     // ── Artikler ──────────────────────────────────────────────
 
+    // ── Block List helpers ──────────────────────────────────
+
+    private string BuildArticleBlockList(params (string elementAlias, Dictionary<string, object> properties)[] blocks)
+    {
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        foreach (var (alias, props) in blocks)
+        {
+            var elementType = _contentTypeService.Get(alias);
+            if (elementType == null) continue;
+
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            var data = new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = elementType.Key.ToString(),
+                ["udi"] = udi
+            };
+            foreach (var (key, value) in props)
+            {
+                data[key] = value;
+            }
+            contentData.Add(data);
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        return JsonSerializer.Serialize(blockList);
+    }
+
+    private (string, Dictionary<string, object>) TextBlock(string html) =>
+        ("artikkelTekst", new Dictionary<string, object> { ["innhold"] = html });
+
+    private (string, Dictionary<string, object>) InfoBox(string title, string html) =>
+        ("artikkelInfoBoks", new Dictionary<string, object> { ["tittel"] = title, ["innhold"] = html });
+
+    private (string, Dictionary<string, object>) DarkPanel(string title, string html) =>
+        ("artikkelMorkPanel", new Dictionary<string, object> { ["tittel"] = title, ["innhold"] = html });
+
+    // ── Artikler ──────────────────────────────────────────────
+
     private void SeedArticles(int parentId)
     {
+        // ── Short articles (simple, 1-2 text blocks) ──
+
         var a1 = Create("artikkel", "Ny nasjonal strategi for kunstig intelligens", parentId);
         a1.SetValue("tittel", "Ny nasjonal strategi for kunstig intelligens");
         a1.SetValue("slug", "ny-nasjonal-strategi-for-kunstig-intelligens");
-        a1.SetValue("innhold", @"<p>Regjeringen har lansert en oppdatert nasjonal strategi for kunstig intelligens.
-Strategien legger vekt på ansvarlig bruk av KI i offentlig sektor, med fokus på åpenhet,
-personvern og tillit.</p>
-<h2>Hovedpunkter i strategien</h2>
+        a1.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Regjeringen har lansert en oppdatert nasjonal strategi for kunstig intelligens. Strategien legger vekt på ansvarlig bruk av KI i offentlig sektor, med fokus på åpenhet, personvern og tillit.</p>
+<p>Strategien følger opp EUs AI Act og setter rammer for hvordan norske virksomheter kan ta i bruk KI på en trygg og tillitvekkende måte.</p>"),
+            TextBlock(@"<h2>Hovedpunkter i strategien</h2>
 <ul>
 <li>Styrket satsing på KI-kompetanse i offentlig forvaltning</li>
 <li>Felles retningslinjer for ansvarlig KI-bruk</li>
 <li>Økt deling av data mellom offentlige virksomheter</li>
 <li>Etablering av nasjonalt KI-senter for offentlig sektor</li>
-</ul>
-<p>Strategien følger opp EUs AI Act og setter rammer for hvordan norske
-virksomheter kan ta i bruk KI på en trygg og tillitvekkende måte.</p>");
+</ul>")
+        ));
+        a1.SetValue("seoTittel", "Ny nasjonal strategi for kunstig intelligens");
+        a1.SetValue("seoBeskrivelse", "Regjeringens oppdaterte strategi for ansvarlig bruk av KI i offentlig sektor med fokus på åpenhet og tillit.");
         SaveAndPublish(a1);
 
         var a2 = Create("artikkel", "Kommuner tar i bruk KI for bedre innbyggertjenester", parentId);
         a2.SetValue("tittel", "Kommuner tar i bruk KI for bedre innbyggertjenester");
         a2.SetValue("slug", "kommuner-tar-i-bruk-ki-for-bedre-innbyggertjenester");
-        a2.SetValue("innhold", @"<p>Flere norske kommuner har begynt å eksperimentere med kunstig intelligens
-for å forbedre tjenestene til innbyggerne. Fra automatisert saksbehandling til
-chatboter for innbyggerdialog — mulighetene er mange.</p>
-<h2>Eksempler fra kommunene</h2>
-<p>Stavanger kommune bruker maskinlæring for å predikere vedlikeholdsbehov
-på kommunale bygg, mens Trondheim har utviklet en KI-basert chatbot som
-hjelper innbyggere med å finne riktig tjeneste.</p>
-<p>Bergen kommune tester automatisk klassifisering av innkommende henvendelser,
-noe som har redusert svartiden med 40 prosent.</p>");
+        a2.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Flere norske kommuner har begynt å eksperimentere med kunstig intelligens for å forbedre tjenestene til innbyggerne. Fra automatisert saksbehandling til chatboter for innbyggerdialog — mulighetene er mange.</p>
+<p>Stavanger kommune bruker maskinlæring for å predikere vedlikeholdsbehov på kommunale bygg, mens Trondheim har utviklet en KI-basert chatbot som hjelper innbyggere med å finne riktig tjeneste. Bergen kommune tester automatisk klassifisering av innkommende henvendelser, noe som har redusert svartiden med 40 prosent.</p>")
+        ));
+        a2.SetValue("seoTittel", "Kommuner tar i bruk KI for bedre innbyggertjenester");
+        a2.SetValue("seoBeskrivelse", "Norske kommuner eksperimenterer med KI for automatisert saksbehandling, chatboter og prediktivt vedlikehold.");
         SaveAndPublish(a2);
 
         var a3 = Create("artikkel", "EUs AI Act og konsekvenser for norsk offentlig sektor", parentId);
         a3.SetValue("tittel", "EUs AI Act og konsekvenser for norsk offentlig sektor");
         a3.SetValue("slug", "eus-ai-act-og-konsekvenser-for-norsk-offentlig-sektor");
-        a3.SetValue("innhold", @"<p>EU har vedtatt verdens første helhetlige regulering av kunstig intelligens.
-AI Act klassifiserer KI-systemer etter risikonivå og stiller krav til åpenhet,
-sikkerhet og menneskerettigheter.</p>
-<h2>Hva betyr dette for Norge?</h2>
-<p>Gjennom EØS-avtalen vil AI Act også gjelde i Norge. Offentlige virksomheter
-som bruker KI-systemer til saksbehandling, velferdstjenester eller overvåkning
-må forberede seg på nye krav til dokumentasjon og risikovurdering.</p>
-<p>KI Norge tilbyr veiledning for virksomheter som trenger hjelp med å
-forstå og etterleve de nye reglene.</p>");
+        a3.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>EU har vedtatt verdens første helhetlige regulering av kunstig intelligens. AI Act klassifiserer KI-systemer etter risikonivå og stiller krav til åpenhet, sikkerhet og menneskerettigheter.</p>
+<p>Gjennom EØS-avtalen vil AI Act også gjelde i Norge. Offentlige virksomheter som bruker KI-systemer til saksbehandling, velferdstjenester eller overvåkning må forberede seg på nye krav til dokumentasjon og risikovurdering.</p>
+<p>KI Norge tilbyr veiledning for virksomheter som trenger hjelp med å forstå og etterleve de nye reglene.</p>")
+        ));
+        a3.SetValue("seoTittel", "EUs AI Act og konsekvenser for norsk offentlig sektor");
+        a3.SetValue("seoBeskrivelse", "Hvordan EUs AI Act påvirker norske offentlige virksomheter gjennom EØS-avtalen.");
         SaveAndPublish(a3);
 
         var a4 = Create("artikkel", "Åpenhet og tillit i KI-prosjekter", parentId);
         a4.SetValue("tittel", "Åpenhet og tillit i KI-prosjekter");
         a4.SetValue("slug", "apenhet-og-tillit-i-ki-prosjekter");
-        a4.SetValue("innhold", @"<p>For at kunstig intelligens skal lykkes i offentlig sektor, er det
-avgjørende at innbyggerne har tillit til løsningene. Åpenhet om hvordan
-KI-systemer fungerer og hvilke data de bruker, er en forutsetning.</p>
-<h2>Prinsipper for åpen KI</h2>
-<ul>
-<li>Dokumenter beslutningsgrunnlaget for KI-systemer</li>
-<li>Gjør algoritmene tilgjengelige for ekstern revisjon</li>
-<li>Informer innbyggerne når KI brukes i saksbehandling</li>
-<li>Etabler klageadgang for automatiserte beslutninger</li>
-</ul>");
+        a4.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>For at kunstig intelligens skal lykkes i offentlig sektor, er det avgjørende at innbyggerne har tillit til løsningene. Åpenhet om hvordan KI-systemer fungerer og hvilke data de bruker, er en forutsetning.</p>")
+        ));
+        a4.SetValue("seoTittel", "Åpenhet og tillit i KI-prosjekter");
+        a4.SetValue("seoBeskrivelse", "Hvorfor åpenhet og tillit er avgjørende for vellykkede KI-prosjekter i offentlig sektor.");
         SaveAndPublish(a4);
+
+        // ── Medium articles (text + info box) ──
 
         var a5 = Create("artikkel", "EU AI Act: Hva betyr det for norsk offentlig sektor?", parentId);
         a5.SetValue("tittel", "EU AI Act: Hva betyr det for norsk offentlig sektor?");
         a5.SetValue("slug", "eu-ai-act-hva-betyr-det-for-norsk-offentlig-sektor");
-        a5.SetValue("innhold", @"<p>EUs forordning om kunstig intelligens (AI Act) trådte i kraft i 2024 og
-innføres gradvis frem mot 2026. Gjennom EØS-avtalen vil regelverket også gjelde
-i Norge. Hva betyr dette i praksis for offentlige virksomheter?</p>
+        a5.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>EUs forordning om kunstig intelligens (AI Act) trådte i kraft i 2024 og innføres gradvis frem mot 2026. Gjennom EØS-avtalen vil regelverket også gjelde i Norge. Hva betyr dette i praksis for offentlige virksomheter?</p>
 <h2>Risikobasert tilnærming</h2>
-<p>AI Act klassifiserer KI-systemer i fire risikonivåer: uakseptabel risiko,
-høy risiko, begrenset risiko og minimal risiko. Systemer brukt i offentlig
-saksbehandling — for eksempel velferdstjenester, grensekontroll og
-strafferettspleie — faller typisk i kategorien høy risiko.</p>
-<h2>Krav til høyrisiko-systemer</h2>
-<ul>
+<p>AI Act klassifiserer KI-systemer i fire risikonivåer: uakseptabel risiko, høy risiko, begrenset risiko og minimal risiko. Systemer brukt i offentlig saksbehandling — for eksempel velferdstjenester, grensekontroll og strafferettspleie — faller typisk i kategorien høy risiko.</p>"),
+            InfoBox("Krav til høyrisiko-systemer", @"<ul>
 <li>Risikovurdering og kvalitetsstyring</li>
 <li>Dokumentasjon av treningsdata og algoritmisk logikk</li>
 <li>Menneskelig tilsyn og mulighet for overstyring</li>
 <li>Logging og sporbarhet av beslutninger</li>
-</ul>
-<p>Norske virksomheter bør begynne kartleggingen av egne KI-systemer allerede nå,
-slik at de er klare når regelverket trer i kraft i EØS.</p>");
+</ul>"),
+            TextBlock(@"<p>Norske virksomheter bør begynne kartleggingen av egne KI-systemer allerede nå, slik at de er klare når regelverket trer i kraft i EØS.</p>")
+        ));
+        a5.SetValue("seoTittel", "EU AI Act: Hva betyr det for norsk offentlig sektor?");
+        a5.SetValue("seoBeskrivelse", "En praktisk gjennomgang av EUs AI Act og hva den betyr for norske offentlige virksomheter.");
         SaveAndPublish(a5);
 
         var a6 = Create("artikkel", "Slik bruker Nav kunstig intelligens til saksbehandling", parentId);
         a6.SetValue("tittel", "Slik bruker Nav kunstig intelligens til saksbehandling");
         a6.SetValue("slug", "slik-bruker-nav-kunstig-intelligens-til-saksbehandling");
-        a6.SetValue("innhold", @"<p>Nav er blant de offentlige virksomhetene i Norge som har kommet lengst
-med å ta i bruk kunstig intelligens. Fra automatisert dokumenthåndtering
-til prediktive modeller for oppfølging — KI er i ferd med å endre
-hvordan Norges største velferdsetat jobber.</p>
+        a6.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Nav er blant de offentlige virksomhetene i Norge som har kommet lengst med å ta i bruk kunstig intelligens. Fra automatisert dokumenthåndtering til prediktive modeller for oppfølging — KI er i ferd med å endre hvordan Norges største velferdsetat jobber.</p>
 <h2>Automatisk dokumentklassifisering</h2>
-<p>Nav mottar millioner av dokumenter hvert år. En KI-modell klassifiserer
-innkommende dokumenter automatisk og ruter dem til riktig saksbehandler,
-noe som har kuttet behandlingstiden betydelig.</p>
+<p>Nav mottar millioner av dokumenter hvert år. En KI-modell klassifiserer innkommende dokumenter automatisk og ruter dem til riktig saksbehandler, noe som har kuttet behandlingstiden betydelig.</p>
 <h2>Prediktiv oppfølging</h2>
-<p>Ved hjelp av maskinlæring identifiserer Nav brukere som kan ha nytte
-av tidlig oppfølging, slik at rådgivere kan prioritere der behovet er størst.</p>
-<h2>Erfaringer og utfordringer</h2>
-<p>Nav understreker viktigheten av menneskelig kontroll, transparens overfor
-brukerne, og løpende evaluering av modellenes treffsikkerhet og rettferdighet.</p>");
+<p>Ved hjelp av maskinlæring identifiserer Nav brukere som kan ha nytte av tidlig oppfølging, slik at rådgivere kan prioritere der behovet er størst.</p>"),
+            InfoBox("Navs erfaringer", @"<p>Nav understreker viktigheten av menneskelig kontroll, transparens overfor brukerne, og løpende evaluering av modellenes treffsikkerhet og rettferdighet. Alle automatiserte beslutninger kan overstyres av en saksbehandler.</p>")
+        ));
+        a6.SetValue("seoTittel", "Slik bruker Nav kunstig intelligens til saksbehandling");
+        a6.SetValue("seoBeskrivelse", "Hvordan Nav bruker KI til dokumentklassifisering, prediktiv oppfølging og effektivisering av saksbehandling.");
         SaveAndPublish(a6);
 
         var a7 = Create("artikkel", "5 ting du må vite før du anskaffer KI-løsninger", parentId);
         a7.SetValue("tittel", "5 ting du må vite før du anskaffer KI-løsninger");
         a7.SetValue("slug", "5-ting-du-ma-vite-for-du-anskaffer-ki-losninger");
-        a7.SetValue("innhold", @"<p>Anskaffelse av KI-løsninger i offentlig sektor krever en annen tilnærming
-enn tradisjonelle IT-innkjøp. Her er fem viktige ting å tenke på.</p>
+        a7.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Anskaffelse av KI-løsninger i offentlig sektor krever en annen tilnærming enn tradisjonelle IT-innkjøp. Her er fem viktige ting å tenke på.</p>
 <h2>1. Definer problemet, ikke løsningen</h2>
-<p>Start med behovet. Hvilken prosess skal forbedres? Hvilke gevinster forventer
-dere? Unngå å bestille «KI» uten et tydelig bruksområde.</p>
+<p>Start med behovet. Hvilken prosess skal forbedres? Hvilke gevinster forventer dere? Unngå å bestille «KI» uten et tydelig bruksområde.</p>
 <h2>2. Datakvalitet er avgjørende</h2>
-<p>En KI-modell er bare så god som dataene den trenes på. Kartlegg tilgjengelige
-data og kvaliteten på disse før dere går ut i markedet.</p>
+<p>En KI-modell er bare så god som dataene den trenes på. Kartlegg tilgjengelige data og kvaliteten på disse før dere går ut i markedet.</p>
 <h2>3. Still krav til åpenhet</h2>
-<p>Krev at leverandøren kan forklare hvordan modellen tar beslutninger, og at
-dere får innsyn i treningsdata og modellarkitektur.</p>
-<h2>4. Tenk livssyklus, ikke bare lansering</h2>
-<p>KI-systemer trenger løpende overvåking, oppdatering av modeller og nye
-treningsdata. Budsjetter for drift, ikke bare utvikling.</p>
-<h2>5. Vurder personvern og etikk tidlig</h2>
-<p>Gjennomfør DPIA tidlig i prosessen, og involver personvernombud og
-fageksperter fra starten.</p>");
+<p>Krev at leverandøren kan forklare hvordan modellen tar beslutninger, og at dere får innsyn i treningsdata og modellarkitektur.</p>"),
+            InfoBox("Husk livssyklus og etikk", @"<p><strong>4. Tenk livssyklus, ikke bare lansering.</strong> KI-systemer trenger løpende overvåking, oppdatering av modeller og nye treningsdata. Budsjetter for drift, ikke bare utvikling.</p>
+<p><strong>5. Vurder personvern og etikk tidlig.</strong> Gjennomfør DPIA tidlig i prosessen, og involver personvernombud og fageksperter fra starten.</p>")
+        ));
+        a7.SetValue("seoTittel", "5 ting du må vite før du anskaffer KI-løsninger");
+        a7.SetValue("seoBeskrivelse", "Fem viktige råd for offentlige virksomheter som skal anskaffe KI-løsninger.");
         SaveAndPublish(a7);
+
+        // ── Long/rich articles (text + info box + dark panel) ──
 
         var a8 = Create("artikkel", "Datatilsynets risikovurdering for KI — en gjennomgang", parentId);
         a8.SetValue("tittel", "Datatilsynets risikovurdering for KI — en gjennomgang");
         a8.SetValue("slug", "datatilsynets-risikovurdering-for-ki");
-        a8.SetValue("innhold", @"<p>Datatilsynet har publisert en veileder for risikovurdering av
-KI-systemer som behandler personopplysninger. Vi oppsummerer de
-viktigste punktene og hva det betyr for din virksomhet.</p>
+        a8.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Datatilsynet har publisert en veileder for risikovurdering av KI-systemer som behandler personopplysninger. Vi oppsummerer de viktigste punktene og hva det betyr for din virksomhet.</p>
 <h2>Hvem gjelder dette?</h2>
-<p>Alle virksomheter som bruker KI til å behandle personopplysninger —
-enten det er ansiktsgjenkjenning, profilering eller automatisert
-saksbehandling — må gjennomføre en risikovurdering.</p>
-<h2>Sentrale vurderingspunkter</h2>
-<ul>
+<p>Alle virksomheter som bruker KI til å behandle personopplysninger — enten det er ansiktsgjenkjenning, profilering eller automatisert saksbehandling — må gjennomføre en risikovurdering.</p>"),
+            InfoBox("Sentrale vurderingspunkter", @"<ul>
 <li>Nødvendighet og proporsjonalitet: Er KI riktig verktøy?</li>
 <li>Dataminimering: Bruker systemet kun nødvendige data?</li>
 <li>Rettferdighet: Er det risiko for diskriminering eller skjevhet?</li>
 <li>Transparens: Kan de registrerte forstå hvordan beslutninger tas?</li>
 <li>Sikkerhet: Er data og modeller tilstrekkelig beskyttet?</li>
-</ul>
-<p>Datatilsynet anbefaler at risikovurderingen gjøres før systemet settes
-i produksjon, og at den oppdateres ved vesentlige endringer.</p>");
+</ul>"),
+            DarkPanel("Når skal risikovurderingen gjøres?", @"<p>Datatilsynet anbefaler at risikovurderingen gjøres <strong>før</strong> systemet settes i produksjon, og at den oppdateres ved vesentlige endringer i modell, data eller bruksområde. Virksomheter som allerede har KI i drift bør gjennomføre en vurdering så snart som mulig.</p>")
+        ));
+        a8.SetValue("seoTittel", "Datatilsynets risikovurdering for KI — en gjennomgang");
+        a8.SetValue("seoBeskrivelse", "Oppsummering av Datatilsynets veileder for risikovurdering av KI-systemer som behandler personopplysninger.");
         SaveAndPublish(a8);
 
         var a9 = Create("artikkel", "Generativ KI i kommunene: erfaringer fra pilotprosjekter", parentId);
         a9.SetValue("tittel", "Generativ KI i kommunene: erfaringer fra pilotprosjekter");
         a9.SetValue("slug", "generativ-ki-i-kommunene-erfaringer-fra-pilotprosjekter");
-        a9.SetValue("innhold", @"<p>Flere norske kommuner tester nå generativ KI — store språkmodeller som
-kan skrive tekst, oppsummere dokumenter og svare på spørsmål. Hva har
-de lært så langt?</p>
+        a9.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Flere norske kommuner tester nå generativ KI — store språkmodeller som kan skrive tekst, oppsummere dokumenter og svare på spørsmål. Hva har de lært så langt?</p>
 <h2>Bruksområder som fungerer</h2>
-<p>Kommunene rapporterer best resultater for intern bruk: utkast til brev
-og vedtak, oppsummering av lange saksdokumenter, og oversettelse til
-klart språk. Her sparer saksbehandlere mye tid.</p>
-<h2>Utfordringer</h2>
-<p>Utadrettet bruk — som chatboter mot innbyggere — krever mer forsiktighet.
-Feilaktige svar (hallusinasjoner) kan få alvorlige konsekvenser når det
-gjelder rettigheter og tjenester.</p>
-<h2>Anbefalinger</h2>
-<ul>
+<p>Kommunene rapporterer best resultater for intern bruk: utkast til brev og vedtak, oppsummering av lange saksdokumenter, og oversettelse til klart språk. Her sparer saksbehandlere mye tid.</p>"),
+            DarkPanel("Utfordringer med utadrettet bruk", @"<p>Utadrettet bruk — som chatboter mot innbyggere — krever mer forsiktighet. Feilaktige svar (hallusinasjoner) kan få alvorlige konsekvenser når det gjelder rettigheter og tjenester. Kommunene anbefaler å starte internt før man vurderer innbyggerrettede løsninger.</p>"),
+            InfoBox("Anbefalinger fra pilotene", @"<ul>
 <li>Start med intern bruk der feiltoleransen er høyere</li>
 <li>Etabler tydelige retningslinjer for hva som kan og ikke kan deles med KI</li>
 <li>Sørg for at sensitive personopplysninger ikke sendes til skybaserte tjenester</li>
 <li>Mål effekten: Spar dere faktisk tid, eller bruker folk like lang tid på å kvalitetssjekke?</li>
-</ul>");
+</ul>")
+        ));
+        a9.SetValue("seoTittel", "Generativ KI i kommunene: erfaringer fra pilotprosjekter");
+        a9.SetValue("seoBeskrivelse", "Erfaringer og anbefalinger fra norske kommuner som tester generativ KI i offentlig forvaltning.");
         SaveAndPublish(a9);
 
         var a10 = Create("artikkel", "Åpenhet og innsyn: Krav til forklarbarhet i KI-systemer", parentId);
         a10.SetValue("tittel", "Åpenhet og innsyn: Krav til forklarbarhet i KI-systemer");
         a10.SetValue("slug", "apenhet-og-innsyn-krav-til-forklarbarhet-i-ki-systemer");
-        a10.SetValue("innhold", @"<p>Når offentlige virksomheter bruker KI til å fatte beslutninger som
-påvirker innbyggere, stiller både forvaltningsloven og GDPR krav til
-forklarbarhet. Men hva betyr egentlig forklarbarhet i praksis?</p>
+        a10.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Når offentlige virksomheter bruker KI til å fatte beslutninger som påvirker innbyggere, stiller både forvaltningsloven og GDPR krav til forklarbarhet. Men hva betyr egentlig forklarbarhet i praksis?</p>
 <h2>Juridiske krav</h2>
-<p>Forvaltningsloven krever at vedtak begrunnes. GDPR gir den registrerte
-rett til informasjon om automatiserte beslutninger. AI Act stiller
-ytterligere krav til dokumentasjon og transparens for høyrisiko-systemer.</p>
-<h2>Tekniske tilnærminger</h2>
-<p>Forklarbarhet kan implementeres på ulike nivåer: fra enkle
-beslutningsregler og featureviktighet til mer avanserte teknikker
-som SHAP-verdier og kontrafaktiske forklaringer.</p>
-<h2>Praktiske råd</h2>
-<ul>
+<p>Forvaltningsloven krever at vedtak begrunnes. GDPR gir den registrerte rett til informasjon om automatiserte beslutninger. AI Act stiller ytterligere krav til dokumentasjon og transparens for høyrisiko-systemer.</p>"),
+            InfoBox("Tekniske tilnærminger", @"<p>Forklarbarhet kan implementeres på ulike nivåer: fra enkle beslutningsregler og featureviktighet til mer avanserte teknikker som SHAP-verdier og kontrafaktiske forklaringer.</p>"),
+            DarkPanel("Praktiske råd for forklarbarhet", @"<ul>
 <li>Tilpass forklaringen til mottakeren — innbygger, saksbehandler og revisor trenger ulik detaljeringsgrad</li>
 <li>Dokumenter modellens virkemåte ved utvikling, ikke i etterkant</li>
 <li>Test forklaringene med reelle brukere — gir de faktisk mening?</li>
-</ul>");
+</ul>")
+        ));
+        a10.SetValue("seoTittel", "Åpenhet og innsyn: Krav til forklarbarhet i KI-systemer");
+        a10.SetValue("seoBeskrivelse", "Juridiske og tekniske krav til forklarbarhet når offentlige virksomheter bruker KI til beslutninger.");
         SaveAndPublish(a10);
 
-        // Full-featured article using all CMS fields
+        // ── Full showcase article: KI-regnekraft ──
+
         var aFull = Create("artikkel", "KI-regnekraft i Norge: Status, utvikling og behov fremover", parentId);
         aFull.SetValue("tittel", "KI-regnekraft i Norge: Status, utvikling og behov fremover");
         aFull.SetValue("slug", "ki-regnekraft-i-norge");
-        aFull.SetValue("innhold", @"<p>Regnekraft er en grunnleggende forutsetning for utvikling, tilpasning og bruk av moderne kunstig intelligens. Etter hvert som avanserte KI-modeller blir større, mer komplekse og mer datakrevende, øker også behovet for nasjonal kapasitet til å trene, kjøre og videreutvikle dem.</p>
-
-<h2>Hva menes med KI-infrastruktur?</h2>
-<p>KI-infrastruktur omfatter både teknologiske og organisatoriske ressurser som gjør det mulig å utvikle og anvende kunstig intelligens på en trygg og effektiv måte. En sentral komponent er tungregning (High Performance Computing, HPC), hvor CPU- og GPU-ressurser brukes til tungregneoppgaver.</p>
-<p>I tillegg består KI-infrastruktur av andre ressurser:</p>
-<ul>
+        aFull.SetValue("innhold", BuildArticleBlockList(
+            TextBlock(@"<p>Regnekraft er en grunnleggende forutsetning for utvikling, tilpasning og bruk av moderne kunstig intelligens. Etter hvert som avanserte KI-modeller blir større, mer komplekse og mer datakrevende, øker også behovet for nasjonal kapasitet til å trene, kjøre og videreutvikle dem.</p>"),
+            TextBlock(@"<h2>Hva menes med KI-infrastruktur?</h2>
+<p>KI-infrastruktur omfatter både teknologiske og organisatoriske ressurser som gjør det mulig å utvikle og anvende kunstig intelligens på en trygg og effektiv måte. En sentral komponent er tungregning (High Performance Computing, HPC), hvor CPU- og GPU-ressurser brukes til tungregneoppgaver.</p>"),
+            InfoBox("Komponenter i KI-infrastruktur", @"<ul>
 <li>Dataressurser, inkludert tilgjengelige datasett og ordnede prosesser for datadeling.</li>
 <li>Programvare og verktøy, som rammeverk og plattformer for modelltrening og drift.</li>
 <li>Organisatoriske strukturer, som sikrer kompetanseutvikling, forvaltning og sikker drift.</li>
 <li>Regulatoriske mekanismer, inkludert tilsyn, sandkasser og ansvarlig bruk av KI.</li>
 </ul>
-<p>Samlet skal infrastrukturen støtte forskning, innovasjon og bruk av KI i Norge.</p>
-
-<h2>Status for KI-infrastruktur i Norge</h2>
-<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
-
-<h3>Nasjonal KI-fabrikk og superdatamaskinen Olivia</h3>
-<p>Sigma2 er den nasjonale leverandøren for e-infrastruktur og tilhørende tjenester, og eies av Sikt. Sigma2 åpnet i 2025 en ny nasjonal KI-fabrikk som huser Norges kraftigste superdatamaskin, Olivia. Maskinen inngår i det europeiske LUMI AI Factory-nettverket og er tilgjengelig for forskningsmiljøer, offentlig sektor og deler av næringslivet.</p>
-<p>Til tross for kapasitetstilførselen rapporterer flere fagmiljøer at etterspørselen raskt overstiger det tilgjengelige tilbudet. Olivia ble fullbooket kort tid etter oppstart, og behovet for flere GPU-ressurser er betydelig.</p>
-
-<h3>Nasjonale språkmodeller og datagrunnlag</h3>
+<p>Samlet skal infrastrukturen støtte forskning, innovasjon og bruk av KI i Norge.</p>"),
+            DarkPanel("Status for KI-infrastruktur i Norge", @"<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
+<p>Sigma2 åpnet i 2025 en ny nasjonal KI-fabrikk som huser Norges kraftigste superdatamaskin, <strong>Olivia</strong>. Maskinen inngår i det europeiske LUMI AI Factory-nettverket og er tilgjengelig for forskningsmiljøer, offentlig sektor og deler av næringslivet.</p>"),
+            TextBlock(@"<h2>Nasjonale språkmodeller og datagrunnlag</h2>
 <p>Nasjonalbiblioteket har fått et utvidet mandat til å klargjøre norske og samiske data for KI-trening. Dette inkluderer blant annet en nasjonal lisensordning for bruk av avisinnhold, inngått i samarbeid med Kopinor. Målet er å sikre tilgang til kvalitetsdata som gjenspeiler norske forhold.</p>
-
 <h2>Behovsvurderinger og kapasitetsutfordringer</h2>
-<p>Utredningene fra Forskningsrådet peker på at dagens kapasitet ikke er tilstrekkelig for behovene i forskning, forvaltning og næringsliv. Arbeidet med en konseptvalgutredning i 2025 anslo at behovet for GPU-kapasitet vil øke med 40–50 % årlig frem mot 2030.</p>
-
-<h2>Internasjonalt samarbeid: EuroHPC og nordisk kapasitet</h2>
+<p>Utredningene fra Forskningsrådet peker på at dagens kapasitet ikke er tilstrekkelig for behovene i forskning, forvaltning og næringsliv. Arbeidet med en konseptvalgutredning i 2025 anslo at behovet for GPU-kapasitet vil øke med 40–50 % årlig frem mot 2030.</p>"),
+            TextBlock(@"<h2>Internasjonalt samarbeid: EuroHPC og nordisk kapasitet</h2>
 <p>Som deltaker i EuroHPC får Norge tilgang til europeisk toppkapasitet, deriblant LUMI-superdatamaskinen i Finland. Deltakelsen gir også mulighet for å påvirke europeiske investeringer og delta i forsknings- og innovasjonsprosjekter.</p>
 <p>Flere europeiske land, inkludert nordiske naboer, investerer tungt i KI-infrastruktur. Dette bidrar til økt samlet kapasitet, men illustrerer også viktigheten av at Norge selv bygger og opprettholder nasjonalt kontrollert regnekraft.</p>
-
 <h2>Hvorfor nasjonal kapasitet er viktig</h2>
-<p>Uten tilstrekkelig nasjonal kapasitet blir Norge i større grad avhengig av globale skyleverandører, hvor reguleringsmuligheter, tilgangskontroll og databehandling foregår utenfor landets jurisdiksjon.</p>");
+<p>Uten tilstrekkelig nasjonal kapasitet blir Norge i større grad avhengig av globale skyleverandører, hvor reguleringsmuligheter, tilgangskontroll og databehandling foregår utenfor landets jurisdiksjon.</p>")
+        ));
         aFull.SetValue("seoTittel", "KI-regnekraft i Norge: Status, utvikling og behov fremover");
         aFull.SetValue("seoBeskrivelse", "En oversikt over norsk KI-infrastruktur, regnekraft og kapasitetsbehov frem mot 2030.");
         SaveAndPublish(aFull);

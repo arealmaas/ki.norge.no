@@ -37,6 +37,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListAccordionDt = null!;
     private IDataType _blockListTipsDt = null!;
     private IDataType _blockListEventsDt = null!;
+    private IDataType _blockListArtikkelDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
@@ -72,12 +73,23 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("eventItem") == null)
                 CreateEventItemElement();
 
+            // Article element types
+            if (_contentTypeService.Get("artikkelTekst") == null)
+                CreateArtikkelTekstElement();
+            if (_contentTypeService.Get("artikkelInfoBoks") == null)
+                CreateArtikkelInfoBoksElement();
+            if (_contentTypeService.Get("artikkelMorkPanel") == null)
+                CreateArtikkelMorkPanelElement();
+            if (_contentTypeService.Get("artikkelBildeSeksjon") == null)
+                CreateArtikkelBildeSeksjonElement();
+
             CreateBlockListDataTypes();
 
             if (_contentTypeService.Get("merkelapp") == null)
                 CreateMerkelapp();
             if (_contentTypeService.Get("artikkel") == null)
                 CreateArtikkel();
+            MigrateArtikkelType();
             if (_contentTypeService.Get("side") == null)
                 CreateSide();
 
@@ -232,6 +244,75 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
+    // --- Article element types ---
+
+    private IContentType CreateArtikkelTekstElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelTekst",
+            Name = "Artikkel Tekst",
+            Description = "Rik tekst-blokk i en artikkel",
+            Icon = "icon-edit",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateArtikkelInfoBoksElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelInfoBoks",
+            Name = "Artikkel Infoboks",
+            Description = "Blå infoboks (#e5f2f7 bakgrunn)",
+            Icon = "icon-info",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateArtikkelMorkPanelElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelMorkPanel",
+            Name = "Artikkel Mørkt Panel",
+            Description = "Mørkt panel (#1b4656 bakgrunn, hvit tekst)",
+            Icon = "icon-marquee",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateArtikkelBildeSeksjonElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelBildeSeksjon",
+            Name = "Artikkel Bildeseksjon",
+            Description = "Bildeseksjon i en artikkel",
+            Icon = "icon-picture",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
+        ct.AddPropertyType(Prop("bildetekst", "Bildetekst", _textStringDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
     // --- Block List DataTypes ---
 
     private void CreateBlockListDataTypes()
@@ -242,6 +323,9 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Tips", "tipItem");
         _blockListEventsDt = CreateOrGetBlockListDataType(
             "Block List - Events", "eventItem");
+        _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
+            "Block List - Artikkel Innhold",
+            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelMorkPanel", "artikkelBildeSeksjon" });
     }
 
     private IDataType CreateOrGetBlockListDataType(string name, string elementTypeAlias)
@@ -276,6 +360,45 @@ public class ContentTypeComponent : IAsyncComponent
                 {
                     new { contentElementTypeKey = elementType.Key }
                 }
+            },
+        };
+        _dataTypeService.Save(dt);
+        return dt;
+    }
+
+    private IDataType CreateOrGetMultiBlockListDataType(string name, string[] elementTypeAliases)
+    {
+        // Check if it already exists by name
+        var existing = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.BlockList)
+            .FirstOrDefault(dt => dt.Name == name);
+        if (existing != null)
+        {
+            if (string.IsNullOrEmpty(existing.EditorUiAlias))
+            {
+                existing.EditorUiAlias = "Umb.PropertyEditorUi.BlockList";
+                _dataTypeService.Save(existing);
+            }
+            return existing;
+        }
+
+        var blocks = elementTypeAliases.Select(alias =>
+        {
+            var elementType = _contentTypeService.Get(alias)
+                ?? throw new InvalidOperationException($"Element type '{alias}' not found");
+            return new { contentElementTypeKey = elementType.Key };
+        }).ToArray();
+
+        var blockListEditor = _propertyEditors[Constants.PropertyEditors.Aliases.BlockList]
+            ?? throw new InvalidOperationException("Block List property editor not found");
+
+        var dt = new DataType(blockListEditor, _configSerializer)
+        {
+            Name = name,
+            DatabaseType = ValueStorageType.Ntext,
+            EditorUiAlias = "Umb.PropertyEditorUi.BlockList",
+            ConfigurationData = new Dictionary<string, object>
+            {
+                ["blocks"] = blocks
             },
         };
         _dataTypeService.Save(dt);
@@ -341,7 +464,7 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, description: "Hovedinnhold"), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Hovedinnhold"), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -349,6 +472,17 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateArtikkelType()
+    {
+        var ct = _contentTypeService.Get("artikkel");
+        if (ct == null) return;
+        var prop = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "innhold");
+        if (prop == null) return;
+        if (prop.DataTypeId == _blockListArtikkelDt.Id) return; // already migrated
+        prop.DataTypeId = _blockListArtikkelDt.Id;
+        _contentTypeService.Save(ct);
     }
 
     private IContentType CreateSide()

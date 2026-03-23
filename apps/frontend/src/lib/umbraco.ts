@@ -33,6 +33,30 @@ export interface UmbracoBlock {
   content: Record<string, unknown>;
 }
 
+// Artikkel block types
+export interface ArtikkelTekstBlock {
+  contentType: 'artikkelTekst';
+  innhold: string; // HTML from rich text
+}
+
+export interface ArtikkelInfoBoksBlock {
+  contentType: 'artikkelInfoBoks';
+  tittel?: string;
+  innhold: string; // HTML
+}
+
+export interface ArtikkelMorkPanelBlock {
+  contentType: 'artikkelMorkPanel';
+  tittel?: string;
+  innhold: string; // HTML
+}
+
+export interface ArtikkelBildeSeksjonBlock {
+  contentType: 'artikkelBildeSeksjon';
+  bilde?: UmbracoMedia;
+  bildetekst?: string;
+}
+
 // Content types matching Umbraco document type schemas
 export interface Artikkel {
   id: string;
@@ -406,7 +430,7 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         ...base,
         tittel: props.tittel as string || item.name,
         slug: props.slug as string || '',
-        innhold: mapRichText(props.innhold),
+        innhold: mapArtikkelBlocks(props.innhold),
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
         seoBilde: mapMedia(props.seoBilde),
@@ -530,6 +554,49 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
 }
 
 // ── Mapping helpers ─────────────────────────────────────────────
+
+/**
+ * Map artikkel innhold from Block List format to UmbracoBlock[].
+ * Handles different block content types: artikkelTekst, artikkelInfoBoks, artikkelMorkPanel, artikkelBildeSeksjon.
+ */
+function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
+  // Handle Block List format: { items: [{ content: { contentType, properties } }] }
+  const items = (value as any)?.items;
+  if (Array.isArray(items)) {
+    return items.map((block: any) => {
+      const content = block.content || block;
+      const ct = content.contentType || 'artikkelTekst';
+      const props = content.properties || content;
+
+      if (ct === 'artikkelTekst') {
+        const richText = props.innhold;
+        const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
+        return { contentType: 'artikkelTekst', content: { innhold: html } };
+      }
+      if (ct === 'artikkelInfoBoks') {
+        const richText = props.innhold;
+        const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
+        return { contentType: 'artikkelInfoBoks', content: { tittel: props.tittel || '', innhold: html } };
+      }
+      if (ct === 'artikkelMorkPanel') {
+        const richText = props.innhold;
+        const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
+        return { contentType: 'artikkelMorkPanel', content: { tittel: props.tittel || '', innhold: html } };
+      }
+      if (ct === 'artikkelBildeSeksjon') {
+        return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildetekst: props.bildetekst || '' } };
+      }
+
+      // Fallback: treat as tekst block (legacy rich text)
+      const richText = props.innhold || value;
+      const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
+      return { contentType: 'tekst', content: { innhold: html } };
+    });
+  }
+
+  // Fallback for plain rich text (legacy data)
+  return mapRichText(value) || [];
+}
 
 /**
  * Handle Umbraco rich text which comes as JSON AST: { tag: "#root", elements: [...] }
