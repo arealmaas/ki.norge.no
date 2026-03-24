@@ -3,6 +3,10 @@ using Umbraco.Cms.Core;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.Models;
 using Umbraco.Cms.Core.Services;
+using Umbraco.Cms.Core.IO;
+using Umbraco.Cms.Core.Strings;
+using Umbraco.Cms.Core.PropertyEditors;
+using Microsoft.AspNetCore.Hosting;
 
 namespace KiNorge.Cms.Composers;
 
@@ -20,16 +24,37 @@ public class ContentSeeder : IAsyncComponent
 {
     private readonly IContentService _contentService;
     private readonly IContentTypeService _contentTypeService;
+    private readonly IMediaService _mediaService;
+    private readonly IMediaTypeService _mediaTypeService;
+    private readonly MediaFileManager _mediaFileManager;
+    private readonly IShortStringHelper _shortStringHelper;
+    private readonly IContentTypeBaseServiceProvider _contentTypeBaseServiceProvider;
+    private readonly MediaUrlGeneratorCollection _mediaUrlGenerators;
     private readonly IRuntimeState _runtimeState;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public ContentSeeder(
         IContentService contentService,
         IContentTypeService contentTypeService,
-        IRuntimeState runtimeState)
+        IMediaService mediaService,
+        IMediaTypeService mediaTypeService,
+        MediaFileManager mediaFileManager,
+        IShortStringHelper shortStringHelper,
+        IContentTypeBaseServiceProvider contentTypeBaseServiceProvider,
+        MediaUrlGeneratorCollection mediaUrlGenerators,
+        IRuntimeState runtimeState,
+        IWebHostEnvironment webHostEnvironment)
     {
         _contentService = contentService;
         _contentTypeService = contentTypeService;
+        _mediaService = mediaService;
+        _mediaTypeService = mediaTypeService;
+        _mediaFileManager = mediaFileManager;
+        _shortStringHelper = shortStringHelper;
+        _contentTypeBaseServiceProvider = contentTypeBaseServiceProvider;
+        _mediaUrlGenerators = mediaUrlGenerators;
         _runtimeState = runtimeState;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     public Task InitializeAsync(bool isRestarting, CancellationToken cancellationToken)
@@ -49,6 +74,9 @@ public class ContentSeeder : IAsyncComponent
             var veiledningerFolder = CreateFolder("veiledninger", "Veiledninger");
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
+
+            // Seed media images
+            SeedMedia();
 
             // Create root-level content nodes
             SeedForside();
@@ -828,4 +856,41 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
     }
 
     private string Udi(IContent content) => $"umb://document/{content.Key:N}";
+
+    // ── Media ──────────────────────────────────────────────────
+
+    private void SeedMedia()
+    {
+        // Check if media already exists
+        var existing = _mediaService.GetRootMedia();
+        if (existing != null && existing.Any()) return;
+
+        var seedMediaPath = Path.Combine(_webHostEnvironment.WebRootPath ?? _webHostEnvironment.ContentRootPath, "seed-media");
+        if (!Directory.Exists(seedMediaPath))
+        {
+            Console.WriteLine($"ContentSeeder: No seed-media folder found at {seedMediaPath}");
+            return;
+        }
+
+        // Create a folder in the media library
+        var folder = _mediaService.CreateMediaWithIdentity("Seed bilder", -1, "Folder");
+
+        foreach (var filePath in Directory.GetFiles(seedMediaPath, "*.png"))
+        {
+            var fileName = Path.GetFileName(filePath);
+            try
+            {
+                var media = _mediaService.CreateMedia(fileName, folder.Id, "Image");
+                var fileBytes = System.IO.File.ReadAllBytes(filePath);
+                var stream = new MemoryStream(fileBytes);
+                media.SetValue(_mediaFileManager, _mediaUrlGenerators, _shortStringHelper, _contentTypeBaseServiceProvider, "umbracoFile", fileName, stream);
+                _mediaService.Save(media);
+                Console.WriteLine($"ContentSeeder: Uploaded media '{fileName}'");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ContentSeeder: Failed to upload '{fileName}': {ex.Message}");
+            }
+        }
+    }
 }
