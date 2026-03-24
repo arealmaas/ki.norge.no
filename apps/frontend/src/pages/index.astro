@@ -12,6 +12,34 @@ const websiteJsonLd = websiteSchema(seoDescription);
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
   <Hero />
 
+  <!-- Aktuelt -->
+  <section class="aktuelt">
+    <div class="aktuelt-container">
+      <h2 class="section-heading">Aktuelt</h2>
+      <div class="aktuelt-grid">
+        <a href="/eksempler/kunnskapsassistenten" class="aktuelt-card">
+          <h3 class="aktuelt-card-title">Kunnskapsassistenten</h3>
+          <span class="aktuelt-tag">Lær av andre</span>
+          <div class="aktuelt-card-image"></div>
+        </a>
+        <a href="#" class="aktuelt-card">
+          <h3 class="aktuelt-card-title">Innbyggerne kan chatte med kommunen på 90 ulike språk</h3>
+          <span class="aktuelt-tag">Lær av andre</span>
+          <div class="aktuelt-card-image"></div>
+        </a>
+        <a href="#" class="aktuelt-card">
+          <h3 class="aktuelt-card-title">KI-regnekraft i Norge: Status, utvikling og behov fremover</h3>
+          <span class="aktuelt-tag">Nyhet</span>
+          <div class="aktuelt-card-image"></div>
+        </a>
+      </div>
+      <a href="/eksempler" class="aktuelt-link">
+        <span class="aktuelt-link-circle">→</span>
+        Finn inspirasjon og lær av andre
+      </a>
+    </div>
+  </section>
+
   <!-- Veiledning -->
   <section class="veiledning">
     <div class="veiledning-container">
@@ -41,34 +69,6 @@ const websiteJsonLd = websiteSchema(seoDescription);
           <span class="veiledning-card-desc">For deg som ønsker å bygge en KI-løsning selv &rarr;</span>
         </a>
       </div>
-    </div>
-  </section>
-
-  <!-- Aktuelt -->
-  <section class="aktuelt">
-    <div class="aktuelt-container">
-      <h2 class="section-heading">Aktuelt</h2>
-      <div class="aktuelt-grid">
-        <a href="/eksempler/kunnskapsassistenten" class="aktuelt-card">
-          <h3 class="aktuelt-card-title">Kunnskapsassistenten</h3>
-          <span class="aktuelt-tag">Lær av andre</span>
-          <div class="aktuelt-card-image"></div>
-        </a>
-        <a href="#" class="aktuelt-card">
-          <h3 class="aktuelt-card-title">Innbyggerne kan chatte med kommunen på 90 ulike språk</h3>
-          <span class="aktuelt-tag">Lær av andre</span>
-          <div class="aktuelt-card-image"></div>
-        </a>
-        <a href="#" class="aktuelt-card">
-          <h3 class="aktuelt-card-title">KI-regnekraft i Norge: Status, utvikling og behov fremover</h3>
-          <span class="aktuelt-tag">Nyhet</span>
-          <div class="aktuelt-card-image"></div>
-        </a>
-      </div>
-      <a href="/eksempler" class="aktuelt-link">
-        <span class="aktuelt-link-circle">→</span>
-        Finn inspirasjon og lær av andre
-      </a>
     </div>
   </section>
 
