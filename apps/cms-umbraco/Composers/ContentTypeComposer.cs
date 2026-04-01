@@ -38,6 +38,8 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListTipsDt = null!;
     private IDataType _blockListEventsDt = null!;
     private IDataType _blockListArtikkelDt = null!;
+    private IDataType _blockListSandkasseStegDt = null!;
+    private IDataType _blockListSandkasseFaqDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
@@ -83,6 +85,12 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("artikkelBildeSeksjon") == null)
                 CreateArtikkelBildeSeksjonElement();
 
+            // Sandkasse element types
+            if (_contentTypeService.Get("sandkasseSteg") == null)
+                CreateSandkasseStegElement();
+            if (_contentTypeService.Get("sandkasseFaq") == null)
+                CreateSandkasseFaqElement();
+
             CreateBlockListDataTypes();
 
             if (_contentTypeService.Get("merkelapp") == null)
@@ -115,6 +123,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateOmOss();
             else
                 MigrateOmOss();
+            if (_contentTypeService.Get("sandkasse") == null)
+                CreateSandkasse();
 
             // Create container types if missing
             CreateContainerIfMissing("artikler", "Artikler", "icon-newspaper-alt", "artikkel");
@@ -317,6 +327,43 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
+    // --- Sandkasse element types ---
+
+    private IContentType CreateSandkasseStegElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "sandkasseSteg",
+            Name = "Sandkasse Steg",
+            Description = "Et steg i sandkasse-prosessen",
+            Icon = "icon-ordered-list",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("nummer", "Nummer", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _richTextDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateSandkasseFaqElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "sandkasseFaq",
+            Name = "Sandkasse FAQ",
+            Description = "Et spørsmål og svar i sandkasse-FAQ",
+            Icon = "icon-help-alt",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("sporsmal", "Spørsmål", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("svar", "Svar", _richTextDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
     // --- Block List DataTypes ---
 
     private void CreateBlockListDataTypes()
@@ -330,6 +377,10 @@ public class ContentTypeComponent : IAsyncComponent
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
             new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelMorkPanel", "artikkelBildeSeksjon" });
+        _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
+            "Block List - Sandkasse Steg", "sandkasseSteg");
+        _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(
+            "Block List - Sandkasse FAQ", "sandkasseFaq");
     }
 
     private IDataType CreateOrGetBlockListDataType(string name, string elementTypeAlias)
@@ -674,6 +725,55 @@ public class ContentTypeComponent : IAsyncComponent
         if (ct.PropertyTypeExists("misjonTekst")) return;
         ct.AddPropertyType(Prop("misjonTekst", "Misjonstekst", _richTextDt, description: "Tekst i den blå misjonsbanneren"), "innhold");
         _contentTypeService.Save(ct);
+    }
+
+    private IContentType CreateSandkasse()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "sandkasse",
+            Name = "Sandkasse",
+            Description = "Sandkasse-siden",
+            Icon = "icon-science",
+            AllowedAsRoot = true,
+        };
+
+        // Tab: Hero
+        ct.AddPropertyGroup("hero", "Hero");
+        ct.AddPropertyType(Prop("heroTittel", "Hero-tittel", _textStringDt), "hero");
+        ct.AddPropertyType(Prop("heroTekst", "Hero-tekst", _richTextDt), "hero");
+        ct.AddPropertyType(Prop("nedtelling", "Nedtelling", _textStringDt), "hero");
+
+        // Tab: Hvem
+        ct.AddPropertyGroup("hvem", "Hvem");
+        ct.AddPropertyType(Prop("hvemTittel", "Hvem-tittel", _textStringDt), "hvem");
+        ct.AddPropertyType(Prop("hvemTekst", "Hvem-tekst", _richTextDt), "hvem");
+        ct.AddPropertyType(Prop("hvemBilde", "Hvem-bilde", _mediaPickerDt), "hvem");
+
+        // Tab: Prosess
+        ct.AddPropertyGroup("prosess", "Prosess");
+        ct.AddPropertyType(Prop("prosessTittel", "Prosess-tittel", _textStringDt), "prosess");
+        ct.AddPropertyType(Prop("prosessSteg", "Prosess-steg", _blockListSandkasseStegDt), "prosess");
+
+        // Tab: Resultat
+        ct.AddPropertyGroup("resultat", "Resultat");
+        ct.AddPropertyType(Prop("resultatTittel", "Resultat-tittel", _textStringDt), "resultat");
+        ct.AddPropertyType(Prop("resultatTekst", "Resultat-tekst", _richTextDt), "resultat");
+        ct.AddPropertyType(Prop("resultatBilde", "Resultat-bilde", _mediaPickerDt), "resultat");
+
+        // Tab: FAQ
+        ct.AddPropertyGroup("faq", "FAQ");
+        ct.AddPropertyType(Prop("faqTittel", "FAQ-tittel", _textStringDt), "faq");
+        ct.AddPropertyType(Prop("faqSeksjoner", "FAQ-seksjoner", _blockListSandkasseFaqDt), "faq");
+
+        // Tab: SEO
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+
+        _contentTypeService.Save(ct);
+        return ct;
     }
 
     private IContentType CreateForside()

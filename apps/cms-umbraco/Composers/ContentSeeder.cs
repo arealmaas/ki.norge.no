@@ -81,6 +81,7 @@ public class ContentSeeder : IAsyncComponent
             // Create root-level content nodes
             SeedForside();
             var omOssNode = SeedOmOss();
+            SeedSandkasse();
 
             // Seed merkelapper FIRST so we can reference them from other content
             var merkelappMap = SeedMerkelapper(merkelapperFolder.Id);
@@ -194,6 +195,143 @@ public class ContentSeeder : IAsyncComponent
         SaveAndPublish(s3);
 
         return omOss;
+    }
+
+    // ── Sandkasse ────────────────────────────────────────────
+
+    private void SeedSandkasse()
+    {
+        var ct = _contentTypeService.Get("sandkasse")
+            ?? throw new InvalidOperationException("Content type 'sandkasse' not found");
+        var sandkasse = _contentService.Create("Sandkasse", -1, ct.Alias);
+
+        // Hero
+        sandkasse.SetValue("heroTittel", "KI-sandkassen");
+        sandkasse.SetValue("heroTekst", "<p>KI-sandkassen er et tilbud der virksomheter kan utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.</p>");
+        sandkasse.SetValue("nedtelling", "120 dager til du kan søke!");
+
+        // Hvem
+        sandkasse.SetValue("hvemTittel", "Hvem er det til for?");
+        sandkasse.SetValue("hvemTekst", @"<p>Sandkassen er åpen for alle som utvikler eller tar i bruk KI-systemer og ønsker veiledning om regelverket.</p>
+<ul>
+<li>Offentlige virksomheter som utvikler eller anskaffer KI-løsninger</li>
+<li>Private virksomheter som leverer KI-tjenester til offentlig sektor</li>
+<li>Forsknings- og utdanningsinstitusjoner som jobber med KI</li>
+<li>Startups og scale-ups med innovative KI-løsninger</li>
+</ul>");
+
+        // Prosess
+        sandkasse.SetValue("prosessTittel", "Slik foregår prosessen");
+        sandkasse.SetValue("prosessSteg", BuildSandkasseStegBlockList(
+            ("1", "Søknad", "<p>Send inn en søknad som beskriver KI-systemet du ønsker å teste, hvilke data det bruker, og hvilke regulatoriske spørsmål du trenger avklaring på. Vi vurderer søknaden og gir deg svar innen fire uker.</p>"),
+            ("2", "Opptak", "<p>Dersom søknaden godkjennes, blir du tatt opp i sandkassen. Du får tildelt et team med juridisk og teknisk ekspertise som følger deg gjennom hele forløpet.</p>"),
+            ("3", "Planlegging", "<p>Sammen med teamet ditt lager du en plan for sandkasseforløpet. Planen beskriver hva som skal testes, hvilke risikoer som skal vurderes, og hvilke milepæler som gjelder.</p>"),
+            ("4", "Sluttbevis", "<p>Etter gjennomført forløp får du et skriftlig bevis som dokumenterer funnene, vurderingene og anbefalingene fra sandkassen. Dette kan brukes som dokumentasjon overfor tilsynsmyndigheter.</p>")
+        ));
+
+        // Resultat
+        sandkasse.SetValue("resultatTittel", "Hva får du ut av det?");
+        sandkasse.SetValue("resultatTekst", @"<p>Deltakelse i KI-sandkassen gir deg verdifull innsikt og dokumentasjon som hjelper deg videre.</p>
+<p>Du får en grundig juridisk vurdering av KI-systemet ditt opp mot gjeldende regelverk, inkludert KI-forordningen, personvernregelverket og sektorspesifikke krav. I tillegg får du praktiske anbefalinger for hvordan du kan tilpasse løsningen din for å oppfylle kravene.</p>
+<p>Etter gjennomført forløp mottar du et sluttbevis som dokumenterer vurderingene og kan brukes overfor tilsynsmyndigheter og samarbeidspartnere.</p>");
+
+        // FAQ
+        sandkasse.SetValue("faqTittel", "Ofte stilte spørsmål");
+        sandkasse.SetValue("faqSeksjoner", BuildSandkasseFaqBlockList(
+            ("Hvem kan søke om deltakelse i sandkassen?", "<p>Sandkassen er åpen for alle leverandører og virksomheter som utvikler, tilbyr eller bruker KI-systemer og ønsker veiledning om regelverket. Både offentlige og private aktører kan søke.</p>"),
+            ("Hvor lang tid tar et sandkasseforløp?", "<p>Et typisk forløp varer 6-12 måneder, avhengig av kompleksiteten til KI-systemet og omfanget av de regulatoriske spørsmålene som skal avklares.</p>"),
+            ("Hva koster det å delta?", "<p>Det er gratis å delta i KI-sandkassen. Deltakerne må selv dekke egne kostnader knyttet til utvikling og tilpasning av KI-systemet.</p>"),
+            ("Hvilke krav stilles til KI-systemet?", "<p>KI-systemet bør være innovativt og reise regulatoriske spørsmål som det er behov for å avklare. Det er en fordel om systemet er i en tidlig fase der det fortsatt er mulig å gjøre tilpasninger basert på veiledningen.</p>"),
+            ("Hva skjer etter sandkasseforløpet?", "<p>Du får et skriftlig bevis som dokumenterer funnene, vurderingene og anbefalingene fra sandkassen. Dette kan brukes som dokumentasjon overfor tilsynsmyndigheter og samarbeidspartnere.</p>")
+        ));
+
+        // SEO
+        sandkasse.SetValue("seoTittel", "KI-sandkassen – Test KI-løsninger trygt");
+        sandkasse.SetValue("seoBeskrivelse", "KI-sandkassen lar virksomheter teste og utvikle KI-løsninger i et kontrollert miljø med juridisk veiledning og regulatorisk støtte.");
+        SaveAndPublish(sandkasse);
+    }
+
+    private string BuildSandkasseStegBlockList(params (string nummer, string tittel, string beskrivelse)[] steps)
+    {
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        var elementType = _contentTypeService.Get("sandkasseSteg");
+        if (elementType == null) return "{}";
+
+        foreach (var (nummer, tittel, beskrivelse) in steps)
+        {
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            contentData.Add(new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = elementType.Key.ToString(),
+                ["udi"] = udi,
+                ["nummer"] = nummer,
+                ["tittel"] = tittel,
+                ["beskrivelse"] = beskrivelse
+            });
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        return JsonSerializer.Serialize(blockList);
+    }
+
+    private string BuildSandkasseFaqBlockList(params (string sporsmal, string svar)[] items)
+    {
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        var elementType = _contentTypeService.Get("sandkasseFaq");
+        if (elementType == null) return "{}";
+
+        foreach (var (sporsmal, svar) in items)
+        {
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            contentData.Add(new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = elementType.Key.ToString(),
+                ["udi"] = udi,
+                ["sporsmal"] = sporsmal,
+                ["svar"] = svar
+            });
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        return JsonSerializer.Serialize(blockList);
     }
 
     // ── Artikler ──────────────────────────────────────────────
