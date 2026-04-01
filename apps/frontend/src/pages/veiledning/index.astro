@@ -2,46 +2,83 @@
 /**
  * Veiledning overview — "Lag et KI-system" landing page.
  * Based on Figma design 564:9097.
- * TODO: Make sections CMS-driven. Currently hardcoded.
- * TODO: Clarify long-term card topics with design/content team.
+ * Content driven by CMS veiledningOversikt singleton with hardcoded fallbacks.
  */
 import Layout from '../../components/layout/Layout.astro';
+import { getVeiledningOversikt, getMediaUrl } from '../../lib/umbraco';
+import type { VeiledningKort, VerktoyKort } from '../../lib/umbraco';
 
-const forDuGarIGang = [
-  { title: 'Definer behovet og hva KI skal løse', desc: '', href: '#' },
-  { title: 'Finn ut hvilket risikonivå løsningen din har', desc: 'Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.', href: '#' },
-  { title: 'Forstå KI-loven og GDPR', desc: 'Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.', href: '#' },
-  { title: 'Forstå krav til data og hva du må gjøre', desc: '', href: '/veiledning/bruk-data-rett' },
-];
+let cmsData: Awaited<ReturnType<typeof getVeiledningOversikt>> = null;
+try {
+  cmsData = await getVeiledningOversikt();
+} catch (e) {
+  console.error('Failed to fetch veiledningOversikt from CMS:', e);
+}
 
-const utvikleSystemet = [
-  { title: 'Dette er kravene du må følge for utforming', href: '#' },
-  { title: 'Valg av språkmodell – utvikle noe eget eller bruke en på markedet', href: '#' },
-  { title: 'Dokumentasjon og testing', href: '#' },
-  { title: 'Tiltak for sikkerhet og hindre misbruk', href: '#' },
-];
+const heroLabel = cmsData?.heroLabel || 'Veiledning';
+const heroTitle = cmsData?.heroTittel || 'Lag et KI-system';
+const heroSubtitle = cmsData?.heroTekst || 'Vi veileder deg gjennom regler, krav og beste praksis.';
+const heroImageUrl = cmsData?.heroBilde ? getMediaUrl(cmsData.heroBilde) : undefined;
+
+const seksjon1Title = cmsData?.seksjon1Tittel || 'Før du går i gang';
+const forDuGarIGang: { title: string; desc: string; href: string }[] =
+  cmsData?.seksjon1Kort && cmsData.seksjon1Kort.length > 0
+    ? cmsData.seksjon1Kort.map((k: VeiledningKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#' }))
+    : [
+        { title: 'Definer behovet og hva KI skal løse', desc: '', href: '#' },
+        { title: 'Finn ut hvilket risikonivå løsningen din har', desc: 'Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.', href: '#' },
+        { title: 'Forstå KI-loven og GDPR', desc: 'Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.', href: '#' },
+        { title: 'Forstå krav til data og hva du må gjøre', desc: '', href: '/veiledning/bruk-data-rett' },
+      ];
+
+const seksjon2Title = cmsData?.seksjon2Tittel || 'Utvikle KI-systemet';
+const utvikleSystemet: { title: string; desc: string; href: string }[] =
+  cmsData?.seksjon2Kort && cmsData.seksjon2Kort.length > 0
+    ? cmsData.seksjon2Kort.map((k: VeiledningKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#' }))
+    : [
+        { title: 'Dette er kravene du må følge for utforming', desc: '', href: '#' },
+        { title: 'Valg av språkmodell – utvikle noe eget eller bruke en på markedet', desc: '', href: '#' },
+        { title: 'Dokumentasjon og testing', desc: '', href: '#' },
+        { title: 'Tiltak for sikkerhet og hindre misbruk', desc: '', href: '#' },
+      ];
+
+const verktoyTitle = cmsData?.verktoyTittel || 'Verktøy';
+const verktoyCards: { title: string; desc: string; href: string; imageUrl?: string }[] =
+  cmsData?.verktoyKort && cmsData.verktoyKort.length > 0
+    ? cmsData.verktoyKort.map((k: VerktoyKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#', imageUrl: k.bilde ? getMediaUrl(k.bilde) : undefined }))
+    : [
+        { title: 'Bias explorer', desc: 'Utforsk hvordan dataskjevheter blir til modellskjevheter', href: '#' },
+        { title: 'Risikovurdering', desc: 'Modellen til Marie', href: '#' },
+      ];
+
+const seoTitle = cmsData?.seoTittel || 'Veiledning';
+const seoDesc = cmsData?.seoBeskrivelse || 'Vi veileder deg gjennom regler, krav og beste praksis for å lage et KI-system.';
 ---
 
-<Layout title="Veiledning" description="Vi veileder deg gjennom regler, krav og beste praksis for å lage et KI-system.">
+<Layout title={seoTitle} description={seoDesc}>
   <div class="veiledning-overview">
     <!-- Hero -->
     <section class="veil-hero">
       <div class="veil-hero-inner">
         <div class="veil-hero-text">
-          <span class="veil-hero-label">Veiledning</span>
-          <h1 class="veil-hero-title">Lag et KI-system</h1>
-          <p class="veil-hero-subtitle">Vi veileder deg gjennom regler, krav og beste praksis.</p>
+          <span class="veil-hero-label">{heroLabel}</span>
+          <h1 class="veil-hero-title">{heroTitle}</h1>
+          <p class="veil-hero-subtitle">{heroSubtitle}</p>
         </div>
         <div class="veil-hero-image">
-          <div class="veil-hero-placeholder"></div>
+          {heroImageUrl ? (
+            <img src={heroImageUrl} alt={heroTitle} class="veil-hero-img" />
+          ) : (
+            <div class="veil-hero-placeholder"></div>
+          )}
         </div>
       </div>
     </section>
 
-    <!-- Før du går i gang -->
+    <!-- Seksjon 1 -->
     <section class="veil-section">
       <div class="veil-section-inner">
-        <h2 class="veil-section-heading">Før du går i gang</h2>
+        <h2 class="veil-section-heading">{seksjon1Title}</h2>
         <div class="veil-cards veil-cards--4">
           {forDuGarIGang.map(card => (
             <a href={card.href} class:list={['veil-card', { 'veil-card--disabled': card.href === '#' }]}>
@@ -49,24 +86,25 @@ const utvikleSystemet = [
                 <h3 class="veil-card-title">{card.title}</h3>
                 {card.desc && <p class="veil-card-desc">{card.desc}</p>}
               </div>
-              <span class="veil-card-arrow">→</span>
+              <span class="veil-card-arrow">&rarr;</span>
             </a>
           ))}
         </div>
       </div>
     </section>
 
-    <!-- Utvikle KI-systemet -->
+    <!-- Seksjon 2 -->
     <section class="veil-section">
       <div class="veil-section-inner">
-        <h2 class="veil-section-heading">Utvikle KI-systemet</h2>
+        <h2 class="veil-section-heading">{seksjon2Title}</h2>
         <div class="veil-cards veil-cards--4">
           {utvikleSystemet.map(card => (
             <a href={card.href} class:list={['veil-card', { 'veil-card--disabled': card.href === '#' }]}>
               <div class="veil-card-content">
                 <h3 class="veil-card-title">{card.title}</h3>
+                {card.desc && <p class="veil-card-desc">{card.desc}</p>}
               </div>
-              <span class="veil-card-arrow">→</span>
+              <span class="veil-card-arrow">&rarr;</span>
             </a>
           ))}
         </div>
@@ -76,24 +114,22 @@ const utvikleSystemet = [
     <!-- Verktøy -->
     <section class="veil-tools">
       <div class="veil-section-inner">
-        <h2 class="veil-section-heading">Verktøy</h2>
+        <h2 class="veil-section-heading">{verktoyTitle}</h2>
         <div class="veil-cards veil-cards--2">
-          <a href="#" class="veil-tool-card">
-            <div class="veil-tool-text">
-              <h3 class="veil-tool-title">Bias explorer</h3>
-              <p class="veil-tool-desc">Utforsk hvordan dataskjevheter blir til modellskjevheter</p>
-            </div>
-            <div class="veil-tool-image"></div>
-            <span class="veil-tool-link">Utforsk →</span>
-          </a>
-          <a href="#" class="veil-tool-card">
-            <div class="veil-tool-text">
-              <h3 class="veil-tool-title">Risikovurdering</h3>
-              <p class="veil-tool-desc">Modellen til Marie</p>
-            </div>
-            <div class="veil-tool-image"></div>
-            <span class="veil-tool-link">Utforsk →</span>
-          </a>
+          {verktoyCards.map(card => (
+            <a href={card.href} class="veil-tool-card">
+              <div class="veil-tool-text">
+                <h3 class="veil-tool-title">{card.title}</h3>
+                <p class="veil-tool-desc">{card.desc}</p>
+              </div>
+              {card.imageUrl ? (
+                <img src={card.imageUrl} alt={card.title} class="veil-tool-image" />
+              ) : (
+                <div class="veil-tool-image"></div>
+              )}
+              <span class="veil-tool-link">Utforsk &rarr;</span>
+            </a>
+          ))}
         </div>
       </div>
     </section>
@@ -160,6 +196,13 @@ const utvikleSystemet = [
     background: var(--image-fallback-bg, #D9D9D9);
     border-radius: 8px;
     opacity: 0.4;
+  }
+
+  .veil-hero-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover;
   }
 
   @media (max-width: 768px) {

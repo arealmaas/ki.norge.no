@@ -276,6 +276,41 @@ export interface Sandkasse {
   locale: string;
 }
 
+export interface VeiledningKort {
+  tittel: string;
+  beskrivelse?: string;
+  url?: string;
+}
+
+export interface VerktoyKort {
+  tittel: string;
+  beskrivelse?: string;
+  url?: string;
+  bilde?: UmbracoMedia;
+}
+
+export interface VeiledningOversikt {
+  id: string;
+  documentId: string;
+  heroLabel?: string;
+  heroTittel?: string;
+  heroTekst?: string;
+  heroBilde?: UmbracoMedia;
+  seksjon1Tittel?: string;
+  seksjon1Kort?: VeiledningKort[];
+  seksjon2Tittel?: string;
+  seksjon2Kort?: VeiledningKort[];
+  verktoyTittel?: string;
+  verktoyKort?: VerktoyKort[];
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  locale: string;
+}
+
 export interface Merkelapp {
   id: string;
   documentId: string;
@@ -625,6 +660,24 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         seoBilde: mapMedia(props.seoBilde),
       } as T;
 
+    case 'veiledningOversikt':
+      return {
+        ...base,
+        heroLabel: props.heroLabel as string || undefined,
+        heroTittel: props.heroTittel as string || undefined,
+        heroTekst: props.heroTekst as string || undefined,
+        heroBilde: mapMedia(props.heroBilde),
+        seksjon1Tittel: props.seksjon1Tittel as string || undefined,
+        seksjon1Kort: mapVeiledningKort(props.seksjon1Kort),
+        seksjon2Tittel: props.seksjon2Tittel as string || undefined,
+        seksjon2Kort: mapVeiledningKort(props.seksjon2Kort),
+        verktoyTittel: props.verktoyTittel as string || undefined,
+        verktoyKort: mapVerktoyKort(props.verktoyKort),
+        seoTittel: props.seoTittel as string || undefined,
+        seoBeskrivelse: props.seoBeskrivelse as string || undefined,
+        seoBilde: mapMedia(props.seoBilde),
+      } as T;
+
     case 'merkelapp':
       return {
         ...base,
@@ -779,6 +832,35 @@ function mapSandkasseFaq(value: unknown): SandkasseFaq[] {
     return {
       sporsmal: (props.sporsmal as string) || '',
       svar: mapRichText(props.svar) || [],
+    };
+  });
+}
+
+function mapVeiledningKort(value: unknown): VeiledningKort[] {
+  const items = Array.isArray(value) ? value : (value as any)?.items;
+  if (!Array.isArray(items)) return [];
+  return items.map((block: any) => {
+    const content = block.content || block;
+    const props = content.properties || content;
+    return {
+      tittel: (props.tittel as string) || '',
+      beskrivelse: (props.beskrivelse as string) || undefined,
+      url: (props.url as string) || undefined,
+    };
+  });
+}
+
+function mapVerktoyKort(value: unknown): VerktoyKort[] {
+  const items = Array.isArray(value) ? value : (value as any)?.items;
+  if (!Array.isArray(items)) return [];
+  return items.map((block: any) => {
+    const content = block.content || block;
+    const props = content.properties || content;
+    return {
+      tittel: (props.tittel as string) || '',
+      beskrivelse: (props.beskrivelse as string) || undefined,
+      url: (props.url as string) || undefined,
+      bilde: mapMedia(props.bilde),
     };
   });
 }
@@ -992,6 +1074,13 @@ export async function getOmOss(options: FetchOptions = {}): Promise<OmOss | null
 
 export async function getSandkasse(options: FetchOptions = {}): Promise<Sandkasse | null> {
   const result = await fetchCollection<Sandkasse>('sandkasse', { ...options, take: 1 });
+  return result.data[0] || null;
+}
+
+// ── Veiledning Oversikt API functions ────────────────────────────
+
+export async function getVeiledningOversikt(options: FetchOptions = {}): Promise<VeiledningOversikt | null> {
+  const result = await fetchCollection<VeiledningOversikt>('veiledningOversikt', { ...options, take: 1 });
   return result.data[0] || null;
 }
 
