@@ -1,57 +1,60 @@
 ---
-// TODO: Make this page CMS-driven. The omOss and omOssSeksjon content types
-// already exist in Umbraco. Replace hardcoded stubs with getOmOss() for
-// hero/intro and getOmOssSeksjoner() for the alternating stubs.
 import Layout from '../components/layout/Layout.astro';
+import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import PartnersSection from '../components/shared/PartnersSection.astro';
+import { getOmOss, getOmOssSeksjoner, getArtikler, getMediaUrl, getPlainText } from '../lib/umbraco';
 
-const stubs = [
-  {
-    tittel: 'Hvorfor KI Norge?',
-    tekst: 'KI Norge gir en nasjonal inngang til offentlig informasjon og veiledning om ansvarlig utvikling og bruk av KI. Portalen skal gjøre det enklere for norske virksomheter, særlig små og mellomstore, å forstå regleverket, finne relevante verktøy og komme i gang på en trygg måte.',
-  },
-  {
-    tittel: 'Veiledning',
-    tekst: 'KI Norge gir veiledning til norske virksomheter som vil utvikle eller ta i bruk ansvarlig kunstig intelligens. Her kan lære mer om hva KI-loven, personvernregelverket og annet lovverk krever for å utvikle KI. KI-verktøy og peke i riktig retning som gjelder. Vi veileder for at alle virksomheter skal ha mulighet og grunnlag for å gjøre gode beslutninger om KI.',
-  },
-  {
-    tittel: 'KI-sandkassen',
-    tekst: 'KI-sandkassen kan du utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser, før du lanserer dem i markedet eller tar dem i bruk internt. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.',
-  },
-];
+const omOss = await getOmOss();
+const seksjonerRes = await getOmOssSeksjoner();
+const seksjoner = seksjonerRes.data;
+const artiklerRes = await getArtikler(3);
+const latestArticles = artiklerRes.data;
 
-const aktueltItems = [
-  { title: 'Artikkel 1', date: 'Dato', lead: 'Call out a feature, benefit, or value that can stand on its own.' },
-  { title: 'Artikkel 2', date: 'Dato', lead: 'Call out a feature, benefit, or value that can stand on its own.' },
-  { title: 'Artikkel 3', date: 'Dato', lead: 'Call out a feature, benefit, or value that can stand on its own.' },
-];
+const heroTittel = omOss?.heroTittel || 'Om KI Norge';
+const heroUndertittel = omOss?.heroUndertittel || 'Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig.';
+const seoTitle = omOss?.seoTittel || 'Om oss';
+const seoDesc = omOss?.seoBeskrivelse || 'Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.';
 ---
 
-<Layout title="Om oss" description="Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens." headerTheme="dark">
+<Layout title={seoTitle} description={seoDesc} headerTheme="dark">
   <div class="om-oss-page">
     <!-- Hero -->
     <section class="om-oss-hero">
-      <h1 class="om-oss-hero-title">Om KI Norge</h1>
-      <p class="om-oss-hero-subtitle">Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig.</p>
+      <h1 class="om-oss-hero-title">{heroTittel}</h1>
+      <p class="om-oss-hero-subtitle">{heroUndertittel}</p>
     </section>
 
     <!-- Intro -->
-    <section class="om-oss-intro">
-      <div class="om-oss-intro-inner">
-        <p class="om-oss-intro-text">KI Norge er en nasjonal satsing under Digitaliseringsdirektoratet (Digdir). Formålet er å gjøre det enklere for norske virksomheter å ta i bruk KI på en måte som er trygg, lovlig og verdiskapende, enten du driver en liten privat bedrift eller jobber i en offentlig virksomhet.</p>
-      </div>
-    </section>
+    {omOss?.introTekst ? (
+      <section class="om-oss-intro">
+        <div class="om-oss-intro-inner">
+          <BlocksRenderer blocks={omOss.introTekst} class="om-oss-intro-text" />
+        </div>
+      </section>
+    ) : (
+      <section class="om-oss-intro">
+        <div class="om-oss-intro-inner">
+          <p class="om-oss-intro-text">KI Norge er en nasjonal satsing under Digitaliseringsdirektoratet (Digdir). Formålet er å gjøre det enklere for norske virksomheter å ta i bruk KI på en måte som er trygg, lovlig og verdiskapende, enten du driver en liten privat bedrift eller jobber i en offentlig virksomhet.</p>
+        </div>
+      </section>
+    )}
 
     <!-- Alternating stubs -->
     <div class="om-oss-seksjoner">
-      {stubs.map((stub, index) => (
+      {seksjoner.map((seksjon, index) => (
         <section class:list={['om-oss-stub', index % 2 === 0 ? 'stub--image-left' : 'stub--image-right']}>
           <div class="stub-image" aria-hidden="true">
-            <div class="stub-image-placeholder"></div>
+            {seksjon.bilde ? (
+              <img src={getMediaUrl(seksjon.bilde)} alt={seksjon.bilde.alternativeText || seksjon.tittel} loading="lazy" class="stub-img" />
+            ) : (
+              <div class="stub-image-placeholder"></div>
+            )}
           </div>
           <div class="stub-content">
-            <h2 class="stub-title">{stub.tittel}</h2>
-            <p class="stub-text">{stub.tekst}</p>
+            <h2 class="stub-title">{seksjon.tittel}</h2>
+            <div class="stub-text">
+              <BlocksRenderer blocks={seksjon.tekst} />
+            </div>
           </div>
         </section>
       ))}
@@ -60,7 +63,11 @@ const aktueltItems = [
     <!-- Mission banner -->
     <section class="om-oss-mission">
       <div class="om-oss-mission-inner">
-        <p class="om-oss-mission-text">KI Norge kobler virksomheter på tvers av offentlig sektor, næringsliv, akademia og forskning. Vi samler kunnskap gjennom kartlegginger, og gir den tilgjengelig for deg som trenger et solid grunnlag for å ta gode beslutninger.</p>
+        {omOss?.misjonTekst ? (
+          <BlocksRenderer blocks={omOss.misjonTekst} class="om-oss-mission-text" />
+        ) : (
+          <p class="om-oss-mission-text">KI Norge kobler virksomheter på tvers av offentlig sektor, næringsliv, akademia og forskning. Vi samler kunnskap gjennom kartlegginger, og gir den tilgjengelig for deg som trenger et solid grunnlag for å ta gode beslutninger.</p>
+        )}
       </div>
     </section>
 
@@ -72,15 +79,17 @@ const aktueltItems = [
       <div class="om-oss-aktuelt-inner">
         <h2 class="om-oss-aktuelt-heading">Aktuelt</h2>
         <div class="om-oss-aktuelt-grid">
-          {aktueltItems.map(item => (
-            <div class="om-oss-aktuelt-card">
+          {latestArticles.map(article => (
+            <a href={`/artikler/${article.slug}`} class="om-oss-aktuelt-card">
               <div class="om-oss-aktuelt-text">
-                <h3 class="om-oss-aktuelt-title">{item.title}</h3>
-                <span class="om-oss-aktuelt-date">{item.date}</span>
-                <p class="om-oss-aktuelt-lead">{item.lead}</p>
+                <h3 class="om-oss-aktuelt-title">{article.tittel}</h3>
+                <span class="om-oss-aktuelt-date">
+                  {new Date(article.publishedAt).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </span>
+                <p class="om-oss-aktuelt-lead">{getPlainText(article.innhold, 80)}</p>
               </div>
               <div class="om-oss-aktuelt-image"></div>
-            </div>
+            </a>
           ))}
         </div>
       </div>

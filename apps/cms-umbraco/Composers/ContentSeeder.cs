@@ -153,6 +153,7 @@ public class ContentSeeder : IAsyncComponent
         omOss.SetValue("heroTittel", "KI Norge");
         omOss.SetValue("heroUndertittel", "Verdigrunnlag");
         omOss.SetValue("introTekst", "<p>KI Norge er en nasjonal satsing under Digitaliseringsdirektoratet (Digdir). Formålet er å gjøre det enklere for norske virksomheter å ta i bruk KI på en måte som er trygg, lovlig og verdiskapende, enten du driver en liten privat bedrift eller jobber i en offentlig virksomhet.</p>");
+        omOss.SetValue("misjonTekst", "<p>KI Norge kobler virksomheter på tvers av offentlig sektor, næringsliv, akademia og forskning. Vi samler kunnskap gjennom kartlegginger, og gir den tilgjengelig for deg som trenger et solid grunnlag for å ta gode beslutninger.</p>");
         omOss.SetValue("seoTittel", "Om oss – KI Norge");
         omOss.SetValue("seoBeskrivelse", "Om KI Norge – en nasjonal satsing for ansvarlig bruk av kunstig intelligens.");
         SaveAndPublish(omOss);

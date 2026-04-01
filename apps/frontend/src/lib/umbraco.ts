@@ -217,6 +217,7 @@ export interface OmOss {
   heroTittel?: string;
   heroUndertittel?: string;
   introTekst?: UmbracoBlock[];
+  misjonTekst?: UmbracoBlock[];
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -535,6 +536,7 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         heroTittel: props.heroTittel as string || '',
         heroUndertittel: props.heroUndertittel as string || '',
         introTekst: mapRichText(props.introTekst),
+        misjonTekst: mapRichText(props.misjonTekst),
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
         seoBilde: mapMedia(props.seoBilde),

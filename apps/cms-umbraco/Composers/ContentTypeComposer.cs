@@ -111,6 +111,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateOmOssSeksjon();
             if (_contentTypeService.Get("omOss") == null)
                 CreateOmOss();
+            else
+                MigrateOmOss();
 
             // Create container types if missing
             CreateContainerIfMissing("artikler", "Artikler", "icon-newspaper-alt", "artikkel");
@@ -642,6 +644,7 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("heroTittel", "Hero-tittel", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("heroUndertittel", "Hero-undertittel", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("introTekst", "Intro-tekst", _richTextDt), "innhold");
+        ct.AddPropertyType(Prop("misjonTekst", "Misjonstekst", _richTextDt, description: "Tekst i den blå misjonsbanneren"), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -660,6 +663,15 @@ public class ContentTypeComponent : IAsyncComponent
 
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateOmOss()
+    {
+        var ct = _contentTypeService.Get("omOss");
+        if (ct == null) return;
+        if (ct.PropertyTypeExists("misjonTekst")) return;
+        ct.AddPropertyType(Prop("misjonTekst", "Misjonstekst", _richTextDt, description: "Tekst i den blå misjonsbanneren"), "innhold");
+        _contentTypeService.Save(ct);
     }
 
     private IContentType CreateForside()
