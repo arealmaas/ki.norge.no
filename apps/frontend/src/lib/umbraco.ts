@@ -182,11 +182,24 @@ export interface Forside {
   heroOverskrift?: string;
   heroTekst?: UmbracoBlock[];
   heroBilde?: UmbracoMedia;
+  veiledningOverskrift?: string;
+  veiledning1Tittel?: string;
+  veiledning1Beskrivelse?: string;
+  veiledning1Url?: string;
+  veiledning2Tittel?: string;
+  veiledning2Beskrivelse?: string;
+  veiledning2Url?: string;
+  aktueltOverskrift?: string;
+  aktueltLenkeTekst?: string;
+  aktueltLenkeUrl?: string;
   raadTittel?: string;
   tips?: TipItem[];
   sandkasseTittel?: string;
   sandkasseTekst?: UmbracoBlock[];
   sandkasseUrl?: string;
+  arrangementOverskrift?: string;
+  arrangementKommendeTekst?: string;
+  arrangementAvholdteTekst?: string;
   arrangementer?: EventItem[];
   seoTittel?: string;
   seoBeskrivelse?: string;
@@ -509,11 +522,24 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         heroOverskrift: props.heroOverskrift as string || undefined,
         heroTekst: mapRichText(props.heroTekst),
         heroBilde: mapMedia(props.heroBilde),
+        veiledningOverskrift: props.veiledningOverskrift as string || undefined,
+        veiledning1Tittel: props.veiledning1Tittel as string || undefined,
+        veiledning1Beskrivelse: props.veiledning1Beskrivelse as string || undefined,
+        veiledning1Url: props.veiledning1Url as string || undefined,
+        veiledning2Tittel: props.veiledning2Tittel as string || undefined,
+        veiledning2Beskrivelse: props.veiledning2Beskrivelse as string || undefined,
+        veiledning2Url: props.veiledning2Url as string || undefined,
+        aktueltOverskrift: props.aktueltOverskrift as string || undefined,
+        aktueltLenkeTekst: props.aktueltLenkeTekst as string || undefined,
+        aktueltLenkeUrl: props.aktueltLenkeUrl as string || undefined,
         raadTittel: props.raadTittel as string || undefined,
         tips: mapTipItems(props.tips),
         sandkasseTittel: props.sandkasseTittel as string || undefined,
         sandkasseTekst: mapRichText(props.sandkasseTekst),
         sandkasseUrl: props.sandkasseUrl as string || undefined,
+        arrangementOverskrift: props.arrangementOverskrift as string || undefined,
+        arrangementKommendeTekst: props.arrangementKommendeTekst as string || undefined,
+        arrangementAvholdteTekst: props.arrangementAvholdteTekst as string || undefined,
         arrangementer: mapEventItems(props.arrangementer),
         seoTittel: props.seoTittel as string || undefined,
         seoBeskrivelse: props.seoBeskrivelse as string || undefined,
