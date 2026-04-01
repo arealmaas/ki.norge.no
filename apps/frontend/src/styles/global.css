@@ -62,12 +62,6 @@ body {
 }
 
 /* Utility classes */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--ds-size-4);
-}
-
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -80,4 +74,4 @@ body {
   border: 0;
 }
 
-/* TODO: sok.astro and TargetAudiences.astro still use Material Symbols — migrate to Aksel icons then remove */
+/* TODO: sok.astro still uses Material Symbols — migrate to Aksel icons when /sok is prioritized */

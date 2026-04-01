@@ -952,27 +952,6 @@ export function getPlainText(blocks?: UmbracoBlock[], maxLength?: number): strin
   return text;
 }
 
-/**
- * Extract headings (h2, h3) from UmbracoBlock[] HTML content.
- * Used for building table-of-contents navigation.
- */
-export function extractHeadings(blocks?: UmbracoBlock[]): { text: string; id: string; level: number }[] {
-  if (!blocks || blocks.length === 0) return [];
-  const html = blocks
-    .filter(b => b.contentType === 'tekst')
-    .map(b => b.content.innhold as string || '')
-    .join('');
-  const headings: { text: string; id: string; level: number }[] = [];
-  const regex = /<h([23])[^>]*>(.*?)<\/h\1>/gi;
-  let match;
-  while ((match = regex.exec(html)) !== null) {
-    const level = parseInt(match[1], 10);
-    const text = match[2].replace(/<[^>]+>/g, '').trim();
-    const id = text.toLowerCase().replace(/[^a-zæøå0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    headings.push({ text, id, level });
-  }
-  return headings;
-}
 
 // ── Artikkel API functions ──────────────────────────────────────
 
@@ -1049,13 +1028,6 @@ export async function getFAQs(options: FetchOptions = {}) {
   });
 }
 
-export async function getFAQsByKategori(kategoriSlug: string, options: FetchOptions = {}) {
-  return fetchCollection<FAQ>('faq', {
-    ...options,
-    sort: 'sortOrder:asc',
-  });
-}
-
 // ── Merkelapp (Tag) API functions ───────────────────────────────
 
 export async function getOmOssSeksjoner(options: FetchOptions = {}) {
@@ -1082,14 +1054,6 @@ export async function getSandkasse(options: FetchOptions = {}): Promise<Sandkass
 export async function getVeiledningOversikt(options: FetchOptions = {}): Promise<VeiledningOversikt | null> {
   const result = await fetchCollection<VeiledningOversikt>('veiledningOversikt', { ...options, take: 1 });
   return result.data[0] || null;
-}
-
-export async function getMerkelapper(options: FetchOptions = {}) {
-  return fetchCollection<Merkelapp>('merkelapp', options);
-}
-
-export async function getMerkelapp(slug: string, options: FetchOptions = {}) {
-  return fetchBySlug<Merkelapp>('merkelapp', slug, options);
 }
 
 // ── Search API ──────────────────────────────────────────────────
@@ -1203,10 +1167,3 @@ export async function searchContent(query: string, options: FetchOptions = {}): 
   }
 }
 
-// English aliases
-export const getArticles = getArtikler;
-export const getArticle = getArtikkel;
-export const getPages = getSider;
-export const getPage = getSide;
-export const getCases = getEksempler;
-export const getCase = getEksempel;
