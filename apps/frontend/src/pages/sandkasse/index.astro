@@ -8,7 +8,12 @@ import Layout from '../../components/layout/Layout.astro';
 import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import { getSandkasse, getMediaUrl, getPlainText } from '../../lib/umbraco';
 
-const sandkasse = await getSandkasse();
+let sandkasse = null;
+try {
+  sandkasse = await getSandkasse();
+} catch (e) {
+  console.error('Failed to fetch sandkasse CMS data:', e);
+}
 
 const fallbackProcessSteps = [
   { number: '1', title: 'Søknad', desc: 'Potensielle deltagere sender en søknad til sandkassen. De vil få svar på sin søknad, eventuell beskjed om klargjøring/retting av søknaden innen rimelig tid.' },
@@ -181,13 +186,6 @@ const seoDescription = sandkasse?.seoBeskrivelse || 'KI-sandkassen skal støtte 
 <style>
   .sandkasse-page {
     margin-top: -72px;
-  }
-
-  .sandkasse-page :global(.logo-link),
-  .sandkasse-page :global(.nav-link),
-  .sandkasse-page :global(.mobile-menu-toggle),
-  .sandkasse-page :global(.menu-label) {
-    color: white;
   }
 
   /* Hero */

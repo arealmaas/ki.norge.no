@@ -2,8 +2,13 @@
 import Layout from '../../components/layout/Layout.astro';
 import { getArtikler, getPlainText, type Artikkel } from '../../lib/umbraco';
 
-const artiklerRes = await getArtikler();
-const articles = artiklerRes.data;
+let articles: Artikkel[] = [];
+try {
+  const artiklerRes = await getArtikler();
+  articles = artiklerRes.data;
+} catch (e) {
+  console.error('Failed to fetch artikler:', e);
+}
 ---
 
 <Layout title="Aktuelt" description="Nyheter, analyser og artikler om kunstig intelligens i norsk offentlig sektor.">

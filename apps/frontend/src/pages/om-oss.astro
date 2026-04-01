@@ -4,11 +4,18 @@ import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import PartnersSection from '../components/shared/PartnersSection.astro';
 import { getOmOss, getOmOssSeksjoner, getArtikler, getMediaUrl, getPlainText } from '../lib/umbraco';
 
-const omOss = await getOmOss();
-const seksjonerRes = await getOmOssSeksjoner();
-const seksjoner = seksjonerRes.data;
-const artiklerRes = await getArtikler(3);
-const latestArticles = artiklerRes.data;
+let omOss = null;
+let seksjoner: any[] = [];
+let latestArticles: any[] = [];
+try {
+  omOss = await getOmOss();
+  const seksjonerRes = await getOmOssSeksjoner();
+  seksjoner = seksjonerRes.data;
+  const artiklerRes = await getArtikler(3);
+  latestArticles = artiklerRes.data;
+} catch (e) {
+  console.error('Failed to fetch om-oss CMS data:', e);
+}
 
 const heroTittel = omOss?.heroTittel || 'Om KI Norge';
 const heroUndertittel = omOss?.heroUndertittel || 'Mange virksomheter vil ta i bruk kunstig intelligens, men vet ikke helt hvor de skal begynne, eller om de gjør det riktig.';

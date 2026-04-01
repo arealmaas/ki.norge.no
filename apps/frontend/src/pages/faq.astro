@@ -5,8 +5,13 @@ import ContactCard from '../components/shared/ContactCard.astro';
 import { getFAQs, getPlainText, type FAQ } from '../lib/umbraco';
 import { faqPageSchema } from '../lib/seo';
 
-const faqRes = await getFAQs();
-const faqs = faqRes.data;
+let faqs: FAQ[] = [];
+try {
+  const faqRes = await getFAQs();
+  faqs = faqRes.data;
+} catch (e) {
+  console.error('Failed to fetch FAQs:', e);
+}
 
 const faqJsonLd = faqPageSchema(
   faqs.map(faq => ({ question: faq.sporsmal, answer: getPlainText(faq.svar) }))

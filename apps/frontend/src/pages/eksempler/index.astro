@@ -3,8 +3,13 @@ import Layout from '../../components/layout/Layout.astro';
 import ContactCard from '../../components/shared/ContactCard.astro';
 import { getEksempler, getPlainText, getMediaUrl, type Eksempel } from '../../lib/umbraco';
 
-const eksemplerRes = await getEksempler();
-const cases = eksemplerRes.data;
+let cases: Eksempel[] = [];
+try {
+  const eksemplerRes = await getEksempler();
+  cases = eksemplerRes.data;
+} catch (e) {
+  console.error('Failed to fetch eksempler:', e);
+}
 ---
 
 <Layout title="Gode eksempler" description="Lær av andre offentlige virksomheters erfaringer med kunstig intelligens.">

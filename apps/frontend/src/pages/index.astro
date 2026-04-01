@@ -4,9 +4,15 @@ import Hero from '../components/landing/Hero.astro';
 import { websiteSchema } from '../lib/seo';
 import { getForside, getArtikler, getPlainText } from '../lib/umbraco';
 
-const forside = await getForside();
-const artiklerRes = await getArtikler(3);
-const latestArticles = artiklerRes.data;
+let forside = null;
+let latestArticles: any[] = [];
+try {
+  forside = await getForside();
+  const artiklerRes = await getArtikler(3);
+  latestArticles = artiklerRes.data;
+} catch (e) {
+  console.error('Failed to fetch frontpage CMS data:', e);
+}
 
 const title = forside?.seoTittel || 'Hjem';
 const seoDescription = forside?.seoBeskrivelse || 'KI Norge - Norges nasjonale strategi for kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.';
