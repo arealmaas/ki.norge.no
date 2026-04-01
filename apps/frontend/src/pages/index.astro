@@ -39,14 +39,23 @@ const arr = {
   kommende: forside?.arrangementKommendeTekst || 'Se kommende arrangement',
   avholdte: forside?.arrangementAvholdteTekst || 'Se avholdte arrangement',
 };
+
+const sectionOrder = {
+  veiledning: forside?.rekkefølgeVeiledning ?? 1,
+  aktuelt: forside?.rekkefølgeAktuelt ?? 2,
+  treraad: forside?.rekkefølgeTreRaad ?? 3,
+  sandkasse: forside?.rekkefølgeSandkasse ?? 4,
+  arrangement: forside?.rekkefølgeArrangement ?? 5,
+};
 ---
 
 <Layout title={title} description={seoDescription}>
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
   <Hero />
 
+  <div class="sections-container">
   <!-- Veiledning -->
-  <section class="veiledning">
+  <section class="veiledning" style={`order: ${sectionOrder.veiledning}`}>
     <div class="veiledning-container">
       <h2 class="section-heading">{v.overskrift}</h2>
       <div class="veiledning-grid">
@@ -71,7 +80,7 @@ const arr = {
   </section>
 
   <!-- Aktuelt -->
-  <section class="aktuelt">
+  <section class="aktuelt" style={`order: ${sectionOrder.aktuelt}`}>
     <div class="aktuelt-container">
       <h2 class="section-heading">{a.overskrift}</h2>
       <div class="aktuelt-grid">
@@ -91,7 +100,7 @@ const arr = {
   </section>
 
   <!-- Tre råd -->
-  <section class="tre-raad">
+  <section class="tre-raad" style={`order: ${sectionOrder.treraad}`}>
     <div class="tre-raad-container">
       <h2 class="tre-raad-heading">Tre råd før du går i gang med KI</h2>
       <div class="tre-raad-grid">
@@ -115,7 +124,7 @@ const arr = {
   </section>
 
   <!-- Sandkasse -->
-  <section class="sandkasse">
+  <section class="sandkasse" style={`order: ${sectionOrder.sandkasse}`}>
     <div class="sandkasse-container">
       <a href="/sandkasse" class="sandkasse-card">
         <h2 class="sandkasse-title">Regulatorisk sandkasse for kunstig intelligens</h2>
@@ -128,7 +137,7 @@ const arr = {
   </section>
 
   <!-- Arrangement -->
-  <section class="arrangement">
+  <section class="arrangement" style={`order: ${sectionOrder.arrangement}`}>
     <div class="arrangement-container">
       <h2 class="section-heading">{arr.overskrift}</h2>
       <div class="arrangement-list">
@@ -193,9 +202,16 @@ const arr = {
       </div>
     </div>
   </section>
+  </div>
 </Layout>
 
 <style>
+  /* Sections container for CMS-driven reordering */
+  .sections-container {
+    display: flex;
+    flex-direction: column;
+  }
+
   /* Shared */
   .section-heading {
     font-family: 'Inter', sans-serif;

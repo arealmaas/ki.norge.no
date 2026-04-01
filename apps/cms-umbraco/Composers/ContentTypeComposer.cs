@@ -183,6 +183,11 @@ public class ContentTypeComponent : IAsyncComponent
     {
         _textStringDt = FindDataType(Constants.PropertyEditors.Aliases.TextBox);
         _textAreaDt = FindDataType(Constants.PropertyEditors.Aliases.TextArea);
+        // NOTE: Rich text editor heading support (H1, H2, H3, etc.) must be configured
+        // in the Umbraco backoffice: Settings → Data Types → Rich Text Editor → ensure
+        // "Styles" or "Format" dropdown is enabled in the toolbar configuration.
+        // Umbraco 17's default RTE (TinyMCE) supports headings but they may need to be
+        // explicitly enabled in the toolbar.
         _richTextDt = FindDataType(Constants.PropertyEditors.Aliases.RichText);
         _numericDt = FindDataType(Constants.PropertyEditors.Aliases.Integer);
         _mediaPickerDt = FindDataType(Constants.PropertyEditors.Aliases.MediaPicker3);
@@ -867,6 +872,32 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("arrangementKommendeTekst", "Kommende tekst", _textStringDt), "arrangement");
         ct.AddPropertyType(Prop("arrangementAvholdteTekst", "Avholdte tekst", _textStringDt), "arrangement");
 
+        // Tab: Bunn (Footer)
+        ct.AddPropertyGroup("bunn", "Bunn (Footer)");
+        ct.AddPropertyType(Prop("footerTittel", "Merkenavn", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerBeskrivelse", "Beskrivelse", _textAreaDt), "bunn");
+        ct.AddPropertyType(Prop("footerSosialInstagram", "Instagram", _textStringDt, description: "URL til Instagram-profil"), "bunn");
+        ct.AddPropertyType(Prop("footerSosialLinkedin", "LinkedIn", _textStringDt, description: "URL til LinkedIn-profil"), "bunn");
+        ct.AddPropertyType(Prop("footerSosialX", "X", _textStringDt, description: "URL til X-profil"), "bunn");
+        ct.AddPropertyType(Prop("footerLenke1Tekst", "Lenke 1 tekst", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke1Url", "Lenke 1 URL", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke2Tekst", "Lenke 2 tekst", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke2Url", "Lenke 2 URL", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke3Tekst", "Lenke 3 tekst", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke3Url", "Lenke 3 URL", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke4Tekst", "Lenke 4 tekst", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke4Url", "Lenke 4 URL", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke5Tekst", "Lenke 5 tekst", _textStringDt), "bunn");
+        ct.AddPropertyType(Prop("footerLenke5Url", "Lenke 5 URL", _textStringDt), "bunn");
+
+        // Tab: Rekkefølge (Order)
+        ct.AddPropertyGroup("rekkefølge", "Rekkefølge");
+        ct.AddPropertyType(Prop("rekkefølgeVeiledning", "Veiledning", _numericDt, description: "Rekkefølge for Veiledning-seksjonen (1-5)"), "rekkefølge");
+        ct.AddPropertyType(Prop("rekkefølgeAktuelt", "Aktuelt", _numericDt, description: "Rekkefølge for Aktuelt-seksjonen (1-5)"), "rekkefølge");
+        ct.AddPropertyType(Prop("rekkefølgeTreRaad", "Tre råd", _numericDt, description: "Rekkefølge for Tre råd-seksjonen (1-5)"), "rekkefølge");
+        ct.AddPropertyType(Prop("rekkefølgeSandkasse", "Sandkasse", _numericDt, description: "Rekkefølge for Sandkasse-seksjonen (1-5)"), "rekkefølge");
+        ct.AddPropertyType(Prop("rekkefølgeArrangement", "Arrangement", _numericDt, description: "Rekkefølge for Arrangement-seksjonen (1-5)"), "rekkefølge");
+
         // Tab: SEO
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -1008,5 +1039,39 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("arrangementAvholdteTekst", "Avholdte tekst", _textStringDt), "arrangement");
 
         _contentTypeService.Save(ct);
+
+        // Migrate footer fields
+        if (!ct.PropertyTypeExists("footerTittel"))
+        {
+            ct.AddPropertyGroup("bunn", "Bunn (Footer)");
+            ct.AddPropertyType(Prop("footerTittel", "Merkenavn", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerBeskrivelse", "Beskrivelse", _textAreaDt), "bunn");
+            ct.AddPropertyType(Prop("footerSosialInstagram", "Instagram", _textStringDt, description: "URL til Instagram-profil"), "bunn");
+            ct.AddPropertyType(Prop("footerSosialLinkedin", "LinkedIn", _textStringDt, description: "URL til LinkedIn-profil"), "bunn");
+            ct.AddPropertyType(Prop("footerSosialX", "X", _textStringDt, description: "URL til X-profil"), "bunn");
+            ct.AddPropertyType(Prop("footerLenke1Tekst", "Lenke 1 tekst", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke1Url", "Lenke 1 URL", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke2Tekst", "Lenke 2 tekst", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke2Url", "Lenke 2 URL", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke3Tekst", "Lenke 3 tekst", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke3Url", "Lenke 3 URL", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke4Tekst", "Lenke 4 tekst", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke4Url", "Lenke 4 URL", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke5Tekst", "Lenke 5 tekst", _textStringDt), "bunn");
+            ct.AddPropertyType(Prop("footerLenke5Url", "Lenke 5 URL", _textStringDt), "bunn");
+            _contentTypeService.Save(ct);
+        }
+
+        // Migrate reorder fields
+        if (!ct.PropertyTypeExists("rekkefølgeVeiledning"))
+        {
+            ct.AddPropertyGroup("rekkefølge", "Rekkefølge");
+            ct.AddPropertyType(Prop("rekkefølgeVeiledning", "Veiledning", _numericDt, description: "Rekkefølge for Veiledning-seksjonen (1-5)"), "rekkefølge");
+            ct.AddPropertyType(Prop("rekkefølgeAktuelt", "Aktuelt", _numericDt, description: "Rekkefølge for Aktuelt-seksjonen (1-5)"), "rekkefølge");
+            ct.AddPropertyType(Prop("rekkefølgeTreRaad", "Tre råd", _numericDt, description: "Rekkefølge for Tre råd-seksjonen (1-5)"), "rekkefølge");
+            ct.AddPropertyType(Prop("rekkefølgeSandkasse", "Sandkasse", _numericDt, description: "Rekkefølge for Sandkasse-seksjonen (1-5)"), "rekkefølge");
+            ct.AddPropertyType(Prop("rekkefølgeArrangement", "Arrangement", _numericDt, description: "Rekkefølge for Arrangement-seksjonen (1-5)"), "rekkefølge");
+            _contentTypeService.Save(ct);
+        }
     }
 }

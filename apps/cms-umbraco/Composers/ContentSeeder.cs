@@ -157,6 +157,30 @@ public class ContentSeeder : IAsyncComponent
         forside.SetValue("arrangementOverskrift", "Arrangement");
         forside.SetValue("arrangementKommendeTekst", "Se kommende arrangement");
         forside.SetValue("arrangementAvholdteTekst", "Se avholdte arrangement");
+        // Footer
+        forside.SetValue("footerTittel", "KI Norge");
+        forside.SetValue("footerBeskrivelse", "Et tverrsektorielt samarbeid for å fremme ansvarlig og sikker bruk av kunstig intelligens i den norske forvaltningen.");
+        forside.SetValue("footerSosialInstagram", "#");
+        forside.SetValue("footerSosialLinkedin", "#");
+        forside.SetValue("footerSosialX", "#");
+        forside.SetValue("footerLenke1Tekst", "Om KI Norge");
+        forside.SetValue("footerLenke1Url", "/om-oss");
+        forside.SetValue("footerLenke2Tekst", "Kontakt");
+        forside.SetValue("footerLenke2Url", "/kontakt");
+        forside.SetValue("footerLenke3Tekst", "Personvern og informasjonskapsler");
+        forside.SetValue("footerLenke3Url", "/personvern");
+        forside.SetValue("footerLenke4Tekst", "Tilgjengelighet");
+        forside.SetValue("footerLenke4Url", "/tilgjengelighet");
+        forside.SetValue("footerLenke5Tekst", "Endre samtykke for informasjonskapsler");
+        forside.SetValue("footerLenke5Url", "");
+
+        // Rekkefølge (section ordering)
+        forside.SetValue("rekkefølgeVeiledning", 1);
+        forside.SetValue("rekkefølgeAktuelt", 2);
+        forside.SetValue("rekkefølgeTreRaad", 3);
+        forside.SetValue("rekkefølgeSandkasse", 4);
+        forside.SetValue("rekkefølgeArrangement", 5);
+
         forside.SetValue("seoTittel", "KI Norge – Kunstig intelligens i norsk offentlig sektor");
         forside.SetValue("seoBeskrivelse", "KI Norge er en nasjonal satsing for ansvarlig bruk av kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.");
         SaveAndPublish(forside);

@@ -201,6 +201,26 @@ export interface Forside {
   arrangementKommendeTekst?: string;
   arrangementAvholdteTekst?: string;
   arrangementer?: EventItem[];
+  footerTittel?: string;
+  footerBeskrivelse?: string;
+  footerSosialInstagram?: string;
+  footerSosialLinkedin?: string;
+  footerSosialX?: string;
+  footerLenke1Tekst?: string;
+  footerLenke1Url?: string;
+  footerLenke2Tekst?: string;
+  footerLenke2Url?: string;
+  footerLenke3Tekst?: string;
+  footerLenke3Url?: string;
+  footerLenke4Tekst?: string;
+  footerLenke4Url?: string;
+  footerLenke5Tekst?: string;
+  footerLenke5Url?: string;
+  rekkefølgeVeiledning?: number;
+  rekkefølgeAktuelt?: number;
+  rekkefølgeTreRaad?: number;
+  rekkefølgeSandkasse?: number;
+  rekkefølgeArrangement?: number;
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -614,6 +634,26 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         arrangementKommendeTekst: props.arrangementKommendeTekst as string || undefined,
         arrangementAvholdteTekst: props.arrangementAvholdteTekst as string || undefined,
         arrangementer: mapEventItems(props.arrangementer),
+        footerTittel: props.footerTittel as string || undefined,
+        footerBeskrivelse: props.footerBeskrivelse as string || undefined,
+        footerSosialInstagram: props.footerSosialInstagram as string || undefined,
+        footerSosialLinkedin: props.footerSosialLinkedin as string || undefined,
+        footerSosialX: props.footerSosialX as string || undefined,
+        footerLenke1Tekst: props.footerLenke1Tekst as string || undefined,
+        footerLenke1Url: props.footerLenke1Url as string || undefined,
+        footerLenke2Tekst: props.footerLenke2Tekst as string || undefined,
+        footerLenke2Url: props.footerLenke2Url as string || undefined,
+        footerLenke3Tekst: props.footerLenke3Tekst as string || undefined,
+        footerLenke3Url: props.footerLenke3Url as string || undefined,
+        footerLenke4Tekst: props.footerLenke4Tekst as string || undefined,
+        footerLenke4Url: props.footerLenke4Url as string || undefined,
+        footerLenke5Tekst: props.footerLenke5Tekst as string || undefined,
+        footerLenke5Url: props.footerLenke5Url as string || undefined,
+        rekkefølgeVeiledning: props.rekkefølgeVeiledning as number || undefined,
+        rekkefølgeAktuelt: props.rekkefølgeAktuelt as number || undefined,
+        rekkefølgeTreRaad: props.rekkefølgeTreRaad as number || undefined,
+        rekkefølgeSandkasse: props.rekkefølgeSandkasse as number || undefined,
+        rekkefølgeArrangement: props.rekkefølgeArrangement as number || undefined,
         seoTittel: props.seoTittel as string || undefined,
         seoBeskrivelse: props.seoBeskrivelse as string || undefined,
         seoBilde: mapMedia(props.seoBilde),
