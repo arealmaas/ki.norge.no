@@ -25,7 +25,7 @@ try {
           <a href={`/eksempler/${c.slug}`} class="case-card">
             <div class="case-card-image-wrapper">
               {c.bilde ? (
-                <img src={getMediaUrl(c.bilde)} alt="" loading="lazy" class="case-card-img" />
+                <img src={getMediaUrl(c.bilde)} alt="" loading="lazy" class="case-card-img" aria-hidden="true" />
               ) : (
                 <div class="case-card-placeholder"></div>
               )}

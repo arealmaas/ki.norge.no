@@ -36,7 +36,7 @@ const hasResources = resources.length > 0;
               <Paragraph size="xsmall" className="resource-description">{resource.description}</Paragraph>
             </div>
             <div class="resource-arrow">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <line x1="5" y1="12" x2="19" y2="12"/>
                 <polyline points="12 5 19 12 12 19"/>
               </svg>
@@ -94,7 +94,7 @@ const hasResources = resources.length > 0;
     gap: var(--ds-size-3);
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: 640px) {
     .resources-grid {
       grid-template-columns: repeat(2, 1fr);
     }
