@@ -2,36 +2,58 @@
 /**
  * Regulatorisk sandkasse landing page.
  * Based on Figma design 561:1761.
- * TODO: Make CMS-driven later. Currently hardcoded.
+ * CMS-driven with hardcoded fallbacks.
  */
 import Layout from '../../components/layout/Layout.astro';
+import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
+import { getSandkasse, getMediaUrl, getPlainText } from '../../lib/umbraco';
 
-const processSteps = [
+const sandkasse = await getSandkasse();
+
+const fallbackProcessSteps = [
   { number: '1', title: 'Søknad', desc: 'Potensielle deltagere sender en søknad til sandkassen. De vil få svar på sin søknad, eventuell beskjed om klargjøring/retting av søknaden innen rimelig tid.' },
   { number: '2', title: 'Opptak', desc: 'Skal skissere sandkasseforløpet. Det vil inneholde spesifisering av hvilke spørsmål som skal behandles, hvor lang tid det er tenkt til å ta, mv.' },
   { number: '3', title: 'Planlegging', desc: 'Når sandkasseforløpet er ferdigstilt vil deltageren få et skriftlig bevis og sluttbevis.' },
   { number: '4', title: 'Sluttbevis', desc: 'Når sandkasseforløpet er ferdigstilt vil deltageren få et skriftlig bevis og sluttbevis.' },
 ];
 
-const faqItems = [
+const fallbackFaqItems = [
   'Hvem kan søke om deltakelse i sandkassen?',
   'Hvor lang tid tar et sandkasseforløp?',
   'Hva koster det å delta?',
   'Hvilke krav stilles til KI-systemet?',
   'Hva skjer etter sandkasseforløpet?',
 ];
+
+const processSteps = sandkasse?.prosessSteg && sandkasse.prosessSteg.length > 0
+  ? sandkasse.prosessSteg
+  : null;
+
+const faqSeksjoner = sandkasse?.faqSeksjoner && sandkasse.faqSeksjoner.length > 0
+  ? sandkasse.faqSeksjoner
+  : null;
+
+const hvemBildeUrl = sandkasse?.hvemBilde ? getMediaUrl(sandkasse.hvemBilde) : undefined;
+const resultatBildeUrl = sandkasse?.resultatBilde ? getMediaUrl(sandkasse.resultatBilde) : undefined;
+
+const seoTitle = sandkasse?.seoTittel || 'Regulatorisk sandkasse for KI';
+const seoDescription = sandkasse?.seoBeskrivelse || 'KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger.';
 ---
 
-<Layout title="Regulatorisk sandkasse for KI" description="KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger." headerTheme="dark">
+<Layout title={seoTitle} description={seoDescription} headerTheme="dark">
   <div class="sandkasse-page">
     <!-- Hero -->
     <section class="sandkasse-hero">
       <div class="sandkasse-hero-inner">
-        <h1 class="sandkasse-hero-title">KI-sandkassen</h1>
-        <p class="sandkasse-hero-body">
-          KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger. Gjennom tett oppfølging og veiledning fra myndighetene får virksomhetene hjelp til å vurdere risiko og forstå relevant regelverk. Målet er at flere norske virksomheter skal lykkes med kunstig intelligens, og at KI-systemene følger lovverket.
-        </p>
-        <p class="sandkasse-hero-countdown">120 dager til du kan søke!</p>
+        <h1 class="sandkasse-hero-title">{sandkasse?.heroTittel || 'KI-sandkassen'}</h1>
+        <div class="sandkasse-hero-body">
+          {sandkasse?.heroTekst ? (
+            <BlocksRenderer blocks={sandkasse.heroTekst} />
+          ) : (
+            <p>KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger. Gjennom tett oppfølging og veiledning fra myndighetene får virksomhetene hjelp til å vurdere risiko og forstå relevant regelverk. Målet er at flere norske virksomheter skal lykkes med kunstig intelligens, og at KI-systemene følger lovverket.</p>
+          )}
+        </div>
+        <p class="sandkasse-hero-countdown">{sandkasse?.nedtelling || '120 dager til du kan søke!'}</p>
         <div class="sandkasse-hero-illustrations">
           <img src="/sandkasse/sandkasse-bucket.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--bucket" aria-hidden="true" />
           <div class="sandkasse-hero-img-group">
@@ -46,18 +68,24 @@ const faqItems = [
     <section class="sandkasse-section sandkasse-section--white">
       <div class="sandkasse-section-inner sandkasse-row">
         <div class="sandkasse-image-col">
-          <img src="/sandkasse/sandkasse-sandkasse.png" alt="" class="sandkasse-illustration" aria-hidden="true" />
+          <img src={hvemBildeUrl || '/sandkasse/sandkasse-sandkasse.png'} alt={sandkasse?.hvemBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.hvemBilde?.alternativeText} />
         </div>
         <div class="sandkasse-text-col">
-          <h2 class="sandkasse-section-title">Hvem er det til for?</h2>
+          <h2 class="sandkasse-section-title">{sandkasse?.hvemTittel || 'Hvem er det til for?'}</h2>
           <div class="sandkasse-section-body">
-            <p>Sandkassen er åpen for alle leverandører og fremtidige leverandører av KI-systemer. Den skal fortrinnsvis støtte små og mellomstore bedrifter og oppstartsbedrifter, men større aktører kan også søke.</p>
-            <p>Vi velger sandkasseprosjekter basert på om KI-systemet</p>
-            <ul>
-              <li>er innovativt</li>
-              <li>kan bidra til å understøtte offentlige hensyn og interesser</li>
-              <li>har rettslige utfordringer som gjelder for resten av sektoren.</li>
-            </ul>
+            {sandkasse?.hvemTekst ? (
+              <BlocksRenderer blocks={sandkasse.hvemTekst} />
+            ) : (
+              <>
+                <p>Sandkassen er åpen for alle leverandører og fremtidige leverandører av KI-systemer. Den skal fortrinnsvis støtte små og mellomstore bedrifter og oppstartsbedrifter, men større aktører kan også søke.</p>
+                <p>Vi velger sandkasseprosjekter basert på om KI-systemet</p>
+                <ul>
+                  <li>er innovativt</li>
+                  <li>kan bidra til å understøtte offentlige hensyn og interesser</li>
+                  <li>har rettslige utfordringer som gjelder for resten av sektoren.</li>
+                </ul>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -66,15 +94,27 @@ const faqItems = [
     <!-- Slik foregår prosessen -->
     <section class="sandkasse-process">
       <div class="sandkasse-process-inner">
-        <h2 class="sandkasse-process-title">Slik foregår prosessen</h2>
+        <h2 class="sandkasse-process-title">{sandkasse?.prosessTittel || 'Slik foregår prosessen'}</h2>
         <div class="sandkasse-process-grid">
-          {processSteps.map(step => (
-            <div class="process-step">
-              <span class="process-step-number">{step.number}</span>
-              <h3 class="process-step-title">{step.title}</h3>
-              <p class="process-step-desc">{step.desc}</p>
-            </div>
-          ))}
+          {processSteps ? (
+            processSteps.map(step => (
+              <div class="process-step">
+                <span class="process-step-number">{step.nummer}</span>
+                <h3 class="process-step-title">{step.tittel}</h3>
+                <div class="process-step-desc">
+                  <BlocksRenderer blocks={step.beskrivelse} />
+                </div>
+              </div>
+            ))
+          ) : (
+            fallbackProcessSteps.map(step => (
+              <div class="process-step">
+                <span class="process-step-number">{step.number}</span>
+                <h3 class="process-step-title">{step.title}</h3>
+                <p class="process-step-desc">{step.desc}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </section>
@@ -83,15 +123,21 @@ const faqItems = [
     <section class="sandkasse-section sandkasse-section--white">
       <div class="sandkasse-section-inner sandkasse-row sandkasse-row--reverse">
         <div class="sandkasse-text-col">
-          <h2 class="sandkasse-section-title">Hva får du ut av det?</h2>
+          <h2 class="sandkasse-section-title">{sandkasse?.resultatTittel || 'Hva får du ut av det?'}</h2>
           <div class="sandkasse-section-body">
-            <p>Deltagere i sandkassen får tett oppfølging og veiledning i å vurdere risiko og forstå relevant regelverk.</p>
-            <p>Når sandkasseforløpet er fullført, får deltakerne et skriftlig bevis og en sluttrapport. Sandkassedeltakeren kan bruke dokumentasjonen til å vise at de følger KI-loven.</p>
-            <p>Det vil gjøre det lettere og raskere å få KI-systemet godkjent eller kontrollert.</p>
+            {sandkasse?.resultatTekst ? (
+              <BlocksRenderer blocks={sandkasse.resultatTekst} />
+            ) : (
+              <>
+                <p>Deltagere i sandkassen får tett oppfølging og veiledning i å vurdere risiko og forstå relevant regelverk.</p>
+                <p>Når sandkasseforløpet er fullført, får deltakerne et skriftlig bevis og en sluttrapport. Sandkassedeltakeren kan bruke dokumentasjonen til å vise at de følger KI-loven.</p>
+                <p>Det vil gjøre det lettere og raskere å få KI-systemet godkjent eller kontrollert.</p>
+              </>
+            )}
           </div>
         </div>
         <div class="sandkasse-image-col">
-          <img src="/sandkasse/sandkasse-sandkasse-2.png" alt="" class="sandkasse-illustration" aria-hidden="true" />
+          <img src={resultatBildeUrl || '/sandkasse/sandkasse-sandkasse-2.png'} alt={sandkasse?.resultatBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.resultatBilde?.alternativeText} />
         </div>
       </div>
     </section>
@@ -99,19 +145,33 @@ const faqItems = [
     <!-- Ofte stilte spørsmål -->
     <section class="sandkasse-faq">
       <div class="sandkasse-faq-inner">
-        <h2 class="sandkasse-faq-title">Ofte stilte spørsmål</h2>
+        <h2 class="sandkasse-faq-title">{sandkasse?.faqTittel || 'Ofte stilte spørsmål'}</h2>
         <div class="sandkasse-faq-list">
-          {faqItems.map(q => (
-            <details class="sandkasse-faq-item">
-              <summary class="sandkasse-faq-question">
-                <span>{q}</span>
-                <span class="sandkasse-faq-icon">+</span>
-              </summary>
-              <div class="sandkasse-faq-answer">
-                <p>Innhold kommer snart.</p>
-              </div>
-            </details>
-          ))}
+          {faqSeksjoner ? (
+            faqSeksjoner.map(faq => (
+              <details class="sandkasse-faq-item">
+                <summary class="sandkasse-faq-question">
+                  <span>{faq.sporsmal}</span>
+                  <span class="sandkasse-faq-icon">+</span>
+                </summary>
+                <div class="sandkasse-faq-answer">
+                  <BlocksRenderer blocks={faq.svar} />
+                </div>
+              </details>
+            ))
+          ) : (
+            fallbackFaqItems.map(q => (
+              <details class="sandkasse-faq-item">
+                <summary class="sandkasse-faq-question">
+                  <span>{q}</span>
+                  <span class="sandkasse-faq-icon">+</span>
+                </summary>
+                <div class="sandkasse-faq-answer">
+                  <p>Innhold kommer snart.</p>
+                </div>
+              </details>
+            ))
+          )}
         </div>
       </div>
     </section>
