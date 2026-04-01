@@ -163,6 +163,9 @@ public class ContentTypeComponent : IAsyncComponent
             }
             CreateContainerIfMissing("faqSamling", "FAQ", "icon-help-alt", "faq");
             CreateContainerIfMissing("merkelapper", "Merkelapper", "icon-tags", "merkelapp");
+            if (_contentTypeService.Get("tilgjengeligIkon") == null)
+                CreateTilgjengeligIkon();
+            CreateContainerIfMissing("tilgjengeligeIkoner", "Tilgjengelige ikoner", "icon-picture", "tilgjengeligIkon");
         }
         catch (Exception ex)
         {
@@ -501,6 +504,23 @@ public class ContentTypeComponent : IAsyncComponent
     }
 
     // --- Document types ---
+
+    private IContentType CreateTilgjengeligIkon()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "tilgjengeligIkon",
+            Name = "Tilgjengelig ikon",
+            Description = "Et ikon fra Aksel-ikonpakken som er tilgjengelig for redaktører",
+            Icon = "icon-picture",
+            AllowedAsRoot = false,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("navn", "Ikonnavn", _textStringDt, mandatory: true, description: "Det engelske navnet på ikonet fra aksel.nav.no/ikoner (f.eks. HandHeart, Package, Calculator)"), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textStringDt, description: "Kort norsk beskrivelse av ikonet (f.eks. Hjerte i hånd, Pakke, Kalkulator)"), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
 
     private IContentType CreateMerkelapp()
     {

@@ -74,6 +74,10 @@ public class ContentSeeder : IAsyncComponent
             var veiledningerFolder = CreateFolder("veiledninger", "Veiledninger");
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
+            var ikonerFolder = CreateFolder("tilgjengeligeIkoner", "Tilgjengelige ikoner");
+
+            // Seed icons and media
+            SeedIkoner(ikonerFolder.Id);
 
             // Seed media images
             SeedMedia();
@@ -1134,6 +1138,38 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
             map[slug] = m;
         }
         return map;
+    }
+
+    // ── Ikoner ──────────────────────────────────────────────────
+
+    private void SeedIkoner(int parentId)
+    {
+        var icons = new[]
+        {
+            ("HandHeart", "Hjerte i hånd"),
+            ("Package", "Pakke"),
+            ("Calculator", "Kalkulator"),
+            ("Office2", "Kontorbygg"),
+            ("SocialAid", "Sosialhjelp"),
+            ("FeedingBottle", "Tåteflaske"),
+            ("Clock", "Klokke"),
+            ("Bookmark", "Bokmerke"),
+            ("LocationPin", "Stedmarkør"),
+            ("Braille", "Blindeskrift"),
+            ("HandShakeHeart", "Håndtrykk med hjerte"),
+            ("Search", "Søk"),
+            ("PersonChat", "Person i samtale"),
+            ("EnvelopeClosed", "Konvolutt"),
+            ("ChevronRight", "Pil høyre"),
+        };
+
+        foreach (var (navn, beskrivelse) in icons)
+        {
+            var ikon = Create("tilgjengeligIkon", beskrivelse, parentId);
+            ikon.SetValue("navn", navn);
+            ikon.SetValue("beskrivelse", beskrivelse);
+            SaveAndPublish(ikon);
+        }
     }
 
     private string Udi(IContent content) => $"umb://document/{content.Key:N}";
