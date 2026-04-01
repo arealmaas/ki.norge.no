@@ -5,6 +5,7 @@
  * Content driven by CMS veiledningOversikt singleton with hardcoded fallbacks.
  */
 import Layout from '../../components/layout/Layout.astro';
+import AkselIcon from '../../components/shared/AkselIcon.astro';
 import { getVeiledningOversikt, getMediaUrl } from '../../lib/umbraco';
 import type { VeiledningKort, VerktoyKort } from '../../lib/umbraco';
 
@@ -21,34 +22,34 @@ const heroSubtitle = cmsData?.heroTekst || 'Vi veileder deg gjennom regler, krav
 const heroImageUrl = cmsData?.heroBilde ? getMediaUrl(cmsData.heroBilde) : undefined;
 
 const seksjon1Title = cmsData?.seksjon1Tittel || 'Før du går i gang';
-const forDuGarIGang: { title: string; desc: string; href: string }[] =
+const forDuGarIGang: { title: string; desc: string; href: string; ikon?: string }[] =
   cmsData?.seksjon1Kort && cmsData.seksjon1Kort.length > 0
-    ? cmsData.seksjon1Kort.map((k: VeiledningKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#' }))
+    ? cmsData.seksjon1Kort.map((k: VeiledningKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#', ikon: k.ikon }))
     : [
-        { title: 'Definer behovet og hva KI skal løse', desc: '', href: '#' },
-        { title: 'Finn ut hvilket risikonivå løsningen din har', desc: 'Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.', href: '#' },
-        { title: 'Forstå KI-loven og GDPR', desc: 'Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.', href: '#' },
-        { title: 'Forstå krav til data og hva du må gjøre', desc: '', href: '/veiledning/bruk-data-rett' },
+        { title: 'Definer behovet og hva KI skal løse', desc: '', href: '#', ikon: 'Search' },
+        { title: 'Finn ut hvilket risikonivå løsningen din har', desc: 'Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.', href: '#', ikon: 'ShieldLock' },
+        { title: 'Forstå KI-loven og GDPR', desc: 'Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.', href: '#', ikon: 'Paragraph' },
+        { title: 'Forstå krav til data og hva du må gjøre', desc: '', href: '/veiledning/bruk-data-rett', ikon: 'Database' },
       ];
 
 const seksjon2Title = cmsData?.seksjon2Tittel || 'Utvikle KI-systemet';
-const utvikleSystemet: { title: string; desc: string; href: string }[] =
+const utvikleSystemet: { title: string; desc: string; href: string; ikon?: string }[] =
   cmsData?.seksjon2Kort && cmsData.seksjon2Kort.length > 0
-    ? cmsData.seksjon2Kort.map((k: VeiledningKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#' }))
+    ? cmsData.seksjon2Kort.map((k: VeiledningKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#', ikon: k.ikon }))
     : [
-        { title: 'Dette er kravene du må følge for utforming', desc: '', href: '#' },
-        { title: 'Valg av språkmodell – utvikle noe eget eller bruke en på markedet', desc: '', href: '#' },
-        { title: 'Dokumentasjon og testing', desc: '', href: '#' },
-        { title: 'Tiltak for sikkerhet og hindre misbruk', desc: '', href: '#' },
+        { title: 'Dette er kravene du må følge for utforming', desc: '', href: '#', ikon: 'Ruler' },
+        { title: 'Valg av språkmodell – utvikle noe eget eller bruke en på markedet', desc: '', href: '#', ikon: 'Chat' },
+        { title: 'Dokumentasjon og testing', desc: '', href: '#', ikon: 'FileText' },
+        { title: 'Tiltak for sikkerhet og hindre misbruk', desc: '', href: '#', ikon: 'ShieldLock' },
       ];
 
 const verktoyTitle = cmsData?.verktoyTittel || 'Verktøy';
-const verktoyCards: { title: string; desc: string; href: string; imageUrl?: string }[] =
+const verktoyCards: { title: string; desc: string; href: string; imageUrl?: string; ikon?: string }[] =
   cmsData?.verktoyKort && cmsData.verktoyKort.length > 0
-    ? cmsData.verktoyKort.map((k: VerktoyKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#', imageUrl: k.bilde ? getMediaUrl(k.bilde) : undefined }))
+    ? cmsData.verktoyKort.map((k: VerktoyKort) => ({ title: k.tittel, desc: k.beskrivelse || '', href: k.url || '#', imageUrl: k.bilde ? getMediaUrl(k.bilde) : undefined, ikon: k.ikon }))
     : [
-        { title: 'Bias explorer', desc: 'Utforsk hvordan dataskjevheter blir til modellskjevheter', href: '#' },
-        { title: 'Risikovurdering', desc: 'Modellen til Marie', href: '#' },
+        { title: 'Bias explorer', desc: 'Utforsk hvordan dataskjevheter blir til modellskjevheter', href: '#', ikon: 'BarChart' },
+        { title: 'Risikovurdering', desc: 'Modellen til Marie', href: '#', ikon: 'Task' },
       ];
 
 const seoTitle = cmsData?.seoTittel || 'Veiledning';
@@ -83,6 +84,7 @@ const seoDesc = cmsData?.seoBeskrivelse || 'Vi veileder deg gjennom regler, krav
           {forDuGarIGang.map(card => (
             <a href={card.href} class:list={['veil-card', { 'veil-card--disabled': card.href === '#' }]}>
               <div class="veil-card-content">
+                {card.ikon && <AkselIcon name={card.ikon} size={20} />}
                 <h3 class="veil-card-title">{card.title}</h3>
                 {card.desc && <p class="veil-card-desc">{card.desc}</p>}
               </div>
@@ -101,6 +103,7 @@ const seoDesc = cmsData?.seoBeskrivelse || 'Vi veileder deg gjennom regler, krav
           {utvikleSystemet.map(card => (
             <a href={card.href} class:list={['veil-card', { 'veil-card--disabled': card.href === '#' }]}>
               <div class="veil-card-content">
+                {card.ikon && <AkselIcon name={card.ikon} size={20} />}
                 <h3 class="veil-card-title">{card.title}</h3>
                 {card.desc && <p class="veil-card-desc">{card.desc}</p>}
               </div>
@@ -119,6 +122,7 @@ const seoDesc = cmsData?.seoBeskrivelse || 'Vi veileder deg gjennom regler, krav
           {verktoyCards.map(card => (
             <a href={card.href} class="veil-tool-card">
               <div class="veil-tool-text">
+                {card.ikon && <AkselIcon name={card.ikon} size={20} />}
                 <h3 class="veil-tool-title">{card.title}</h3>
                 <p class="veil-tool-desc">{card.desc}</p>
               </div>

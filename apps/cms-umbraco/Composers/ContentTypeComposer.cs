@@ -99,6 +99,9 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("verktoyKort") == null)
                 CreateVerktoyKortElement();
 
+            MigrateVeiledningKort();
+            MigrateVerktoyKort();
+
             CreateBlockListDataTypes();
 
             if (_contentTypeService.Get("merkelapp") == null)
@@ -890,8 +893,18 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("url", "URL", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("ikon", "Ikon", _textStringDt, description: "Ikonnavn fra Aksel (f.eks. HandHeart, Package)"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateVeiledningKort()
+    {
+        var ct = _contentTypeService.Get("veiledningKort");
+        if (ct == null) return;
+        if (ct.PropertyTypeExists("ikon")) return;
+        ct.AddPropertyType(Prop("ikon", "Ikon", _textStringDt, description: "Ikonnavn fra Aksel (f.eks. HandHeart, Package)"), "innhold");
+        _contentTypeService.Save(ct);
     }
 
     private IContentType CreateVerktoyKortElement()
@@ -909,8 +922,18 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("url", "URL", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
+        ct.AddPropertyType(Prop("ikon", "Ikon", _textStringDt, description: "Ikonnavn fra Aksel (f.eks. HandHeart, Package)"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateVerktoyKort()
+    {
+        var ct = _contentTypeService.Get("verktoyKort");
+        if (ct == null) return;
+        if (ct.PropertyTypeExists("ikon")) return;
+        ct.AddPropertyType(Prop("ikon", "Ikon", _textStringDt, description: "Ikonnavn fra Aksel (f.eks. HandHeart, Package)"), "innhold");
+        _contentTypeService.Save(ct);
     }
 
     private IContentType CreateVeiledningOversikt()

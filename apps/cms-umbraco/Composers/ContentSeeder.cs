@@ -355,26 +355,26 @@ public class ContentSeeder : IAsyncComponent
         // Seksjon 1
         vo.SetValue("seksjon1Tittel", "Før du går i gang");
         vo.SetValue("seksjon1Kort", BuildVeiledningKortBlockList(
-            ("Definer behovet og hva KI skal løse", "", "#"),
-            ("Finn ut hvilket risikonivå løsningen din har", "Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.", "#"),
-            ("Forstå KI-loven og GDPR", "Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.", "#"),
-            ("Forstå krav til data og hva du må gjøre", "", "/veiledning/bruk-data-rett")
+            ("Definer behovet og hva KI skal løse", "", "#", "Search"),
+            ("Finn ut hvilket risikonivå løsningen din har", "Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.", "#", "ShieldLock"),
+            ("Forstå KI-loven og GDPR", "Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.", "#", "Paragraph"),
+            ("Forstå krav til data og hva du må gjøre", "", "/veiledning/bruk-data-rett", "Database")
         ));
 
         // Seksjon 2
         vo.SetValue("seksjon2Tittel", "Utvikle KI-systemet");
         vo.SetValue("seksjon2Kort", BuildVeiledningKortBlockList(
-            ("Dette er kravene du må følge for utforming", "", "#"),
-            ("Valg av språkmodell – utvikle noe eget eller bruke en på markedet", "", "#"),
-            ("Dokumentasjon og testing", "", "#"),
-            ("Tiltak for sikkerhet og hindre misbruk", "", "#")
+            ("Dette er kravene du må følge for utforming", "", "#", "Ruler"),
+            ("Valg av språkmodell – utvikle noe eget eller bruke en på markedet", "", "#", "Chat"),
+            ("Dokumentasjon og testing", "", "#", "FileText"),
+            ("Tiltak for sikkerhet og hindre misbruk", "", "#", "ShieldLock")
         ));
 
         // Verktøy
         vo.SetValue("verktoyTittel", "Verktøy");
         vo.SetValue("verktoyKort", BuildVerktoyKortBlockList(
-            ("Bias explorer", "Utforsk hvordan dataskjevheter blir til modellskjevheter", "#"),
-            ("Risikovurdering", "Modellen til Marie", "#")
+            ("Bias explorer", "Utforsk hvordan dataskjevheter blir til modellskjevheter", "#", "BarChart"),
+            ("Risikovurdering", "Modellen til Marie", "#", "Task")
         ));
 
         // SEO
@@ -383,7 +383,7 @@ public class ContentSeeder : IAsyncComponent
         SaveAndPublish(vo);
     }
 
-    private string BuildVeiledningKortBlockList(params (string tittel, string beskrivelse, string url)[] cards)
+    private string BuildVeiledningKortBlockList(params (string tittel, string beskrivelse, string url, string ikon)[] cards)
     {
         var contentData = new List<object>();
         var layoutItems = new List<object>();
@@ -391,7 +391,7 @@ public class ContentSeeder : IAsyncComponent
         var elementType = _contentTypeService.Get("veiledningKort");
         if (elementType == null) return "{}";
 
-        foreach (var (tittel, beskrivelse, url) in cards)
+        foreach (var (tittel, beskrivelse, url, ikon) in cards)
         {
             var guid = Guid.NewGuid();
             var udi = $"umb://element/{guid:N}";
@@ -408,7 +408,8 @@ public class ContentSeeder : IAsyncComponent
                 ["udi"] = udi,
                 ["tittel"] = tittel,
                 ["beskrivelse"] = beskrivelse,
-                ["url"] = url
+                ["url"] = url,
+                ["ikon"] = ikon
             });
         }
 
@@ -425,7 +426,7 @@ public class ContentSeeder : IAsyncComponent
         return JsonSerializer.Serialize(blockList);
     }
 
-    private string BuildVerktoyKortBlockList(params (string tittel, string beskrivelse, string url)[] cards)
+    private string BuildVerktoyKortBlockList(params (string tittel, string beskrivelse, string url, string ikon)[] cards)
     {
         var contentData = new List<object>();
         var layoutItems = new List<object>();
@@ -433,7 +434,7 @@ public class ContentSeeder : IAsyncComponent
         var elementType = _contentTypeService.Get("verktoyKort");
         if (elementType == null) return "{}";
 
-        foreach (var (tittel, beskrivelse, url) in cards)
+        foreach (var (tittel, beskrivelse, url, ikon) in cards)
         {
             var guid = Guid.NewGuid();
             var udi = $"umb://element/{guid:N}";
@@ -450,7 +451,8 @@ public class ContentSeeder : IAsyncComponent
                 ["udi"] = udi,
                 ["tittel"] = tittel,
                 ["beskrivelse"] = beskrivelse,
-                ["url"] = url
+                ["url"] = url,
+                ["ikon"] = ikon
             });
         }
 

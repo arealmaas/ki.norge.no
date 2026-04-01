@@ -280,6 +280,7 @@ export interface VeiledningKort {
   tittel: string;
   beskrivelse?: string;
   url?: string;
+  ikon?: string;
 }
 
 export interface VerktoyKort {
@@ -287,6 +288,7 @@ export interface VerktoyKort {
   beskrivelse?: string;
   url?: string;
   bilde?: UmbracoMedia;
+  ikon?: string;
 }
 
 export interface VeiledningOversikt {
@@ -846,6 +848,7 @@ function mapVeiledningKort(value: unknown): VeiledningKort[] {
       tittel: (props.tittel as string) || '',
       beskrivelse: (props.beskrivelse as string) || undefined,
       url: (props.url as string) || undefined,
+      ikon: (props.ikon as string) || undefined,
     };
   });
 }
@@ -861,6 +864,7 @@ function mapVerktoyKort(value: unknown): VerktoyKort[] {
       beskrivelse: (props.beskrivelse as string) || undefined,
       url: (props.url as string) || undefined,
       bilde: mapMedia(props.bilde),
+      ikon: (props.ikon as string) || undefined,
     };
   });
 }
