@@ -107,6 +107,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateFAQ();
             if (_contentTypeService.Get("forside") == null)
                 CreateForside();
+            else
+                MigrateForside();
             if (_contentTypeService.Get("omOssSeksjon") == null)
                 CreateOmOssSeksjon();
             if (_contentTypeService.Get("omOss") == null)
@@ -706,6 +708,28 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyGroup("arrangementer", "Arrangementer");
         ct.AddPropertyType(Prop("arrangementer", "Arrangementer", _blockListEventsDt), "arrangementer");
 
+        // Tab: Veiledning
+        ct.AddPropertyGroup("veiledning", "Veiledning");
+        ct.AddPropertyType(Prop("veiledningOverskrift", "Overskrift", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning1Tittel", "Veiledning 1 Tittel", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning1Beskrivelse", "Veiledning 1 Beskrivelse", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning1Url", "Veiledning 1 URL", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning2Tittel", "Veiledning 2 Tittel", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning2Beskrivelse", "Veiledning 2 Beskrivelse", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning2Url", "Veiledning 2 URL", _textStringDt), "veiledning");
+
+        // Tab: Aktuelt
+        ct.AddPropertyGroup("aktuelt", "Aktuelt");
+        ct.AddPropertyType(Prop("aktueltOverskrift", "Overskrift", _textStringDt), "aktuelt");
+        ct.AddPropertyType(Prop("aktueltLenkeTekst", "Lenketekst", _textStringDt), "aktuelt");
+        ct.AddPropertyType(Prop("aktueltLenkeUrl", "Lenke-URL", _textStringDt), "aktuelt");
+
+        // Tab: Arrangement
+        ct.AddPropertyGroup("arrangement", "Arrangement");
+        ct.AddPropertyType(Prop("arrangementOverskrift", "Overskrift", _textStringDt), "arrangement");
+        ct.AddPropertyType(Prop("arrangementKommendeTekst", "Kommende tekst", _textStringDt), "arrangement");
+        ct.AddPropertyType(Prop("arrangementAvholdteTekst", "Avholdte tekst", _textStringDt), "arrangement");
+
         // Tab: SEO
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -714,5 +738,36 @@ public class ContentTypeComponent : IAsyncComponent
 
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateForside()
+    {
+        var ct = _contentTypeService.Get("forside");
+        if (ct == null) return;
+        if (ct.PropertyTypeExists("veiledningOverskrift")) return; // already migrated
+
+        // Tab: Veiledning
+        ct.AddPropertyGroup("veiledning", "Veiledning");
+        ct.AddPropertyType(Prop("veiledningOverskrift", "Overskrift", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning1Tittel", "Veiledning 1 Tittel", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning1Beskrivelse", "Veiledning 1 Beskrivelse", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning1Url", "Veiledning 1 URL", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning2Tittel", "Veiledning 2 Tittel", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning2Beskrivelse", "Veiledning 2 Beskrivelse", _textStringDt), "veiledning");
+        ct.AddPropertyType(Prop("veiledning2Url", "Veiledning 2 URL", _textStringDt), "veiledning");
+
+        // Tab: Aktuelt
+        ct.AddPropertyGroup("aktuelt", "Aktuelt");
+        ct.AddPropertyType(Prop("aktueltOverskrift", "Overskrift", _textStringDt), "aktuelt");
+        ct.AddPropertyType(Prop("aktueltLenkeTekst", "Lenketekst", _textStringDt), "aktuelt");
+        ct.AddPropertyType(Prop("aktueltLenkeUrl", "Lenke-URL", _textStringDt), "aktuelt");
+
+        // Tab: Arrangement
+        ct.AddPropertyGroup("arrangement", "Arrangement");
+        ct.AddPropertyType(Prop("arrangementOverskrift", "Overskrift", _textStringDt), "arrangement");
+        ct.AddPropertyType(Prop("arrangementKommendeTekst", "Kommende tekst", _textStringDt), "arrangement");
+        ct.AddPropertyType(Prop("arrangementAvholdteTekst", "Avholdte tekst", _textStringDt), "arrangement");
+
+        _contentTypeService.Save(ct);
     }
 }
