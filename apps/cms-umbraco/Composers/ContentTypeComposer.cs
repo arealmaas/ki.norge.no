@@ -40,6 +40,8 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListArtikkelDt = null!;
     private IDataType _blockListSandkasseStegDt = null!;
     private IDataType _blockListSandkasseFaqDt = null!;
+    private IDataType _blockListVeiledningKortDt = null!;
+    private IDataType _blockListVerktoyKortDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
@@ -91,6 +93,12 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("sandkasseFaq") == null)
                 CreateSandkasseFaqElement();
 
+            // Veiledning Oversikt element types
+            if (_contentTypeService.Get("veiledningKort") == null)
+                CreateVeiledningKortElement();
+            if (_contentTypeService.Get("verktoyKort") == null)
+                CreateVerktoyKortElement();
+
             CreateBlockListDataTypes();
 
             if (_contentTypeService.Get("merkelapp") == null)
@@ -125,6 +133,8 @@ public class ContentTypeComponent : IAsyncComponent
                 MigrateOmOss();
             if (_contentTypeService.Get("sandkasse") == null)
                 CreateSandkasse();
+            if (_contentTypeService.Get("veiledningOversikt") == null)
+                CreateVeiledningOversikt();
 
             // Create container types if missing
             CreateContainerIfMissing("artikler", "Artikler", "icon-newspaper-alt", "artikkel");
@@ -381,6 +391,10 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Sandkasse Steg", "sandkasseSteg");
         _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(
             "Block List - Sandkasse FAQ", "sandkasseFaq");
+        _blockListVeiledningKortDt = CreateOrGetBlockListDataType(
+            "Block List - Veiledning Kort", "veiledningKort");
+        _blockListVerktoyKortDt = CreateOrGetBlockListDataType(
+            "Block List - Verktøy Kort", "verktoyKort");
     }
 
     private IDataType CreateOrGetBlockListDataType(string name, string elementTypeAlias)
@@ -829,6 +843,88 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("arrangementOverskrift", "Overskrift", _textStringDt), "arrangement");
         ct.AddPropertyType(Prop("arrangementKommendeTekst", "Kommende tekst", _textStringDt), "arrangement");
         ct.AddPropertyType(Prop("arrangementAvholdteTekst", "Avholdte tekst", _textStringDt), "arrangement");
+
+        // Tab: SEO
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    // --- Veiledning Oversikt element types ---
+
+    private IContentType CreateVeiledningKortElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "veiledningKort",
+            Name = "Veiledning Kort",
+            Description = "Et kort i veiledningsoversikten",
+            Icon = "icon-thumbnail-list",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("url", "URL", _textStringDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateVerktoyKortElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "verktoyKort",
+            Name = "Verktøy Kort",
+            Description = "Et verktøy-kort i veiledningsoversikten",
+            Icon = "icon-wrench",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("url", "URL", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateVeiledningOversikt()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "veiledningOversikt",
+            Name = "Veiledning Oversikt",
+            Description = "Oversiktsside for veiledning",
+            Icon = "icon-book-alt",
+            AllowedAsRoot = true,
+        };
+
+        // Tab: Hero
+        ct.AddPropertyGroup("hero", "Hero");
+        ct.AddPropertyType(Prop("heroLabel", "Hero-label", _textStringDt), "hero");
+        ct.AddPropertyType(Prop("heroTittel", "Hero-tittel", _textStringDt), "hero");
+        ct.AddPropertyType(Prop("heroTekst", "Hero-tekst", _textStringDt), "hero");
+        ct.AddPropertyType(Prop("heroBilde", "Hero-bilde", _mediaPickerDt), "hero");
+
+        // Tab: Seksjon 1
+        ct.AddPropertyGroup("seksjon1", "Seksjon 1");
+        ct.AddPropertyType(Prop("seksjon1Tittel", "Seksjon 1 tittel", _textStringDt), "seksjon1");
+        ct.AddPropertyType(Prop("seksjon1Kort", "Seksjon 1 kort", _blockListVeiledningKortDt), "seksjon1");
+
+        // Tab: Seksjon 2
+        ct.AddPropertyGroup("seksjon2", "Seksjon 2");
+        ct.AddPropertyType(Prop("seksjon2Tittel", "Seksjon 2 tittel", _textStringDt), "seksjon2");
+        ct.AddPropertyType(Prop("seksjon2Kort", "Seksjon 2 kort", _blockListVeiledningKortDt), "seksjon2");
+
+        // Tab: Verktøy
+        ct.AddPropertyGroup("verktoy", "Verktøy");
+        ct.AddPropertyType(Prop("verktoyTittel", "Verktøy tittel", _textStringDt), "verktoy");
+        ct.AddPropertyType(Prop("verktoyKort", "Verktøy kort", _blockListVerktoyKortDt), "verktoy");
 
         // Tab: SEO
         ct.AddPropertyGroup("seo", "SEO");

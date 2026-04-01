@@ -82,6 +82,7 @@ public class ContentSeeder : IAsyncComponent
             SeedForside();
             var omOssNode = SeedOmOss();
             SeedSandkasse();
+            SeedVeiledningOversikt();
 
             // Seed merkelapper FIRST so we can reference them from other content
             var merkelappMap = SeedMerkelapper(merkelapperFolder.Id);
@@ -318,6 +319,134 @@ public class ContentSeeder : IAsyncComponent
                 ["udi"] = udi,
                 ["sporsmal"] = sporsmal,
                 ["svar"] = svar
+            });
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        return JsonSerializer.Serialize(blockList);
+    }
+
+    // ── Veiledning Oversikt ─────────────────────────────────
+
+    private void SeedVeiledningOversikt()
+    {
+        var ct = _contentTypeService.Get("veiledningOversikt")
+            ?? throw new InvalidOperationException("Content type 'veiledningOversikt' not found");
+        var vo = _contentService.Create("Veiledning Oversikt", -1, ct.Alias);
+
+        // Hero
+        vo.SetValue("heroLabel", "Veiledning");
+        vo.SetValue("heroTittel", "Lag et KI-system");
+        vo.SetValue("heroTekst", "Vi veileder deg gjennom regler, krav og beste praksis.");
+
+        // Seksjon 1
+        vo.SetValue("seksjon1Tittel", "Før du går i gang");
+        vo.SetValue("seksjon1Kort", BuildVeiledningKortBlockList(
+            ("Definer behovet og hva KI skal løse", "", "#"),
+            ("Finn ut hvilket risikonivå løsningen din har", "Hvis det du skal lage har høy risiko, må du få det godkjent før du kan sette det i drift.", "#"),
+            ("Forstå KI-loven og GDPR", "Det er nytt at loven stiller krav både til leverandøren og de som setter KI i drift.", "#"),
+            ("Forstå krav til data og hva du må gjøre", "", "/veiledning/bruk-data-rett")
+        ));
+
+        // Seksjon 2
+        vo.SetValue("seksjon2Tittel", "Utvikle KI-systemet");
+        vo.SetValue("seksjon2Kort", BuildVeiledningKortBlockList(
+            ("Dette er kravene du må følge for utforming", "", "#"),
+            ("Valg av språkmodell – utvikle noe eget eller bruke en på markedet", "", "#"),
+            ("Dokumentasjon og testing", "", "#"),
+            ("Tiltak for sikkerhet og hindre misbruk", "", "#")
+        ));
+
+        // Verktøy
+        vo.SetValue("verktoyTittel", "Verktøy");
+        vo.SetValue("verktoyKort", BuildVerktoyKortBlockList(
+            ("Bias explorer", "Utforsk hvordan dataskjevheter blir til modellskjevheter", "#"),
+            ("Risikovurdering", "Modellen til Marie", "#")
+        ));
+
+        // SEO
+        vo.SetValue("seoTittel", "Veiledning – Lag et KI-system");
+        vo.SetValue("seoBeskrivelse", "Vi veileder deg gjennom regler, krav og beste praksis for å lage et KI-system.");
+        SaveAndPublish(vo);
+    }
+
+    private string BuildVeiledningKortBlockList(params (string tittel, string beskrivelse, string url)[] cards)
+    {
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        var elementType = _contentTypeService.Get("veiledningKort");
+        if (elementType == null) return "{}";
+
+        foreach (var (tittel, beskrivelse, url) in cards)
+        {
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            contentData.Add(new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = elementType.Key.ToString(),
+                ["udi"] = udi,
+                ["tittel"] = tittel,
+                ["beskrivelse"] = beskrivelse,
+                ["url"] = url
+            });
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        return JsonSerializer.Serialize(blockList);
+    }
+
+    private string BuildVerktoyKortBlockList(params (string tittel, string beskrivelse, string url)[] cards)
+    {
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        var elementType = _contentTypeService.Get("verktoyKort");
+        if (elementType == null) return "{}";
+
+        foreach (var (tittel, beskrivelse, url) in cards)
+        {
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            contentData.Add(new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = elementType.Key.ToString(),
+                ["udi"] = udi,
+                ["tittel"] = tittel,
+                ["beskrivelse"] = beskrivelse,
+                ["url"] = url
             });
         }
 
