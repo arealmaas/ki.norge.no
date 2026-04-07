@@ -175,11 +175,11 @@ public class ContentSeeder : IAsyncComponent
         forside.SetValue("footerLenke5Url", "");
 
         // Rekkefølge (section ordering)
-        forside.SetValue("rekkefølgeVeiledning", 1);
-        forside.SetValue("rekkefølgeAktuelt", 2);
-        forside.SetValue("rekkefølgeTreRaad", 3);
-        forside.SetValue("rekkefølgeSandkasse", 4);
-        forside.SetValue("rekkefølgeArrangement", 5);
+        forside.SetValue("rekkefolgeVeiledning", 1);
+        forside.SetValue("rekkefolgeAktuelt", 2);
+        forside.SetValue("rekkefolgeTreRaad", 3);
+        forside.SetValue("rekkefolgeSandkasse", 4);
+        forside.SetValue("rekkefolgeArrangement", 5);
 
         forside.SetValue("seoTittel", "KI Norge – Kunstig intelligens i norsk offentlig sektor");
         forside.SetValue("seoBeskrivelse", "KI Norge er en nasjonal satsing for ansvarlig bruk av kunstig intelligens. Veiledning, regulatorisk sandkasse og gode eksempler for offentlig sektor.");

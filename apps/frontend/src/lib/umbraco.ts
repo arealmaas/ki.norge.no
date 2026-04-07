@@ -216,11 +216,11 @@ export interface Forside {
   footerLenke4Url?: string;
   footerLenke5Tekst?: string;
   footerLenke5Url?: string;
-  rekkefølgeVeiledning?: number;
-  rekkefølgeAktuelt?: number;
-  rekkefølgeTreRaad?: number;
-  rekkefølgeSandkasse?: number;
-  rekkefølgeArrangement?: number;
+  rekkefolgeVeiledning?: number;
+  rekkefolgeAktuelt?: number;
+  rekkefolgeTreRaad?: number;
+  rekkefolgeSandkasse?: number;
+  rekkefolgeArrangement?: number;
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -649,11 +649,11 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         footerLenke4Url: props.footerLenke4Url as string || undefined,
         footerLenke5Tekst: props.footerLenke5Tekst as string || undefined,
         footerLenke5Url: props.footerLenke5Url as string || undefined,
-        rekkefølgeVeiledning: props.rekkefølgeVeiledning as number || undefined,
-        rekkefølgeAktuelt: props.rekkefølgeAktuelt as number || undefined,
-        rekkefølgeTreRaad: props.rekkefølgeTreRaad as number || undefined,
-        rekkefølgeSandkasse: props.rekkefølgeSandkasse as number || undefined,
-        rekkefølgeArrangement: props.rekkefølgeArrangement as number || undefined,
+        rekkefolgeVeiledning: props.rekkefolgeVeiledning as number || undefined,
+        rekkefolgeAktuelt: props.rekkefolgeAktuelt as number || undefined,
+        rekkefolgeTreRaad: props.rekkefolgeTreRaad as number || undefined,
+        rekkefolgeSandkasse: props.rekkefolgeSandkasse as number || undefined,
+        rekkefolgeArrangement: props.rekkefolgeArrangement as number || undefined,
         seoTittel: props.seoTittel as string || undefined,
         seoBeskrivelse: props.seoBeskrivelse as string || undefined,
         seoBilde: mapMedia(props.seoBilde),

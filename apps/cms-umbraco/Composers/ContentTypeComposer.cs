@@ -891,12 +891,12 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("footerLenke5Url", "Lenke 5 URL", _textStringDt), "bunn");
 
         // Tab: Rekkefølge (Order)
-        ct.AddPropertyGroup("rekkefølge", "Rekkefølge");
-        ct.AddPropertyType(Prop("rekkefølgeVeiledning", "Veiledning", _numericDt, description: "Rekkefølge for Veiledning-seksjonen (1-5)"), "rekkefølge");
-        ct.AddPropertyType(Prop("rekkefølgeAktuelt", "Aktuelt", _numericDt, description: "Rekkefølge for Aktuelt-seksjonen (1-5)"), "rekkefølge");
-        ct.AddPropertyType(Prop("rekkefølgeTreRaad", "Tre råd", _numericDt, description: "Rekkefølge for Tre råd-seksjonen (1-5)"), "rekkefølge");
-        ct.AddPropertyType(Prop("rekkefølgeSandkasse", "Sandkasse", _numericDt, description: "Rekkefølge for Sandkasse-seksjonen (1-5)"), "rekkefølge");
-        ct.AddPropertyType(Prop("rekkefølgeArrangement", "Arrangement", _numericDt, description: "Rekkefølge for Arrangement-seksjonen (1-5)"), "rekkefølge");
+        ct.AddPropertyGroup("rekkefolge", "Rekkefølge");
+        ct.AddPropertyType(Prop("rekkefolgeVeiledning", "Veiledning", _numericDt, description: "Rekkefølge for Veiledning-seksjonen (1-5)"), "rekkefolge");
+        ct.AddPropertyType(Prop("rekkefolgeAktuelt", "Aktuelt", _numericDt, description: "Rekkefølge for Aktuelt-seksjonen (1-5)"), "rekkefolge");
+        ct.AddPropertyType(Prop("rekkefolgeTreRaad", "Tre råd", _numericDt, description: "Rekkefølge for Tre råd-seksjonen (1-5)"), "rekkefolge");
+        ct.AddPropertyType(Prop("rekkefolgeSandkasse", "Sandkasse", _numericDt, description: "Rekkefølge for Sandkasse-seksjonen (1-5)"), "rekkefolge");
+        ct.AddPropertyType(Prop("rekkefolgeArrangement", "Arrangement", _numericDt, description: "Rekkefølge for Arrangement-seksjonen (1-5)"), "rekkefolge");
 
         // Tab: SEO
         ct.AddPropertyGroup("seo", "SEO");
@@ -1063,14 +1063,14 @@ public class ContentTypeComponent : IAsyncComponent
         }
 
         // Migrate reorder fields
-        if (!ct.PropertyTypeExists("rekkefølgeVeiledning"))
+        if (!ct.PropertyTypeExists("rekkefolgeVeiledning"))
         {
-            ct.AddPropertyGroup("rekkefølge", "Rekkefølge");
-            ct.AddPropertyType(Prop("rekkefølgeVeiledning", "Veiledning", _numericDt, description: "Rekkefølge for Veiledning-seksjonen (1-5)"), "rekkefølge");
-            ct.AddPropertyType(Prop("rekkefølgeAktuelt", "Aktuelt", _numericDt, description: "Rekkefølge for Aktuelt-seksjonen (1-5)"), "rekkefølge");
-            ct.AddPropertyType(Prop("rekkefølgeTreRaad", "Tre råd", _numericDt, description: "Rekkefølge for Tre råd-seksjonen (1-5)"), "rekkefølge");
-            ct.AddPropertyType(Prop("rekkefølgeSandkasse", "Sandkasse", _numericDt, description: "Rekkefølge for Sandkasse-seksjonen (1-5)"), "rekkefølge");
-            ct.AddPropertyType(Prop("rekkefølgeArrangement", "Arrangement", _numericDt, description: "Rekkefølge for Arrangement-seksjonen (1-5)"), "rekkefølge");
+            ct.AddPropertyGroup("rekkefolge", "Rekkefølge");
+            ct.AddPropertyType(Prop("rekkefolgeVeiledning", "Veiledning", _numericDt, description: "Rekkefølge for Veiledning-seksjonen (1-5)"), "rekkefolge");
+            ct.AddPropertyType(Prop("rekkefolgeAktuelt", "Aktuelt", _numericDt, description: "Rekkefølge for Aktuelt-seksjonen (1-5)"), "rekkefolge");
+            ct.AddPropertyType(Prop("rekkefolgeTreRaad", "Tre råd", _numericDt, description: "Rekkefølge for Tre råd-seksjonen (1-5)"), "rekkefolge");
+            ct.AddPropertyType(Prop("rekkefolgeSandkasse", "Sandkasse", _numericDt, description: "Rekkefølge for Sandkasse-seksjonen (1-5)"), "rekkefolge");
+            ct.AddPropertyType(Prop("rekkefolgeArrangement", "Arrangement", _numericDt, description: "Rekkefølge for Arrangement-seksjonen (1-5)"), "rekkefolge");
             _contentTypeService.Save(ct);
         }
     }
