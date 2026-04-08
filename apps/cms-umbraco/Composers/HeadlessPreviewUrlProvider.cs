@@ -29,7 +29,7 @@ public class HeadlessPreviewSetup : IAsyncComponent
 
     // Content types that should use the preview redirect
     private static readonly string[] PreviewableTypes =
-        ["artikkel", "side", "eksempel", "veiledning", "faq"];
+        ["artikkel", "side", "eksempel", "faq", "veiledningGuide", "veiledningSteg", "omOss", "omOssSeksjon", "forside", "sandkasse", "veiledningOversikt"];
 
     public HeadlessPreviewSetup(
         IContentTypeService contentTypeService,

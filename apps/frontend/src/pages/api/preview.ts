@@ -1,12 +1,18 @@
 import type { APIRoute } from 'astro';
 
 // Map content types to their frontend paths
-const contentTypeRoutes: Record<string, (slug: string) => string> = {
+const contentTypeRoutes: Record<string, (slug: string, props?: Record<string, unknown>) => string> = {
   artikkel: (slug) => `/artikler/${slug}`,
   side: (slug) => `/${slug}`,
   eksempel: (slug) => `/eksempler/${slug}`,
-  veiledning: (slug) => `/veiledning/${slug}`,
   faq: () => '/faq',
+  forside: () => '/',
+  omOss: () => '/om-oss',
+  omOssSeksjon: () => '/om-oss',
+  sandkasse: () => '/sandkasse',
+  veiledningOversikt: () => '/veiledning',
+  veiledningGuide: (slug) => `/veiledning/${slug}`,
+  veiledningSteg: (slug, props) => `/veiledning/${props?.guideSlug || 'bruk-data-rett'}/${slug}`,
 };
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
@@ -77,7 +83,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
       return new Response(`No route configured for type: ${type}`, { status: 400 });
     }
 
-    const targetPath = routeBuilder(slug);
+    const targetPath = routeBuilder(slug, content.properties);
     return redirect(`${targetPath}?preview=true`, 307);
   } catch (error) {
     console.error('Preview error:', error);

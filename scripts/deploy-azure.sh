@@ -174,12 +174,22 @@ properties:
         value: Information
       - name: Serilog__WriteTo__0__Name
         value: Console
+      - name: HeadlessPreview__FrontendUrl
+        value: https://ki-norge-frontend.greentree-c9e56a64.norwayeast.azurecontainerapps.io
+      - name: HeadlessPreview__PreviewSecret
+        value: '59cfdda7b9140784c3c80149b5348d81'
       image: ${UMBRACO_IMAGE}
       name: ki-norge-cms
+      volumeMounts:
+      - volumeName: umbracomedia
+        mountPath: /app/umbraco/Data/Media
       resources:
         cpu: 0.5
         memory: 1Gi
-    volumes: []
+    volumes:
+    - name: umbracomedia
+      storageName: umbracomedia
+      storageType: AzureFile
 YAMLDOC
 
   az containerapp update \
