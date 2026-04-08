@@ -18,28 +18,60 @@ BLOB_CONTAINER="umbraco-db"
 IMAGE_TAG="$(date +%Y%m%d%H%M%S)"
 
 # Ensure Azure auth + PIM activation before deploying
+# Handles: expired MFA, wrong tenant, missing subscription, PIM activation
+TENANT_ID="cd0026d8-283b-4a55-9bfa-d0ef4a8ba21c"
+SUBSCRIPTION_ID="fdc58270-273a-4afc-b996-83e97fe5173a"
+PRINCIPAL_ID="3beaadb7-8bbb-4396-9773-8843fa1b2057"
+ROLE_DEF_ID="/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+
 echo "==> Checking Azure authentication..."
-if ! az account show >/dev/null 2>&1; then
-  echo "  Not logged in. Running az login..."
-  az login --allow-no-subscriptions >/dev/null 2>&1
-fi
 
-# Activate PIM if needed (uses curl to bypass subscription resolution)
-echo "==> Activating PIM role..."
-_TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv 2>/dev/null || true)
-if [ -n "$_TOKEN" ]; then
+# Check if we can already access the subscription
+if az account show --query name -o tsv 2>/dev/null | grep -q "Altinn"; then
+  echo "  Already authenticated with subscription access."
+else
+  # Try to get a token from current session
+  _TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv 2>/dev/null || true)
+
+  if [ -z "$_TOKEN" ]; then
+    # No token at all — need full login with MFA to the correct tenant
+    echo "  No Azure session. Logging in to tenant ${TENANT_ID}..."
+    az login --tenant "${TENANT_ID}" --allow-no-subscriptions
+    _TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv 2>/dev/null || true)
+  fi
+
+  if [ -z "$_TOKEN" ]; then
+    echo "  ERROR: Could not get Azure access token. Run 'az login' manually."
+    exit 1
+  fi
+
+  # Check if token is for the right tenant
+  _ISSUER=$(echo "$_TOKEN" | cut -d. -f2 | base64 -d 2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('tid',''))" 2>/dev/null || true)
+  if [ -n "$_ISSUER" ] && [ "$_ISSUER" != "$TENANT_ID" ]; then
+    echo "  Wrong tenant (${_ISSUER}). Re-logging to ${TENANT_ID}..."
+    az login --tenant "${TENANT_ID}" --allow-no-subscriptions
+    _TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv)
+  fi
+
+  # Activate PIM
+  echo "  Activating PIM role..."
   _PIM_RESULT=$(curl -s -X PUT \
-    "https://management.azure.com/subscriptions/fdc58270-273a-4afc-b996-83e97fe5173a/providers/Microsoft.Authorization/roleAssignmentScheduleRequests/$(uuidgen)?api-version=2020-10-01" \
+    "https://management.azure.com/subscriptions/${SUBSCRIPTION_ID}/providers/Microsoft.Authorization/roleAssignmentScheduleRequests/$(uuidgen)?api-version=2020-10-01" \
     -H "Authorization: Bearer $_TOKEN" -H "Content-Type: application/json" \
-    -d '{"properties":{"principalId":"3beaadb7-8bbb-4396-9773-8843fa1b2057","roleDefinitionId":"/subscriptions/fdc58270-273a-4afc-b996-83e97fe5173a/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c","requestType":"SelfActivate","justification":"Deploy ki.norge.no","scheduleInfo":{"expiration":{"type":"AfterDuration","duration":"PT8H"}}}}' 2>/dev/null)
+    -d "{\"properties\":{\"principalId\":\"${PRINCIPAL_ID}\",\"roleDefinitionId\":\"${ROLE_DEF_ID}\",\"requestType\":\"SelfActivate\",\"justification\":\"Deploy ki.norge.no\",\"scheduleInfo\":{\"expiration\":{\"type\":\"AfterDuration\",\"duration\":\"PT8H\"}}}}" 2>/dev/null)
   echo "  PIM: $(echo "$_PIM_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('properties',{}).get('status', d.get('error',{}).get('message','OK')))" 2>/dev/null || echo "activated")"
-fi
 
-# Re-login to pick up the subscription
-if ! az account show --query name -o tsv 2>/dev/null | grep -q "Altinn"; then
-  echo "  Re-logging in to see subscription..."
-  sleep 10
+  # Wait for PIM propagation then re-login to see subscription
+  echo "  Waiting for PIM propagation..."
+  sleep 12
   az login >/dev/null 2>&1
+
+  # Verify
+  if ! az account show --query name -o tsv 2>/dev/null | grep -q "Altinn"; then
+    echo "  ERROR: Subscription still not visible after PIM activation."
+    echo "  Try running manually: az login --tenant ${TENANT_ID}"
+    exit 1
+  fi
 fi
 echo "OK"
 
