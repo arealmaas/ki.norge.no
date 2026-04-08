@@ -17,6 +17,32 @@ STORAGE_ACCOUNT="kinorgestorage"
 BLOB_CONTAINER="umbraco-db"
 IMAGE_TAG="$(date +%Y%m%d%H%M%S)"
 
+# Ensure Azure auth + PIM activation before deploying
+echo "==> Checking Azure authentication..."
+if ! az account show >/dev/null 2>&1; then
+  echo "  Not logged in. Running az login..."
+  az login --allow-no-subscriptions >/dev/null 2>&1
+fi
+
+# Activate PIM if needed (uses curl to bypass subscription resolution)
+echo "==> Activating PIM role..."
+_TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv 2>/dev/null || true)
+if [ -n "$_TOKEN" ]; then
+  _PIM_RESULT=$(curl -s -X PUT \
+    "https://management.azure.com/subscriptions/fdc58270-273a-4afc-b996-83e97fe5173a/providers/Microsoft.Authorization/roleAssignmentScheduleRequests/$(uuidgen)?api-version=2020-10-01" \
+    -H "Authorization: Bearer $_TOKEN" -H "Content-Type: application/json" \
+    -d '{"properties":{"principalId":"3beaadb7-8bbb-4396-9773-8843fa1b2057","roleDefinitionId":"/subscriptions/fdc58270-273a-4afc-b996-83e97fe5173a/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c","requestType":"SelfActivate","justification":"Deploy ki.norge.no","scheduleInfo":{"expiration":{"type":"AfterDuration","duration":"PT8H"}}}}' 2>/dev/null)
+  echo "  PIM: $(echo "$_PIM_RESULT" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('properties',{}).get('status', d.get('error',{}).get('message','OK')))" 2>/dev/null || echo "activated")"
+fi
+
+# Re-login to pick up the subscription
+if ! az account show --query name -o tsv 2>/dev/null | grep -q "Altinn"; then
+  echo "  Re-logging in to see subscription..."
+  sleep 10
+  az login >/dev/null 2>&1
+fi
+echo "OK"
+
 echo "=== ki.norge.no Azure deployment ==="
 echo "Resource group: ${RESOURCE_GROUP}"
 echo "Location: ${LOCATION}"
