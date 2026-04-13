@@ -320,7 +320,7 @@ else
     --ingress external \
     --target-port 4321 \
     --min-replicas 1 \
-    --max-replicas 1 \
+    --max-replicas 3 \
     --registry-server "${ACR_LOGIN_SERVER}" \
     --registry-username "${ACR_USERNAME}" \
     --registry-password "${ACR_PASSWORD}" \
