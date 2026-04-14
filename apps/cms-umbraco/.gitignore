@@ -25,4 +25,3 @@ appsettings-schema.*.json
 
 ## User secrets
 appsettings.*.local.json
-appsettings.Development.json
