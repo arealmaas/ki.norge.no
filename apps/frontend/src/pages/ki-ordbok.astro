@@ -231,6 +231,19 @@ const letters = Object.keys(grouped).sort();
   searchInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') filterOrdbok(searchInput.value);
   });
+
+  // Sort toggle: reverse letter-section order on click.
+  let reversed = false;
+  const sortBtn = document.querySelector('.sort-btn') as HTMLButtonElement | null;
+  const sortChevron = sortBtn?.querySelector('svg:last-child') as SVGElement | null;
+
+  sortBtn?.addEventListener('click', () => {
+    reversed = !reversed;
+    const sections = Array.from(ordbokList?.querySelectorAll<HTMLElement>('.letter-section') ?? []);
+    sections.reverse().forEach((s) => ordbokList?.appendChild(s));
+    if (sortChevron) sortChevron.style.transform = reversed ? 'rotate(180deg)' : '';
+    sortBtn.setAttribute('aria-label', reversed ? 'Sortert Å–A' : 'Sortert A–Å');
+  });
 </script>
 
 <style>
