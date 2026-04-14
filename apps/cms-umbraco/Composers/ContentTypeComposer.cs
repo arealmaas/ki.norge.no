@@ -169,6 +169,10 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("tilgjengeligIkon") == null)
                 CreateTilgjengeligIkon();
             CreateContainerIfMissing("tilgjengeligeIkoner", "Tilgjengelige ikoner", "icon-picture", "tilgjengeligIkon");
+
+            if (_contentTypeService.Get("ordbokOppslag") == null)
+                CreateOrdbokOppslag();
+            CreateContainerIfMissing("ordbokSamling", "KI-ordbok", "icon-book-alt", "ordbokOppslag");
         }
         catch (Exception ex)
         {
@@ -700,6 +704,24 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("svar", "Svar", _richTextDt), "innhold");
         ct.AddPropertyType(Prop("kategori", "Kategori", _contentPickerDt), "innhold");
         ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateOrdbokOppslag()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "ordbokOppslag",
+            Name = "Ordbok-oppslag",
+            Description = "Et begrep i KI-ordboka",
+            Icon = "icon-book-alt",
+            AllowedAsRoot = false,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("term", "Term", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("alternativTerm", "Alternativt term (engelsk/alias)", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("definisjon", "Definisjon", _textAreaDt, mandatory: true), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }

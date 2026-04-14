@@ -145,6 +145,12 @@ export interface VeiledningSteg {
   locale: string;
 }
 
+export interface OrdbokOppslag {
+  term: string;
+  alternativTerm?: string;
+  definisjon: string;
+}
+
 export interface FAQ {
   id: string;
   documentId: string;
@@ -728,6 +734,13 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         beskrivelse: props.beskrivelse as string || '',
       } as T;
 
+    case 'ordbokOppslag':
+      return {
+        term: props.term as string || item.name,
+        alternativTerm: props.alternativTerm as string || undefined,
+        definisjon: props.definisjon as string || '',
+      } as T;
+
     default:
       return { ...base, ...props } as T;
   }
@@ -1069,6 +1082,16 @@ export async function getFAQs(options: FetchOptions = {}) {
   return fetchCollection<FAQ>('faq', {
     ...options,
     sort: 'sortOrder:asc',
+  });
+}
+
+// ── KI-ordbok API functions ──────────────────────────────────────
+
+export async function getOrdbokOppslag(options: FetchOptions = {}) {
+  return fetchCollection<OrdbokOppslag>('ordbokOppslag', {
+    ...options,
+    sort: 'name:asc',
+    take: 500,
   });
 }
 

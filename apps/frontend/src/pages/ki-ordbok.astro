@@ -1,5 +1,6 @@
 ---
 import Layout from '../components/layout/Layout.astro';
+import { getOrdbokOppslag } from '../lib/umbraco';
 
 interface OrdEntry {
   term: string;
@@ -7,7 +8,23 @@ interface OrdEntry {
   definisjon: string;
 }
 
-const ordliste: OrdEntry[] = [
+// Try to load terms from CMS first
+let cmsOrdliste: OrdEntry[] = [];
+try {
+  const cmsRes = await getOrdbokOppslag();
+  if (cmsRes.data.length > 0) {
+    cmsOrdliste = cmsRes.data.map((item) => ({
+      term: item.term,
+      altTerm: item.alternativTerm,
+      definisjon: item.definisjon,
+    }));
+  }
+} catch (e) {
+  console.error('Failed to fetch ordbok from CMS:', e);
+}
+
+// Hardcoded fallback — used when CMS returns no terms
+const fallbackOrdliste: OrdEntry[] = [
   { term: 'Kunstig intelligens (KI) eller Artificial Intelligence', altTerm: 'AI', definisjon: 'Kunstig intelligens er datasystemer som kan utføre oppgaver som vanligvis krever menneskelig intelligens, for eksempel å forstå tekst, bilder eller tale og ta enkle beslutninger.' },
   { term: 'A/B-testing', definisjon: 'A/B-testing er å sammenligne to versjoner av en løsning, for eksempel to KI-modeller, for å se hvilken som gir best resultater i praksis.' },
   { term: 'A/B-testing med KI', definisjon: 'A/B-testing med KI betyr at modellen hjelper til med å lage flere varianter og finne ut hvilke budskap, bilder eller vinklinger som fungerer best.' },
@@ -201,6 +218,9 @@ const ordliste: OrdEntry[] = [
   { term: 'Verktøyskalling / tool calling', altTerm: 'function calling', definisjon: 'Verktøyskalling betyr at KI-modellen kan kalle eksterne verktøy eller funksjoner, for eksempel søk i CRM eller oppslag i et fagsystem, mens den løser en oppgave.' },
   { term: 'Zero-shot learning', definisjon: 'Zero-shot learning er når modellen løser en oppgave kun basert på instruksjonen, uten at du gir eksempler i prompten.' },
 ];
+
+// Use CMS data if available, otherwise fall back to hardcoded list
+const ordliste: OrdEntry[] = cmsOrdliste.length > 0 ? cmsOrdliste : fallbackOrdliste;
 
 // Group by first letter
 const grouped = ordliste
