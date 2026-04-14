@@ -240,7 +240,7 @@ properties:
       name: ki-norge-cms
       volumeMounts:
       - volumeName: umbracomedia
-        mountPath: /app/umbraco/Data/Media
+        mountPath: /app/wwwroot/media
       resources:
         cpu: 0.5
         memory: 1Gi
