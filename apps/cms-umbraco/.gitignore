@@ -25,3 +25,4 @@ appsettings-schema.*.json
 
 ## User secrets
 appsettings.*.local.json
+.cms-running.lock
