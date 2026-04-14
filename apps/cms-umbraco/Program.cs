@@ -1,3 +1,19 @@
+// Prevent running two CMS instances simultaneously — the second one
+// would overwrite the SQLite database with an empty file.
+var lockPath = Path.Combine(AppContext.BaseDirectory, ".cms-running.lock");
+FileStream? lockFile = null;
+try
+{
+    lockFile = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+}
+catch (IOException)
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.Error.WriteLine("CMS kjører allerede! Stopp den andre instansen først (Ctrl+C).");
+    Console.ResetColor();
+    Environment.Exit(1);
+}
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.CreateUmbracoBuilder()
