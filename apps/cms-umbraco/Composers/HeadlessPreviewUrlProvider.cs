@@ -45,6 +45,7 @@ public class KiNorgePreviewService : IDocumentPreviewService
             "veiledningOversikt" => "/veiledning",
             "veiledningGuide" => $"/veiledning/{slug}",
             "veiledningSteg" => $"/veiledning/{guideSlug}/{slug}",
+            "kiOrdbok" => "/ki-ordbok",
             _ => null
         };
 
