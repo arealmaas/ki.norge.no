@@ -4,9 +4,12 @@ obj/
 publish/
 
 ## Umbraco
-umbraco/Data/
-umbraco/Logs/
-umbraco/mediacache/
+umbraco/Data/*
+!umbraco/Data/.gitkeep
+umbraco/Logs/*
+!umbraco/Logs/.gitkeep
+umbraco/mediacache/*
+!umbraco/mediacache/.gitkeep
 App_Data/
 wwwroot/media/*
 !wwwroot/media/.gitkeep
