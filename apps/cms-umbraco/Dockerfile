@@ -17,7 +17,7 @@ COPY --from=build /app/publish .
 USER root
 
 # Install Litestream for SQLite replication to Azure Blob Storage
-ADD https://github.com/benbjohnson/litestream/releases/download/v0.3.13/litestream-v0.3.13-linux-amd64.tar.gz /tmp/litestream.tar.gz
+ADD https://github.com/benbjohnson/litestream/releases/download/v0.3.14/litestream-v0.3.14-linux-amd64.tar.gz /tmp/litestream.tar.gz
 RUN tar -C /usr/local/bin -xzf /tmp/litestream.tar.gz && rm /tmp/litestream.tar.gz
 
 # Ensure directories exist with correct permissions
