@@ -415,15 +415,33 @@ const activeGroup = allGroups[activePage];
     if (e.key === 'Enter') filterOrdbok(searchInput.value);
   });
 
-  // Sort toggle: reverse letter-section order on click.
+  // Sort toggle: reverse everything (sections + terms within each section + nav links)
   let reversed = false;
   const sortBtn = document.querySelector('.sort-btn') as HTMLButtonElement | null;
   const sortChevron = sortBtn?.querySelector('svg:last-child') as SVGElement | null;
 
   sortBtn?.addEventListener('click', () => {
     reversed = !reversed;
+
+    // Reverse sections in DOM
     const sections = Array.from(ordbokList?.querySelectorAll<HTMLElement>('.letter-section') ?? []);
     sections.reverse().forEach((s) => ordbokList?.appendChild(s));
+
+    // Reverse terms within each section
+    sections.forEach((section) => {
+      const list = section.querySelector('.term-list');
+      if (!list) return;
+      const items = Array.from(list.children);
+      items.reverse().forEach((item) => list.appendChild(item));
+    });
+
+    // Reverse nav links
+    const nav = document.querySelector('.letter-nav');
+    if (nav) {
+      const links = Array.from(nav.children);
+      links.reverse().forEach((link) => nav.appendChild(link));
+    }
+
     if (sortChevron) sortChevron.style.transform = reversed ? 'rotate(180deg)' : '';
     sortBtn.setAttribute('aria-label', reversed ? 'Sortert Å–A' : 'Sortert A–Å');
   });
