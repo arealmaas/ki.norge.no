@@ -283,9 +283,15 @@ const letters = Object.keys(grouped).sort();
         </button>
       </div>
 
+      <nav class="letter-nav" aria-label="Hopp til bokstav">
+        {letters.map((letter) => (
+          <a href={`#letter-${letter}`} class="letter-nav-link" data-nav-letter={letter}>{letter}</a>
+        ))}
+      </nav>
+
       <div id="ordbok-list" class="ordbok-list">
         {letters.map((letter) => (
-          <section class="letter-section" data-letter={letter}>
+          <section class="letter-section" data-letter={letter} id={`letter-${letter}`}>
             <h2 class="letter-heading">{letter}</h2>
             <ul class="term-list" role="list">
               {grouped[letter].map((entry, idx) => (
@@ -376,6 +382,43 @@ const letters = Object.keys(grouped).sort();
     if (sortChevron) sortChevron.style.transform = reversed ? 'rotate(180deg)' : '';
     sortBtn.setAttribute('aria-label', reversed ? 'Sortert Å–A' : 'Sortert A–Å');
   });
+
+  // Letter nav: highlight active letter on scroll
+  const navLinks = document.querySelectorAll<HTMLAnchorElement>('.letter-nav-link');
+
+  function updateActiveLetterOnScroll() {
+    const sections = ordbokList?.querySelectorAll<HTMLElement>('.letter-section');
+    if (!sections) return;
+    let activeLetter = '';
+    for (const section of sections) {
+      if (section.hidden) continue;
+      const rect = section.getBoundingClientRect();
+      if (rect.top <= 120) activeLetter = section.dataset.letter || '';
+    }
+    navLinks.forEach((link) => {
+      link.classList.toggle('active', link.dataset.navLetter === activeLetter);
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveLetterOnScroll, { passive: true });
+
+  // Dim letters that have no visible terms (during search)
+  function updateNavDisabledState() {
+    const sections = ordbokList?.querySelectorAll<HTMLElement>('.letter-section');
+    if (!sections) return;
+    const visibleLetters = new Set<string>();
+    sections.forEach((s) => { if (!s.hidden) visibleLetters.add(s.dataset.letter || ''); });
+    navLinks.forEach((link) => {
+      link.classList.toggle('disabled', !visibleLetters.has(link.dataset.navLetter || ''));
+    });
+  }
+
+  // Hook into existing filter to also update nav
+  const origFilter = filterOrdbok;
+  filterOrdbok = function(query: string) {
+    origFilter(query);
+    updateNavDisabledState();
+  };
 </script>
 
 <style>
@@ -538,10 +581,61 @@ const letters = Object.keys(grouped).sort();
     background: rgba(0, 98, 186, 0.05);
   }
 
+  /* ── Letter navigation ──────────────────────────────── */
+
+  .letter-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+
+  .letter-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1a2a6d;
+    text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .letter-nav-link:hover {
+    background: #e5f2f7;
+  }
+
+  .letter-nav-link.active {
+    background: #1a2a6d;
+    color: white;
+  }
+
+  .letter-nav-link.disabled {
+    color: #cbd5e1;
+    pointer-events: none;
+  }
+
+  @media (max-width: 640px) {
+    .letter-nav-link {
+      width: 30px;
+      height: 30px;
+      font-size: 0.8rem;
+    }
+  }
+
   /* ── Letter sections ────────────────────────────────── */
 
   .letter-section {
     margin-top: 32px;
+    scroll-margin-top: 60px;
   }
 
   .letter-heading {
