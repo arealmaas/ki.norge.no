@@ -49,9 +49,28 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // Coming-soon mode: show placeholder for all non-API routes.
   // Set LAUNCH_MODE=coming-soon as env var to activate.
+  // Bypass: visit /preview-tilgang?key=<PREVIEW_SECRET> to set a cookie that skips the wall.
   if (LAUNCH_MODE === 'coming-soon') {
     const isApiRoute = url.pathname.startsWith('/api/');
-    if (!isApiRoute) {
+    const previewSecret = process.env.PREVIEW_SECRET || import.meta.env.PREVIEW_SECRET || '';
+
+    // Grant access via secret URL
+    if (url.pathname === '/preview-tilgang') {
+      const key = url.searchParams.get('key');
+      if (key && key === previewSecret) {
+        const res = new Response('Tilgang gitt! Du blir videresendt...', {
+          status: 302,
+          headers: { 'Location': '/', 'Cache-Control': 'no-store' },
+        });
+        res.headers.append('Set-Cookie', `ki_preview=1; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`);
+        return res;
+      }
+    }
+
+    // Allow through if preview cookie is set
+    const hasPreviewCookie = cookies.has('ki_preview');
+
+    if (!isApiRoute && !hasPreviewCookie) {
       return new Response(COMING_SOON_HTML, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
