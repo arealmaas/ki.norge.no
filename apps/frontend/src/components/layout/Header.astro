@@ -39,6 +39,17 @@ const currentPath = Astro.url.pathname;
     <div class="header-actions">
       <button
         type="button"
+        class="search-toggle"
+        aria-label="Søk"
+        data-search-toggle
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <button
+        type="button"
         class="mobile-menu-toggle"
         aria-label="Åpne meny"
         aria-expanded="false"
@@ -96,6 +107,12 @@ const currentPath = Astro.url.pathname;
 </header>
 
 <script>
+  // Search dialog trigger
+  const searchToggle = document.querySelector('[data-search-toggle]');
+  searchToggle?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('open-search-dialog'));
+  });
+
   function initMobileMenu() {
     const toggle = document.querySelector('[data-mobile-menu-toggle]');
     const nav = document.getElementById('mobile-nav');

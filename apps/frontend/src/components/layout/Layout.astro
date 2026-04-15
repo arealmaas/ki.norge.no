@@ -2,7 +2,9 @@
 import Header from './Header.astro';
 import Footer from './Footer.astro';
 import PreviewBanner from '../shared/PreviewBanner.astro';
+import SearchDialog from '../shared/SearchDialog.tsx';
 import '../../styles/global.css';
+import '../../styles/search-dialog.css';
 
 interface Props {
   title: string;
@@ -79,6 +81,7 @@ const ogImageUrl = ogImage ? new URL(ogImage, siteUrl).href : undefined;
       <slot />
     </main>
     <Footer />
+    <SearchDialog client:load />
     {isPreview && <PreviewBanner currentPath={currentPath} />}
   </body>
 </html>
