@@ -1,35 +1,40 @@
 // ── Guard: prevent two instances (protects SQLite from corruption) ──
 // Must run BEFORE WebApplication.CreateBuilder, because Umbraco's boot
-// sequence overwrites the database file during builder setup.
+// sequence can overwrite the database file.
 {
-    // 1. File lock (same directory)
-    var lockPath = Path.Combine(Directory.GetCurrentDirectory(), ".cms-running.lock");
-    try
+    // 1. Port check — the most reliable guard
+    foreach (var port in new[] { 5000, 44391 })
     {
-        var lf = new FileStream(lockPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-        // Keep lf open for the lifetime of the process (GC won't collect a rooted static)
-        AppDomain.CurrentDomain.ProcessExit += (_, _) => { lf.Dispose(); try { File.Delete(lockPath); } catch {} };
-    }
-    catch (IOException)
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.Error.WriteLine("CMS kjører allerede! Stopp den andre instansen først (Ctrl+C).");
-        Console.ResetColor();
-        Environment.Exit(1);
+        try
+        {
+            using var tcp = new System.Net.Sockets.TcpClient();
+            tcp.Connect("127.0.0.1", port);
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine($"Port {port} er allerede i bruk! En annen CMS-instans kjører sannsynligvis.");
+            Console.Error.WriteLine("Stopp den med: pkill -f KiNorge.Cms");
+            Console.ResetColor();
+            Environment.Exit(1);
+        }
+        catch (System.Net.Sockets.SocketException) { /* Port is free */ }
     }
 
-    // 2. Port check (catches instances started from other directories)
-    try
+    // 2. DB file lock — keeps the DB file locked while running
+    var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "umbraco", "Data", "Umbraco.sqlite.db");
+    if (File.Exists(dbPath) && new FileInfo(dbPath).Length > 8192)
     {
-        using var tcp = new System.Net.Sockets.TcpClient();
-        tcp.Connect("127.0.0.1", 5000);
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.Error.WriteLine("Port 5000 er allerede i bruk! En annen CMS-instans kjører sannsynligvis.");
-        Console.Error.WriteLine("Stopp den med: lsof -ti :5000 | xargs kill");
-        Console.ResetColor();
-        Environment.Exit(1);
+        try
+        {
+            var dbLock = new FileStream(dbPath + ".lock", FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            AppDomain.CurrentDomain.ProcessExit += (_, _) => { dbLock.Dispose(); try { File.Delete(dbPath + ".lock"); } catch {} };
+        }
+        catch (IOException)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine("CMS kjører allerede! Stopp den andre instansen først (Ctrl+C / pkill -f KiNorge.Cms).");
+            Console.ResetColor();
+            Environment.Exit(1);
+        }
     }
-    catch (System.Net.Sockets.SocketException) { /* Port is free */ }
 }
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
