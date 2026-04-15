@@ -330,8 +330,10 @@ const activeGroup = allGroups[activePage];
       </nav>
 
       <div id="ordbok-list" class="ordbok-list">
-        {activeGroup.letters.map((letter) => (
-          <section class="letter-section" data-letter={letter} id={`letter-${letter}`}>
+        {letters.map((letter) => {
+          const isActivePage = activeGroup.letters.includes(letter);
+          return (
+          <section class={`letter-section ${isActivePage ? '' : 'paginated-hidden'}`} data-letter={letter} data-page-visible={isActivePage ? 'true' : 'false'} id={`letter-${letter}`}>
             <h2 class="letter-heading">{letter}</h2>
             <ul class="term-list" role="list">
               {grouped[letter].map((entry, idx) => (
@@ -423,13 +425,50 @@ const activeGroup = allGroups[activePage];
     sortBtn.setAttribute('aria-label', reversed ? 'Sortert Å–A' : 'Sortert A–Å');
   });
 
-  // When searching, show ALL terms (bypass pagination) and hide nav
+  // When searching: show ALL sections (bypass pagination), filter across everything.
+  // When search is cleared: restore pagination.
   const letterNav = document.querySelector('.letter-nav') as HTMLElement | null;
-  const origFilter = filterOrdbok;
-  filterOrdbok = function(query: string) {
-    origFilter(query);
-    // Hide pagination when searching since we show filtered results from current page only
-  };
+  const allSections = ordbokList?.querySelectorAll<HTMLElement>('.letter-section');
+
+  function filterGlobal(query: string) {
+    const q = query.trim().toLowerCase();
+    const isSearching = q.length > 0;
+
+    // Show/hide pagination nav
+    if (letterNav) letterNav.style.display = isSearching ? 'none' : '';
+
+    let totalVisible = 0;
+    allSections?.forEach((section) => {
+      // When searching: unhide paginated sections. When not: restore pagination.
+      if (!isSearching) {
+        section.classList.toggle('paginated-hidden', section.dataset.pageVisible !== 'true');
+      } else {
+        section.classList.remove('paginated-hidden');
+      }
+
+      const items = section.querySelectorAll<HTMLElement>('.term-item');
+      let sectionVisible = 0;
+      items.forEach((item) => {
+        const term = item.dataset.term ?? '';
+        const alt = item.dataset.alt ?? '';
+        const matches = !isSearching || term.includes(q) || alt.includes(q);
+        item.hidden = !matches;
+        if (matches) sectionVisible++;
+      });
+
+      if (isSearching) {
+        section.hidden = sectionVisible === 0;
+      } else {
+        section.hidden = false;
+      }
+      totalVisible += sectionVisible;
+    });
+
+    if (noResults) noResults.hidden = totalVisible > 0;
+  }
+
+  // Override the original filter
+  filterOrdbok = filterGlobal;
 </script>
 
 <style>
@@ -641,6 +680,10 @@ const activeGroup = allGroups[activePage];
   .letter-section {
     margin-top: 32px;
     scroll-margin-top: 60px;
+  }
+
+  .letter-section.paginated-hidden {
+    display: none;
   }
 
   .letter-heading {
