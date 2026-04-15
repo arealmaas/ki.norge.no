@@ -232,7 +232,44 @@ const grouped = ordliste
     return acc;
   }, {});
 
-const letters = Object.keys(grouped).sort();
+const letters = Object.keys(grouped).sort((a, b) => a.localeCompare(b, 'nb'));
+
+// Build letter groups of ~20 entries each for pagination
+const PAGE_SIZE = 20;
+interface LetterGroup {
+  label: string;       // e.g. "A–B" or "K"
+  letters: string[];   // e.g. ["A", "B"]
+  entries: OrdEntry[];
+}
+
+const allGroups: LetterGroup[] = [];
+let currentGroup: LetterGroup = { label: '', letters: [], entries: [] };
+
+for (const letter of letters) {
+  const letterEntries = grouped[letter];
+  // If adding this letter would exceed PAGE_SIZE and we already have entries, start a new group
+  if (currentGroup.entries.length > 0 && currentGroup.entries.length + letterEntries.length > PAGE_SIZE) {
+    currentGroup.label = currentGroup.letters.length === 1
+      ? currentGroup.letters[0]
+      : `${currentGroup.letters[0]}–${currentGroup.letters[currentGroup.letters.length - 1]}`;
+    allGroups.push(currentGroup);
+    currentGroup = { label: '', letters: [], entries: [] };
+  }
+  currentGroup.letters.push(letter);
+  currentGroup.entries.push(...letterEntries);
+}
+// Push remaining
+if (currentGroup.entries.length > 0) {
+  currentGroup.label = currentGroup.letters.length === 1
+    ? currentGroup.letters[0]
+    : `${currentGroup.letters[0]}–${currentGroup.letters[currentGroup.letters.length - 1]}`;
+  allGroups.push(currentGroup);
+}
+
+// Use URL param for current page
+const currentPage = parseInt(Astro.url.searchParams.get('side') || '0');
+const activePage = Math.max(0, Math.min(currentPage, allGroups.length - 1));
+const activeGroup = allGroups[activePage];
 ---
 
 <Layout
@@ -283,14 +320,17 @@ const letters = Object.keys(grouped).sort();
         </button>
       </div>
 
-      <nav class="letter-nav" aria-label="Hopp til bokstav">
-        {letters.map((letter) => (
-          <a href={`#letter-${letter}`} class="letter-nav-link" data-nav-letter={letter}>{letter}</a>
+      <nav class="letter-nav" aria-label="Velg bokstavgruppe">
+        {allGroups.map((group, idx) => (
+          <a
+            href={`?side=${idx}`}
+            class={`letter-nav-link ${idx === activePage ? 'active' : ''}`}
+          >{group.label}</a>
         ))}
       </nav>
 
       <div id="ordbok-list" class="ordbok-list">
-        {letters.map((letter) => (
+        {activeGroup.letters.map((letter) => (
           <section class="letter-section" data-letter={letter} id={`letter-${letter}`}>
             <h2 class="letter-heading">{letter}</h2>
             <ul class="term-list" role="list">
@@ -383,41 +423,12 @@ const letters = Object.keys(grouped).sort();
     sortBtn.setAttribute('aria-label', reversed ? 'Sortert Å–A' : 'Sortert A–Å');
   });
 
-  // Letter nav: highlight active letter on scroll
-  const navLinks = document.querySelectorAll<HTMLAnchorElement>('.letter-nav-link');
-
-  function updateActiveLetterOnScroll() {
-    const sections = ordbokList?.querySelectorAll<HTMLElement>('.letter-section');
-    if (!sections) return;
-    let activeLetter = '';
-    for (const section of sections) {
-      if (section.hidden) continue;
-      const rect = section.getBoundingClientRect();
-      if (rect.top <= 120) activeLetter = section.dataset.letter || '';
-    }
-    navLinks.forEach((link) => {
-      link.classList.toggle('active', link.dataset.navLetter === activeLetter);
-    });
-  }
-
-  window.addEventListener('scroll', updateActiveLetterOnScroll, { passive: true });
-
-  // Dim letters that have no visible terms (during search)
-  function updateNavDisabledState() {
-    const sections = ordbokList?.querySelectorAll<HTMLElement>('.letter-section');
-    if (!sections) return;
-    const visibleLetters = new Set<string>();
-    sections.forEach((s) => { if (!s.hidden) visibleLetters.add(s.dataset.letter || ''); });
-    navLinks.forEach((link) => {
-      link.classList.toggle('disabled', !visibleLetters.has(link.dataset.navLetter || ''));
-    });
-  }
-
-  // Hook into existing filter to also update nav
+  // When searching, show ALL terms (bypass pagination) and hide nav
+  const letterNav = document.querySelector('.letter-nav') as HTMLElement | null;
   const origFilter = filterOrdbok;
   filterOrdbok = function(query: string) {
     origFilter(query);
-    updateNavDisabledState();
+    // Hide pagination when searching since we show filtered results from current page only
   };
 </script>
 
@@ -599,14 +610,14 @@ const letters = Object.keys(grouped).sort();
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 0.85rem;
     font-weight: 600;
     color: #1a2a6d;
     text-decoration: none;
     transition: background 0.1s, color 0.1s;
+    white-space: nowrap;
   }
 
   .letter-nav-link:hover {
@@ -618,15 +629,9 @@ const letters = Object.keys(grouped).sort();
     color: white;
   }
 
-  .letter-nav-link.disabled {
-    color: #cbd5e1;
-    pointer-events: none;
-  }
-
   @media (max-width: 640px) {
     .letter-nav-link {
-      width: 30px;
-      height: 30px;
+      padding: 5px 10px;
       font-size: 0.8rem;
     }
   }
