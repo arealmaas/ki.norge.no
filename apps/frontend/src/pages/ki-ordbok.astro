@@ -330,10 +330,13 @@ const activeGroup = allGroups[activePage];
       </nav>
 
       <div id="ordbok-list" class="ordbok-list">
-        {letters.map((letter) => {
-          const isActivePage = activeGroup.letters.includes(letter);
-          return (
-          <section class={`letter-section ${isActivePage ? '' : 'paginated-hidden'}`} data-letter={letter} data-page-visible={isActivePage ? 'true' : 'false'} id={`letter-${letter}`}>
+        {letters.map((letter) => (
+          <section
+            class={`letter-section ${activeGroup.letters.includes(letter) ? '' : 'paginated-hidden'}`}
+            data-letter={letter}
+            data-page-visible={activeGroup.letters.includes(letter) ? 'true' : 'false'}
+            id={`letter-${letter}`}
+          >
             <h2 class="letter-heading">{letter}</h2>
             <ul class="term-list" role="list">
               {grouped[letter].map((entry, idx) => (
