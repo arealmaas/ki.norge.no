@@ -173,6 +173,9 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("ordbokOppslag") == null)
                 CreateOrdbokOppslag();
             CreateContainerIfMissing("ordbokSamling", "KI-ordbok", "icon-book-alt", "ordbokOppslag");
+
+            // Ensure RichText toolbar has heading selector
+            EnsureRichTextHeadings();
         }
         catch (Exception ex)
         {
@@ -487,6 +490,64 @@ public class ContentTypeComponent : IAsyncComponent
         };
         _dataTypeService.Save(dt);
         return dt;
+    }
+
+    /// <summary>
+    /// Ensures the default RichText editor toolbar includes heading buttons.
+    /// The Heading extension is loaded but not shown in the toolbar by default.
+    /// This adds it as the first group so editors can set H2, H3, H4 etc.
+    /// Runs every startup and is idempotent (skips if already present).
+    /// </summary>
+    private void EnsureRichTextHeadings()
+    {
+        var rteDt = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.RichText)
+            .FirstOrDefault(dt => dt.Name == "Richtext editor");
+        if (rteDt == null) return;
+
+        var config = rteDt.ConfigurationData;
+        if (config == null) return;
+
+        // Check if toolbar already has heading
+        var configJson = System.Text.Json.JsonSerializer.Serialize(config);
+        if (configJson.Contains("Umb.Tiptap.Toolbar.Heading")) return;
+
+        // Parse toolbar and add heading as first group
+        if (config.TryGetValue("toolbar", out var toolbarObj))
+        {
+            var toolbarJson = System.Text.Json.JsonSerializer.Serialize(toolbarObj);
+            var toolbar = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(toolbarJson);
+
+            if (toolbar.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                // toolbar is [[group1], [group2], ...] — one row
+                // Each row is an array of groups, each group is an array of button names
+                var rows = new List<List<List<string>>>();
+                foreach (var row in toolbar.EnumerateArray())
+                {
+                    var groups = new List<List<string>>();
+                    // Add heading as first group in first row
+                    if (rows.Count == 0)
+                    {
+                        groups.Add(new List<string> { "Umb.Tiptap.Toolbar.Heading" });
+                    }
+                    foreach (var group in row.EnumerateArray())
+                    {
+                        var buttons = new List<string>();
+                        foreach (var btn in group.EnumerateArray())
+                        {
+                            buttons.Add(btn.GetString() ?? "");
+                        }
+                        groups.Add(buttons);
+                    }
+                    rows.Add(groups);
+                }
+
+                config["toolbar"] = rows;
+                rteDt.ConfigurationData = config;
+                _dataTypeService.Save(rteDt);
+                Console.WriteLine("ContentTypeComposer: Added Heading to RichText toolbar");
+            }
+        }
     }
 
     // --- Container helper ---
