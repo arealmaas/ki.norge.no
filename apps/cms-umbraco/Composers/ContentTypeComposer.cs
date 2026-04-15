@@ -507,11 +507,12 @@ public class ContentTypeComponent : IAsyncComponent
         var config = rteDt.ConfigurationData;
         if (config == null) return;
 
-        // Check if toolbar already has heading
+        // Check if toolbar already has heading buttons
         var configJson = System.Text.Json.JsonSerializer.Serialize(config);
-        if (configJson.Contains("Umb.Tiptap.Toolbar.Heading")) return;
+        if (configJson.Contains("Umb.Tiptap.Toolbar.Heading2")) return;
 
-        // Parse toolbar and add heading as first group
+        // Remove broken "Umb.Tiptap.Toolbar.Heading" if present, replace with
+        // individual heading buttons (H2, H3, H4). No H1 — that's the page title.
         if (config.TryGetValue("toolbar", out var toolbarObj))
         {
             var toolbarJson = System.Text.Json.JsonSerializer.Serialize(toolbarObj);
@@ -519,25 +520,31 @@ public class ContentTypeComponent : IAsyncComponent
 
             if (toolbar.ValueKind == System.Text.Json.JsonValueKind.Array)
             {
-                // toolbar is [[group1], [group2], ...] — one row
-                // Each row is an array of groups, each group is an array of button names
                 var rows = new List<List<List<string>>>();
                 foreach (var row in toolbar.EnumerateArray())
                 {
                     var groups = new List<List<string>>();
-                    // Add heading as first group in first row
                     if (rows.Count == 0)
                     {
-                        groups.Add(new List<string> { "Umb.Tiptap.Toolbar.Heading" });
+                        // Add H2/H3/H4 as first group
+                        groups.Add(new List<string>
+                        {
+                            "Umb.Tiptap.Toolbar.Heading2",
+                            "Umb.Tiptap.Toolbar.Heading3",
+                            "Umb.Tiptap.Toolbar.Heading4",
+                        });
                     }
                     foreach (var group in row.EnumerateArray())
                     {
                         var buttons = new List<string>();
                         foreach (var btn in group.EnumerateArray())
                         {
-                            buttons.Add(btn.GetString() ?? "");
+                            var name = btn.GetString() ?? "";
+                            // Skip the broken generic "Heading" alias
+                            if (name == "Umb.Tiptap.Toolbar.Heading") continue;
+                            buttons.Add(name);
                         }
-                        groups.Add(buttons);
+                        if (buttons.Count > 0) groups.Add(buttons);
                     }
                     rows.Add(groups);
                 }
@@ -545,7 +552,7 @@ public class ContentTypeComponent : IAsyncComponent
                 config["toolbar"] = rows;
                 rteDt.ConfigurationData = config;
                 _dataTypeService.Save(rteDt);
-                Console.WriteLine("ContentTypeComposer: Added Heading to RichText toolbar");
+                Console.WriteLine("ContentTypeComposer: Added H2/H3/H4 to RichText toolbar");
             }
         }
     }
