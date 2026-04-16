@@ -1,0 +1,194 @@
+---
+/**
+ * Status page — health overview for ki.norge.no.
+ * Access controlled by ki_admin cookie (see middleware.ts).
+ *
+ * Currently shows: HTTP health checks for frontend, CMS, Delivery API.
+ * Future: Azure Container Apps metrics, Litestream backup status, analytics.
+ */
+import Layout from '../components/layout/Layout.astro';
+---
+
+<Layout title="Status" description="Statusoversikt for ki.norge.no">
+  <div class="status-page">
+    <h1>Status</h1>
+    <p class="status-lead">
+      Live oversikt over tjenestene. Refresheres automatisk hvert 30. sekund.
+    </p>
+
+    <section class="status-section">
+      <div class="status-section-header">
+        <h2>Tjenester</h2>
+        <span id="last-checked" class="status-meta"></span>
+      </div>
+      <div id="checks" class="status-checks">
+        <p class="status-loading">Sjekker…</p>
+      </div>
+    </section>
+
+    <section class="status-section">
+      <h2>Kommer senere</h2>
+      <ul class="status-future">
+        <li>Container restarts (siste 24t) — fra Azure Monitor</li>
+        <li>CPU og minne — fra Azure Monitor</li>
+        <li>Aktive replicas — fra Container Apps API</li>
+        <li>Litestream backup-timestamp — fra blob storage</li>
+        <li>TLS-sertifikat utløpsdato</li>
+        <li>Bruksstatistikk — fra analytics (når satt opp)</li>
+      </ul>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  const checksEl = document.getElementById('checks')!;
+  const lastCheckedEl = document.getElementById('last-checked')!;
+
+  function escape(s: string): string {
+    return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  }
+
+  async function loadChecks() {
+    try {
+      const res = await fetch('/api/status-checks');
+      const data = await res.json();
+
+      const rows = data.checks.map((c: any) => {
+        const dot = c.status === 'ok' ? '🟢' : c.status === 'degraded' ? '🟡' : '🔴';
+        const meta = c.error
+          ? `<span class="check-error">${escape(c.error)}</span>`
+          : `<span class="check-meta">HTTP ${c.httpStatus} · ${c.responseTime}ms</span>`;
+        return `
+          <div class="check-row check-${c.status}">
+            <span class="check-dot">${dot}</span>
+            <div class="check-info">
+              <div class="check-name">${escape(c.name)}</div>
+              <div class="check-url"><a href="${escape(c.url)}" target="_blank" rel="noopener">${escape(c.url)}</a></div>
+            </div>
+            <div class="check-result">${meta}</div>
+          </div>
+        `;
+      }).join('');
+
+      checksEl.innerHTML = rows;
+
+      const ts = new Date(data.timestamp);
+      lastCheckedEl.textContent = `Sist sjekket ${ts.toLocaleTimeString('nb-NO')}`;
+    } catch (err) {
+      checksEl.innerHTML = `<p class="status-error">Klarte ikke hente status: ${err}</p>`;
+    }
+  }
+
+  loadChecks();
+  setInterval(loadChecks, 30_000);
+</script>
+
+<style>
+  .status-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 24px;
+  }
+
+  .status-page h1 {
+    font-size: 2rem;
+    margin: 0 0 8px;
+  }
+
+  .status-lead {
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0 0 32px;
+  }
+
+  .status-section {
+    margin-bottom: 32px;
+  }
+
+  .status-section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .status-section h2 {
+    font-size: 1.25rem;
+    margin: 0;
+  }
+
+  .status-meta {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .status-loading {
+    color: rgba(0, 0, 0, 0.5);
+    font-style: italic;
+  }
+
+  .status-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .check-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    align-items: center;
+    padding: 14px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: white;
+  }
+
+  .check-row.check-ok { border-color: #86efac; background: #f0fdf4; }
+  .check-row.check-degraded { border-color: #fcd34d; background: #fefce8; }
+  .check-row.check-down { border-color: #fca5a5; background: #fef2f2; }
+
+  .check-dot {
+    font-size: 1.1rem;
+  }
+
+  .check-name {
+    font-weight: 600;
+  }
+
+  .check-url {
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.5);
+    word-break: break-all;
+  }
+
+  .check-url a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .check-url a:hover {
+    text-decoration: underline;
+  }
+
+  .check-meta {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.6);
+    font-family: ui-monospace, monospace;
+    white-space: nowrap;
+  }
+
+  .check-error {
+    font-size: 0.85rem;
+    color: #b91c1c;
+    font-family: ui-monospace, monospace;
+  }
+
+  .status-future {
+    color: rgba(0, 0, 0, 0.6);
+    line-height: 1.8;
+  }
+
+  .status-error {
+    color: #b91c1c;
+  }
+</style>

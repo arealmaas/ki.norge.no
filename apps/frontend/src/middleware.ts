@@ -47,30 +47,37 @@ const COMING_SOON_HTML = `<!doctype html>
 export const onRequest = defineMiddleware(async (context, next) => {
   const { url, cookies } = context;
 
+  // Admin access (status page, coming-soon bypass).
+  // Visit /admin-tilgang?key=<ADMIN_SECRET> to set the ki_admin cookie.
+  const adminSecret = process.env.ADMIN_SECRET || import.meta.env.ADMIN_SECRET || '';
+  if (url.pathname === '/admin-tilgang') {
+    const key = url.searchParams.get('key');
+    if (key && adminSecret && key === adminSecret) {
+      const res = new Response('Tilgang gitt! Du blir videresendt...', {
+        status: 302,
+        headers: { 'Location': '/status', 'Cache-Control': 'no-store' },
+      });
+      res.headers.append('Set-Cookie', `ki_admin=1; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax; HttpOnly`);
+      return res;
+    }
+    return new Response('Ugyldig nøkkel', { status: 401 });
+  }
+
+  // Status page requires admin cookie
+  if (url.pathname === '/status' && !cookies.has('ki_admin')) {
+    return new Response('Ikke autorisert. Trenger ki_admin-cookie. Bruk /admin-tilgang?key=<secret>', {
+      status: 401,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
+  }
+
   // Coming-soon mode: show placeholder for all non-API routes.
-  // Set LAUNCH_MODE=coming-soon as env var to activate.
-  // Bypass: visit /preview-tilgang?key=<PREVIEW_SECRET> to set a cookie that skips the wall.
+  // Bypass via the same admin cookie.
   if (LAUNCH_MODE === 'coming-soon') {
     const isApiRoute = url.pathname.startsWith('/api/');
-    const previewSecret = process.env.PREVIEW_SECRET || import.meta.env.PREVIEW_SECRET || '';
+    const hasAdminCookie = cookies.has('ki_admin');
 
-    // Grant access via secret URL
-    if (url.pathname === '/preview-tilgang') {
-      const key = url.searchParams.get('key');
-      if (key && key === previewSecret) {
-        const res = new Response('Tilgang gitt! Du blir videresendt...', {
-          status: 302,
-          headers: { 'Location': '/', 'Cache-Control': 'no-store' },
-        });
-        res.headers.append('Set-Cookie', `ki_preview=1; Path=/; Max-Age=${60 * 60 * 24 * 30}; SameSite=Lax`);
-        return res;
-      }
-    }
-
-    // Allow through if preview cookie is set
-    const hasPreviewCookie = cookies.has('ki_preview');
-
-    if (!isApiRoute && !hasPreviewCookie) {
+    if (!isApiRoute && !hasAdminCookie) {
       return new Response(COMING_SOON_HTML, {
         status: 200,
         headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' },
@@ -81,11 +88,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isPreview =
     url.searchParams.has('preview') || cookies.has('preview');
   const isApiRoute = url.pathname.startsWith('/api/');
+  const isAdminRoute = url.pathname === '/status' || url.pathname === '/admin-tilgang';
 
   const response = await next();
 
-  // Don't cache preview requests or API routes
-  if (isPreview || isApiRoute) {
+  // Don't cache preview, API, or admin routes
+  if (isPreview || isApiRoute || isAdminRoute) {
     response.headers.set('Cache-Control', 'private, no-store');
     return response;
   }
