@@ -64,10 +64,10 @@ export default function SearchDialog() {
   const [aiExpanded, setAiExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  function openDialog() {
+  function openDialog(initialQuery = '') {
     setOpen(true);
-    setQuery('');
-    setSubmitted('');
+    setQuery(initialQuery);
+    setSubmitted(initialQuery);  // auto-submit if provided
     setAiExpanded(false);
   }
 
@@ -91,10 +91,12 @@ export default function SearchDialog() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open]);
 
-  // External trigger from header button
+  // External trigger from header button or chips
   useEffect(() => {
-    function handleTrigger() {
-      openDialog();
+    function handleTrigger(e: Event) {
+      const customEvent = e as CustomEvent<{ query?: string }>;
+      const initialQuery = customEvent.detail?.query || '';
+      openDialog(initialQuery);
     }
     window.addEventListener('open-search-dialog', handleTrigger);
     return () => window.removeEventListener('open-search-dialog', handleTrigger);

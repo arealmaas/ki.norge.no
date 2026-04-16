@@ -6,8 +6,56 @@
 <section class="hero">
   <div class="hero-container">
     <h1 class="hero-title">Innovativ og ansvarlig utvikling og bruk av kunstig intelligens</h1>
+
+    <button type="button" class="hero-search" data-hero-search aria-label="Åpne søk">
+      <span class="hero-search-placeholder">Hva kan vi hjelpe med</span>
+      <span class="hero-search-submit" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="19" x2="12" y2="5"/>
+          <polyline points="5 12 12 5 19 12"/>
+        </svg>
+      </span>
+    </button>
+
+    <div class="hero-chips" role="group" aria-label="Forslag til søk">
+      <button type="button" class="hero-chip" data-hero-chip="Hva er KI Norge">
+        <span class="hero-chip-radio" aria-hidden="true"></span>
+        Hva er KI Norge
+      </button>
+      <button type="button" class="hero-chip" data-hero-chip="Regulatorisk sandkasse">
+        <span class="hero-chip-radio" aria-hidden="true"></span>
+        Regulatorisk sandkasse
+      </button>
+      <button type="button" class="hero-chip" data-hero-chip="Veiledning">
+        <span class="hero-chip-radio" aria-hidden="true"></span>
+        Veiledning
+      </button>
+      <button type="button" class="hero-chip" data-hero-chip="Gode eksempler">
+        <span class="hero-chip-radio" aria-hidden="true"></span>
+        Gode eksempler
+      </button>
+      <button type="button" class="hero-chip" data-hero-chip="KI-ordbok">
+        <span class="hero-chip-radio" aria-hidden="true"></span>
+        KI-ordbok
+      </button>
+    </div>
   </div>
 </section>
+
+<script>
+  // Open search dialog from hero search bar + chips
+  document.querySelectorAll('[data-hero-search]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('open-search-dialog'));
+    });
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-hero-chip]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const query = btn.dataset.heroChip || '';
+      window.dispatchEvent(new CustomEvent('open-search-dialog', { detail: { query } }));
+    });
+  });
+</script>
 
 <style>
   .hero-gradient {
@@ -32,17 +80,103 @@
     position: relative;
     z-index: 1;
     margin-top: -72px;
-    height: 537px;
+    min-height: 720px;
+    padding: 120px 0 80px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
   .hero-container {
-    max-width: 800px;
+    max-width: 860px;
     margin: 0 auto;
     padding: 0 24px;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  /* Hero search pill */
+  .hero-search {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 844px;
+    height: 64px;
+    padding: 8px 8px 8px 30px;
+    border: none;
+    border-radius: 80px;
+    background: white;
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+
+  .hero-search:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .hero-search-placeholder {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: rgba(17, 24, 39, 0.5);
+    text-align: left;
+  }
+
+  .hero-search-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: #111d46;
+    color: white;
+    border-radius: 24px;
+    flex-shrink: 0;
+  }
+
+  /* Chip row */
+  .hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px 0 8px;
+    background: #ddeaf6;
+    border: 1px solid #99c0e3;
+    border-radius: 99px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #002c54;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .hero-chip:hover {
+    background: #b8d5ee;
+    border-color: #005db1;
+  }
+
+  .hero-chip-radio {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #005db1;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 
   .hero-title {
@@ -51,7 +185,6 @@
     line-height: 68px;
     color: #000000;
     margin: 0;
-    margin-top: 80px;
     letter-spacing: -0.02em;
     text-shadow: 0 0 80px rgba(255, 255, 255, 0.5);
   }
@@ -65,14 +198,29 @@
 
   @media (max-width: 640px) {
     .hero {
-      height: 400px;
+      min-height: 560px;
+      padding: 80px 0 40px;
     }
     .hero-gradient {
-      height: 500px;
+      height: 600px;
     }
     .hero-title {
       font-size: 32px;
       line-height: 38px;
+    }
+    .hero-container {
+      gap: 32px;
+    }
+    .hero-search {
+      height: 56px;
+      padding: 6px 6px 6px 20px;
+    }
+    .hero-search-placeholder {
+      font-size: 1rem;
+    }
+    .hero-search-submit {
+      width: 44px;
+      height: 44px;
     }
   }
 </style>
