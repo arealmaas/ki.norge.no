@@ -18,6 +18,23 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { Search, Heading, Paragraph, Link } from '@digdir/designsystemet-react';
+import { akselIcons } from '../../lib/aksel-icons';
+
+function AkselIcon({ name, size = 24, className }: { name: string; size?: number; className?: string }) {
+  const svgContent = akselIcons[name] || '';
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={className}
+      dangerouslySetInnerHTML={{ __html: svgContent }}
+    />
+  );
+}
 
 interface SearchResult {
   title: string;
@@ -156,7 +173,7 @@ export default function SearchDialog() {
                 <Search.Input
                   ref={inputRef}
                   aria-label="Søk på ki.norge.no"
-                  placeholder="Skriv et begrep eller spørsmål..."
+                  placeholder="Hva kan vi hjelpe med"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
@@ -186,13 +203,7 @@ export default function SearchDialog() {
                 {/* KI-oversikt (AI overview) FIRST, expandable */}
                 <section className="search-ai-overview" aria-label="KI-oversikt">
                   <div className="search-ai-heading-row">
-                    <svg className="search-ai-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <rect x="3" y="11" width="18" height="10" rx="2"/>
-                      <circle cx="12" cy="5" r="2"/>
-                      <path d="M12 7v4"/>
-                      <line x1="8" y1="16" x2="8" y2="16"/>
-                      <line x1="16" y1="16" x2="16" y2="16"/>
-                    </svg>
+                    <AkselIcon name="RobotSmile" size={24} className="search-ai-icon" />
                     <h3 className="search-section-heading">KI-oversikt</h3>
                   </div>
                   <div className={`search-ai-content ${aiExpanded ? 'expanded' : 'collapsed'}`}>
@@ -201,7 +212,7 @@ export default function SearchDialog() {
                     </Paragraph>
                     {aiExpanded && (
                       <div className="search-ai-sources">
-                        <p className="search-ai-sources-label">Kilder:</p>
+                        <p className="search-ai-sources-label">Relevante artikler:</p>
                         <ul className="search-ai-sources-list">
                           {dummyMatch.aiSources.map((s) => (
                             <li key={s.path}>
@@ -225,12 +236,7 @@ export default function SearchDialog() {
                 {/* Search results UNDER */}
                 <section className="search-results" aria-label="Søkeresultater">
                   <div className="search-results-heading-row">
-                    <svg className="search-results-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <circle cx="11.5" cy="14.5" r="2.5"/>
-                      <line x1="13.5" y1="16.5" x2="15" y2="18"/>
-                    </svg>
+                    <AkselIcon name="FileSearch" size={24} className="search-results-icon" />
                     <h3 className="search-section-heading">Søkeresultater</h3>
                   </div>
                   <ul className="search-results-list">
