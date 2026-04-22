@@ -88,6 +88,10 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateArtikkelBildeSeksjonElement();
             if (_contentTypeService.Get("artikkelTrekkspill") == null)
                 CreateArtikkelTrekkspillElement();
+            if (_contentTypeService.Get("artikkelSitat") == null)
+                CreateArtikkelSitatElement();
+            if (_contentTypeService.Get("artikkelCallout") == null)
+                CreateArtikkelCalloutElement();
 
             // Sandkasse element types
             if (_contentTypeService.Get("sandkasseSteg") == null)
@@ -357,6 +361,41 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
+    private IContentType CreateArtikkelSitatElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelSitat",
+            Name = "Artikkel Sitat",
+            Description = "Uthevet sitat med valgfri kilde",
+            Icon = "icon-quote",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("sitat", "Sitat", _textAreaDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("kilde", "Kilde", _textStringDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private IContentType CreateArtikkelCalloutElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelCallout",
+            Name = "Artikkel Callout",
+            Description = "Varselboks (info, obs, advarsel, suksess)",
+            Icon = "icon-alert",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("variant", "Variant", _textStringDt, description: "info, obs, advarsel, eller suksess"), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
     private IContentType CreateArtikkelBildeSeksjonElement()
     {
         var ct = new ContentType(_shortStringHelper, -1)
@@ -423,7 +462,7 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Events", "eventItem");
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
-            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon", "artikkelTrekkspill" });
+            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon", "artikkelTrekkspill", "artikkelSitat", "artikkelCallout" });
         _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
             "Block List - Sandkasse Steg", "sandkasseSteg");
         _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(

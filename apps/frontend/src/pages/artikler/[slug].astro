@@ -89,6 +89,27 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
             </details>
           );
         }
+        if (block.contentType === 'artikkelSitat') {
+          return (
+            <blockquote class="article-quote">
+              <p class="article-quote-text">{block.content.sitat}</p>
+              {block.content.kilde && (
+                <footer class="article-quote-source">
+                  <cite>{block.content.kilde}</cite>
+                </footer>
+              )}
+            </blockquote>
+          );
+        }
+        if (block.contentType === 'artikkelCallout') {
+          const variant = block.content.variant || 'info';
+          return (
+            <div class={`article-callout article-callout--${variant}`} role={variant === 'advarsel' ? 'alert' : 'note'}>
+              {block.content.tittel && <p class="article-callout-title">{block.content.tittel}</p>}
+              <div class="article-callout-body" set:html={block.content.innhold} />
+            </div>
+          );
+        }
         if (block.contentType === 'artikkelBildeSeksjon') {
           return (
             <figure class="article-image-section">
@@ -276,6 +297,82 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
   }
 
   .article-accordion-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Sitat / blockquote */
+  .article-quote {
+    margin: 32px 0;
+    padding: 24px 32px;
+    border-left: 4px solid #1a2a6d;
+    background: #f8fafc;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .article-quote-text {
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .article-quote-source {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .article-quote-source cite {
+    font-style: normal;
+  }
+
+  /* Callout / varselboks */
+  .article-callout {
+    margin: 24px 0;
+    padding: 20px 24px;
+    border-radius: 8px;
+    border-left: 4px solid;
+  }
+
+  .article-callout--info {
+    background: #e5f2f7;
+    border-left-color: #0062ba;
+  }
+
+  .article-callout--obs {
+    background: #fef9c3;
+    border-left-color: #ca8a04;
+  }
+
+  .article-callout--advarsel {
+    background: #fef2f2;
+    border-left-color: #dc2626;
+  }
+
+  .article-callout--suksess {
+    background: #f0fdf4;
+    border-left-color: #16a34a;
+  }
+
+  .article-callout-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0 0 8px;
+    color: #1e293b;
+  }
+
+  .article-callout-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .article-callout-body :global(p) {
+    margin: 0 0 8px;
+  }
+
+  .article-callout-body :global(p:last-child) {
     margin-bottom: 0;
   }
 
