@@ -335,6 +335,34 @@ else
     >/dev/null
 fi
 
+# Configure health probes
+az containerapp update \
+  --resource-group "${RESOURCE_GROUP}" \
+  --name "${FRONTEND_APP_NAME}" \
+  --set-env-vars "ADMIN_SECRET=secretref:admin-secret" 2>/dev/null || true
+az containerapp update \
+  --resource-group "${RESOURCE_GROUP}" \
+  --name "${FRONTEND_APP_NAME}" \
+  --yaml /dev/stdin >/dev/null 2>&1 <<PROBES || true
+properties:
+  template:
+    containers:
+    - name: ${FRONTEND_APP_NAME}
+      probes:
+      - type: liveness
+        httpGet:
+          path: /api/health
+          port: 4321
+        periodSeconds: 30
+        failureThreshold: 3
+      - type: readiness
+        httpGet:
+          path: /api/health
+          port: 4321
+        periodSeconds: 10
+        failureThreshold: 3
+PROBES
+
 FRONTEND_FQDN="$(az containerapp show --resource-group "${RESOURCE_GROUP}" --name "${FRONTEND_APP_NAME}" --query properties.configuration.ingress.fqdn -o tsv)"
 echo "OK — Frontend URL: https://${FRONTEND_FQDN}"
 
