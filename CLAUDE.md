@@ -124,7 +124,7 @@ Eller bruk /az-auth skillen.
 - Ikke bruk em dash
 - Minimalt med kolon
 - Konsist, sjekkliste-format
-- Se STYLE.md i skills-mappen og gh-project skill for eksempler
+- Se `~/.claude/skills/STYLE.md` for fullstendig stilguide, og gh-project skill for issue-eksempler
 
 ## Lenker
 
