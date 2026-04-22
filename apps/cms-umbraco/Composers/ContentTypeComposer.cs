@@ -86,6 +86,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateArtikkelHeroElement();
             if (_contentTypeService.Get("artikkelBildeSeksjon") == null)
                 CreateArtikkelBildeSeksjonElement();
+            if (_contentTypeService.Get("artikkelTrekkspill") == null)
+                CreateArtikkelTrekkspillElement();
 
             // Sandkasse element types
             if (_contentTypeService.Get("sandkasseSteg") == null)
@@ -338,6 +340,23 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
+    private IContentType CreateArtikkelTrekkspillElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelTrekkspill",
+            Name = "Artikkel Trekkspill",
+            Description = "Accordion med tittel og innhold som kan utvides",
+            Icon = "icon-list",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
     private IContentType CreateArtikkelBildeSeksjonElement()
     {
         var ct = new ContentType(_shortStringHelper, -1)
@@ -404,7 +423,7 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Events", "eventItem");
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
-            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon" });
+            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon", "artikkelTrekkspill" });
         _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
             "Block List - Sandkasse Steg", "sandkasseSteg");
         _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(

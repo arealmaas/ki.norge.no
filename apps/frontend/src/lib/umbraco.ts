@@ -50,6 +50,11 @@ export interface ArtikkelHeroBlock {
   content: { tittel: string; tekst: string };
 }
 
+export interface ArtikkelTrekkspillBlock {
+  contentType: 'artikkelTrekkspill';
+  content: { tittel: string; innhold: string };
+}
+
 export interface ArtikkelBildeSeksjonBlock {
   contentType: 'artikkelBildeSeksjon';
   bilde?: UmbracoMedia;
@@ -774,6 +779,11 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
         const richText = props.tekst;
         const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
         return { contentType: 'artikkelHero', content: { tittel: props.tittel || '', tekst: html } };
+      }
+      if (ct === 'artikkelTrekkspill') {
+        const richText = props.innhold;
+        const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
+        return { contentType: 'artikkelTrekkspill', content: { tittel: props.tittel || '', innhold: html } };
       }
       if (ct === 'artikkelBildeSeksjon') {
         return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildetekst: props.bildetekst || '' } };
