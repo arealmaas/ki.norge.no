@@ -45,10 +45,9 @@ export interface ArtikkelInfoBoksBlock {
   innhold: string; // HTML
 }
 
-export interface ArtikkelMorkPanelBlock {
-  contentType: 'artikkelMorkPanel';
-  tittel?: string;
-  innhold: string; // HTML
+export interface ArtikkelHeroBlock {
+  contentType: 'artikkelHero';
+  content: { tittel: string; tekst: string };
 }
 
 export interface ArtikkelBildeSeksjonBlock {
@@ -750,7 +749,7 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
 
 /**
  * Map artikkel innhold from Block List format to UmbracoBlock[].
- * Handles different block content types: artikkelTekst, artikkelInfoBoks, artikkelMorkPanel, artikkelBildeSeksjon.
+ * Handles different block content types: artikkelTekst, artikkelInfoBoks, artikkelHero, artikkelBildeSeksjon.
  */
 function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
   // Handle Block List format: { items: [{ content: { contentType, properties } }] }
@@ -771,10 +770,10 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
         const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
         return { contentType: 'artikkelInfoBoks', content: { tittel: props.tittel || '', innhold: html } };
       }
-      if (ct === 'artikkelMorkPanel') {
-        const richText = props.innhold;
+      if (ct === 'artikkelHero') {
+        const richText = props.tekst;
         const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
-        return { contentType: 'artikkelMorkPanel', content: { tittel: props.tittel || '', innhold: html } };
+        return { contentType: 'artikkelHero', content: { tittel: props.tittel || '', tekst: html } };
       }
       if (ct === 'artikkelBildeSeksjon') {
         return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildetekst: props.bildetekst || '' } };

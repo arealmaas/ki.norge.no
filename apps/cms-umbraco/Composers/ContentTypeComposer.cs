@@ -82,8 +82,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateArtikkelTekstElement();
             if (_contentTypeService.Get("artikkelInfoBoks") == null)
                 CreateArtikkelInfoBoksElement();
-            if (_contentTypeService.Get("artikkelMorkPanel") == null)
-                CreateArtikkelMorkPanelElement();
+            if (_contentTypeService.Get("artikkelHero") == null)
+                CreateArtikkelHeroElement();
             if (_contentTypeService.Get("artikkelBildeSeksjon") == null)
                 CreateArtikkelBildeSeksjonElement();
 
@@ -321,19 +321,19 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
-    private IContentType CreateArtikkelMorkPanelElement()
+    private IContentType CreateArtikkelHeroElement()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
-            Alias = "artikkelMorkPanel",
-            Name = "Artikkel Mørkt Panel",
-            Description = "Mørkt panel (#1b4656 bakgrunn, hvit tekst)",
-            Icon = "icon-marquee",
+            Alias = "artikkelHero",
+            Name = "Artikkel Hero",
+            Description = "Full-bredde hero-banner (#1b4656 bakgrunn, hvit tekst)",
+            Icon = "icon-thumbnail-list",
             IsElement = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
-        ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("tekst", "Tekst", _richTextDt), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -404,7 +404,7 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Events", "eventItem");
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
-            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelMorkPanel", "artikkelBildeSeksjon" });
+            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon" });
         _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
             "Block List - Sandkasse Steg", "sandkasseSteg");
         _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(
