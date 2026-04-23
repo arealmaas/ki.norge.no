@@ -23,29 +23,9 @@
   /* Stitch-specific custom properties */
   --stitch-primary: #136dec;
   --stitch-bg-light: #f6f7f8;
-  --stitch-bg-dark: #101822;
-  --stitch-surface-dark: #1a2332;
 
   /* Font family */
   --ds-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Dark mode */
-html.dark,
-[data-ds-color-mode="dark"] {
-  --ds-color-neutral-background-default: #101822;
-  --ds-color-neutral-surface-default: #1a2332;
-  --ds-color-neutral-surface-hover: #243042;
-  --ds-color-neutral-text-default: #f1f5f9;
-  --ds-color-neutral-text-subtle: #94a3b8;
-  --ds-color-neutral-border-subtle: #334155;
-  --ds-color-neutral-border-default: #475569;
-
-  /* Accent colors in dark mode - slightly adjusted for contrast */
-  --ds-color-accent-surface-default: rgba(19, 109, 236, 0.15);
-  --ds-color-accent-surface-hover: rgba(19, 109, 236, 0.25);
-  --ds-color-accent-text-default: #5ba0f5;
-  --ds-color-accent-border-default: #3387ef;
 }
 
 html {

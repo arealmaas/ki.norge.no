@@ -71,17 +71,8 @@ const ogImageUrl = `${siteUrl}${ogImage || DEFAULT_OG_IMAGE}`;
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
-    <!-- Dark mode script - runs before page renders to prevent flash -->
-    <script is:inline>
-      (function() {
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        document.documentElement.setAttribute('data-ds-color-mode', theme);
-      })();
-    </script>
+    <!-- Light mode only (dark mode not supported) -->
+    <meta name="color-scheme" content="light" />
   </head>
   <body data-header-theme={headerTheme}>
     <Header />
