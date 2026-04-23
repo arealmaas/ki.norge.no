@@ -75,8 +75,9 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateTipItemElement();
             else
                 MigrateTipItemElement();
-            if (_contentTypeService.Get("eventItem") == null)
-                CreateEventItemElement();
+            // Arrangement deaktivert for MVP
+            // if (_contentTypeService.Get("eventItem") == null)
+            //     CreateEventItemElement();
 
             // Article element types
             if (_contentTypeService.Get("artikkelTekst") == null)
