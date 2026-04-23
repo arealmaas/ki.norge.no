@@ -32,6 +32,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _numericDt = null!;
     private IDataType _mediaPickerDt = null!;
     private IDataType _contentPickerDt = null!;
+    private IDataType _calloutVariantDt = null!;
 
     // Block List data types (created at init time)
     private IDataType _blockListAccordionDt = null!;
@@ -172,9 +173,10 @@ public class ContentTypeComponent : IAsyncComponent
             }
             CreateContainerIfMissing("faqSamling", "FAQ", "icon-help-alt", "faq");
             CreateContainerIfMissing("merkelapper", "Merkelapper", "icon-tags", "merkelapp");
-            if (_contentTypeService.Get("tilgjengeligIkon") == null)
-                CreateTilgjengeligIkon();
-            CreateContainerIfMissing("tilgjengeligeIkoner", "Tilgjengelige ikoner", "icon-picture", "tilgjengeligIkon");
+            // Ikonvelger deaktivert — ble ikke bra nok for redaktørene
+            // if (_contentTypeService.Get("tilgjengeligIkon") == null)
+            //     CreateTilgjengeligIkon();
+            // CreateContainerIfMissing("tilgjengeligeIkoner", "Tilgjengelige ikoner", "icon-picture", "tilgjengeligIkon");
 
             if (_contentTypeService.Get("ordbokOppslag") == null)
                 CreateOrdbokOppslag();
@@ -205,6 +207,30 @@ public class ContentTypeComponent : IAsyncComponent
         _numericDt = FindDataType(Constants.PropertyEditors.Aliases.Integer);
         _mediaPickerDt = FindDataType(Constants.PropertyEditors.Aliases.MediaPicker3);
         _contentPickerDt = FindDataType(Constants.PropertyEditors.Aliases.ContentPicker);
+        _calloutVariantDt = CreateOrGetCalloutVariantDropdown();
+    }
+
+    private IDataType CreateOrGetCalloutVariantDropdown()
+    {
+        var existing = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.DropDownListFlexible)
+            .FirstOrDefault(dt => dt.Name == "Callout Variant");
+        if (existing != null) return existing;
+
+        var editor = _propertyEditors[Constants.PropertyEditors.Aliases.DropDownListFlexible]
+            ?? throw new InvalidOperationException("DropDownListFlexible editor not found");
+
+        var dt = new DataType(editor, _configSerializer)
+        {
+            Name = "Callout Variant",
+            DatabaseType = ValueStorageType.Nvarchar,
+            EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+            ConfigurationData = new Dictionary<string, object>
+            {
+                ["items"] = new[] { "info", "obs", "advarsel", "suksess" },
+            },
+        };
+        _dataTypeService.Save(dt);
+        return dt;
     }
 
     private IDataType FindDataType(string editorAlias)
@@ -391,7 +417,7 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("variant", "Variant", _textStringDt, description: "info, obs, advarsel, eller suksess"), "innhold");
+        ct.AddPropertyType(Prop("variant", "Variant", _calloutVariantDt, description: "Velg type varselboks"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
