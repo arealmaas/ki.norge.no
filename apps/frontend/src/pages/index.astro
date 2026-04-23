@@ -50,7 +50,7 @@ const sectionOrder = {
 ---
 
 <Layout title={title} description={seoDescription}>
-  <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd).replace(/</g, '\\u003c')} />
   <Hero />
 
   <div class="sections-container">

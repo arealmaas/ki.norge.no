@@ -33,7 +33,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
 ---
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
-  <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd).replace(/</g, '\\u003c')} />
   <div class="article-page">
     <!-- Hero -->
     <section class="article-hero">

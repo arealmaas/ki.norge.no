@@ -57,7 +57,7 @@ const faqJsonLd = faqPageSchema(
 ---
 
 <Layout title="Ofte stilte spørsmål (FAQ)" description="Svar på ofte stilte spørsmål om KI Norge, den regulatoriske sandkassen og kunstig intelligens i offentlig sektor.">
-  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(faqJsonLd).replace(/</g, '\\u003c')} />
 
   <div class="faq-page">
     <div class="faq-title-bar">
