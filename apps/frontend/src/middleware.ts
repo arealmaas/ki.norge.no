@@ -71,9 +71,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     });
   }
 
-  // Coming-soon mode: show placeholder for all non-API routes.
-  // Bypass via the same admin cookie.
-  if (LAUNCH_MODE === 'coming-soon') {
+  // Coming-soon wall for ki.norge.no only.
+  // The Azure URL remains open. Admin cookie bypasses.
+  // Remove this block entirely when ready to launch.
+  const isKiNorgeDomain = url.hostname === 'ki.norge.no';
+  const isComingSoon = isKiNorgeDomain || LAUNCH_MODE === 'coming-soon';
+
+  if (isComingSoon) {
     const isApiRoute = url.pathname.startsWith('/api/');
     const hasAdminCookie = cookies.has('ki_admin');
 
