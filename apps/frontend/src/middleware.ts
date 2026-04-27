@@ -24,22 +24,23 @@ const COMING_SOON_HTML = `<!doctype html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>KI Norge — Kommer snart</title>
+  <title>KI Norge</title>
   <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     * { margin: 0; box-sizing: border-box; }
-    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
-    .card { text-align: center; padding: 3rem 2rem; max-width: 520px; }
+    body { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', system-ui, sans-serif; background: #f8fafc; color: #1e293b; }
+    .card { text-align: center; padding: 3rem 2rem; max-width: 600px; }
     h1 { font-size: 2rem; font-weight: 600; margin-bottom: 1rem; }
     p { font-size: 1.1rem; line-height: 1.6; color: #475569; }
-    .tag { display: inline-block; margin-top: 1.5rem; padding: 0.35rem 1rem; background: #e5f2f7; color: #1a2a6d; border-radius: 99px; font-size: 0.85rem; font-weight: 500; }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>KI Norge</h1>
-    <p>Portalen for kunstig intelligens i offentlig sektor er snart klar. Vi jobber med de siste detaljene.</p>
-    <span class="tag">Lansering juni 2026</span>
+    <p>Arenaen for innovativ og ansvarlig utvikling og bruk av kunstig intelligens i offentlig sektor er snart klar. Vi jobber med de siste detaljene.</p>
   </div>
 </body>
 </html>`;
