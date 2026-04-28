@@ -16,10 +16,18 @@
  *
  * Bruk:
  *   <div class="grid">
- *     <div class="col-all">Header, footer, hero</div>
+ *     <div class="col-all">Header, footer, hero-bakgrunn</div>
  *     <div class="col-center-6">Brødtekst, moduler</div>
- *     <div class="col-center-10">Hero med bilde</div>
+ *     <div class="col-center-10">Hero med bilde, "flere artikler"</div>
  *   </div>
+ *
+ * Artikkelmoduler:
+ *   Alle artikkelmoduler (CMS Block List) skal bruke col-center-6
+ *   med mindre de eksplisitt trenger full bredde (col-all) for
+ *   bakgrunnsfarge e.l. Gjelder eksisterende og fremtidige moduler.
+ *   Se #144 for liste over planlagte moduler.
+ *   Nye moduler som legges til i artikler/[slug].astro skal alltid
+ *   få en col-klasse. Standard er col-center-6.
  */
 
 :root {
