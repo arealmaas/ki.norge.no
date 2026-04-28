@@ -34,9 +34,9 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd).replace(/</g, '\\u003c')} />
-  <div class="article-page">
-    <!-- Hero -->
-    <section class="article-hero">
+  <div class="article-page grid">
+    <!-- Hero: col-center-10 (title + image side by side) -->
+    <section class="article-hero col-center-10">
       <div class="article-hero-inner">
         <div class="article-hero-text">
           <h1 class="article-title">{article.tittel}</h1>
@@ -48,19 +48,16 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
       </div>
     </section>
 
-    <!-- Lead -->
+    <!-- Lead: col-center-6 -->
     {article.innhold && (
-      <section class="article-lead">
-        <p class="article-lead-text">{getPlainText(article.innhold, 300)}</p>
-      </section>
+      <p class="article-lead-text col-center-6">{getPlainText(article.innhold, 300)}</p>
     )}
 
-    <!-- Body -->
-    <article class="article-body-section">
-      {article.innhold?.map(block => {
+    <!-- Body blocks: each is col-center-6 except hero which bleeds -->
+    {article.innhold?.map(block => {
         if (block.contentType === 'artikkelInfoBoks') {
           return (
-            <div class="article-info-box">
+            <div class="article-info-box col-center-6">
               {block.content.tittel && <h3 class="info-box-title">{block.content.tittel}</h3>}
               <div class="info-box-body" set:html={block.content.innhold} />
             </div>
@@ -68,7 +65,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
         }
         if (block.contentType === 'artikkelHero') {
           return (
-            <section class="article-hero-block">
+            <section class="article-hero-block col-all">
               <div class="article-hero-block-inner">
                 <h2 class="article-hero-block-title">{block.content.tittel}</h2>
                 {block.content.tekst && <div class="article-hero-block-body" set:html={block.content.tekst} />}
@@ -78,7 +75,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
         }
         if (block.contentType === 'artikkelTrekkspill') {
           return (
-            <details class="article-accordion">
+            <details class="article-accordion col-center-6">
               <summary class="article-accordion-summary">
                 {block.content.tittel}
                 <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -91,7 +88,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
         }
         if (block.contentType === 'artikkelSitat') {
           return (
-            <blockquote class="article-quote">
+            <blockquote class="article-quote col-center-6">
               <p class="article-quote-text">{block.content.sitat}</p>
               {block.content.kilde && (
                 <footer class="article-quote-source">
@@ -104,7 +101,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
         if (block.contentType === 'artikkelCallout') {
           const variant = block.content.variant || 'info';
           return (
-            <div class={`article-callout article-callout--${variant}`} role={variant === 'advarsel' ? 'alert' : 'note'}>
+            <div class={`article-callout article-callout--${variant} col-center-6`} role={variant === 'advarsel' ? 'alert' : 'note'}>
               {block.content.tittel && <p class="article-callout-title">{block.content.tittel}</p>}
               <div class="article-callout-body" set:html={block.content.innhold} />
             </div>
@@ -112,9 +109,9 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
         }
         if (block.contentType === 'artikkelBildeSeksjon') {
           return (
-            <figure class="article-image-section">
+            <figure class="article-image-section col-center-6">
               {block.content.bilde?.url ? (
-                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildetekst || ''} />
+                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildetekst || ''} class="stub-img" />
               ) : (
                 <div class="article-image-placeholder"></div>
               )}
@@ -124,14 +121,13 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
         }
         // Default: artikkelTekst or tekst
         return (
-          <div class="article-text-block" set:html={block.content.innhold} />
+          <div class="article-text-block col-center-6" set:html={block.content.innhold} />
         );
       })}
-    </article>
 
-    <!-- Flere artikler -->
+    <!-- Flere artikler: col-center-10 -->
     {otherArticles.length > 0 && (
-      <section class="more-articles">
+      <section class="more-articles col-center-10">
         <h2 class="more-articles-heading">Flere artikler</h2>
         <div class="more-articles-grid">
           {otherArticles.map(a => (
@@ -155,13 +151,12 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
 <style>
   .article-page {
     padding-top: var(--ds-size-4);
+    row-gap: 48px; /* vertikal avstand mellom grid-barn */
   }
 
   /* Hero */
   .article-hero {
-    max-width: 1230px;
-    margin: 0 auto;
-    padding: 24px 24px 48px;
+    padding: 24px 0 48px;
   }
 
   .article-hero-inner {
@@ -198,7 +193,6 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
   }
 
   .article-hero-image {
-    width: 400px;
     flex-shrink: 0;
     display: none;
   }
@@ -206,6 +200,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
   @media (min-width: 1024px) {
     .article-hero-image {
       display: block;
+      width: 407px;
     }
   }
 
@@ -217,12 +212,6 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
   }
 
   /* Lead */
-  .article-lead {
-    max-width: 830px;
-    margin: 0 auto;
-    padding: 64px 24px;
-  }
-
   .article-lead-text {
     font-size: 21px;
     font-weight: 400;
@@ -230,13 +219,6 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
     line-height: 1.7;
     letter-spacing: 0.005em;
     margin: 0;
-  }
-
-  /* Body */
-  .article-body-section {
-    max-width: 830px;
-    margin: 0 auto;
-    padding: 0 24px 64px;
   }
 
   /* Info box - light blue */
@@ -492,9 +474,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
 
   /* More articles */
   .more-articles {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 64px 24px 120px;
+    padding: 64px 0 120px;
   }
 
   .more-articles-heading {
