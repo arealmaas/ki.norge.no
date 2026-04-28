@@ -1,0 +1,39 @@
+---
+/**
+ * Grid — wrapper-komponent for 12-kolonne responsivt grid.
+ *
+ * Bruk:
+ *   <Grid>
+ *     <div class="col-all">Full bredde</div>
+ *     <div class="col-center-6">Brødtekst</div>
+ *   </Grid>
+ *
+ * Props:
+ *   tag     — HTML-element (default: div)
+ *   class   — ekstra CSS-klasser
+ *   bleed   — om innholdet skal ha full-bleed bakgrunn
+ *
+ * Se grid.css for detaljer om kolonne-klasser og breakpoints.
+ */
+
+interface Props {
+  tag?: string;
+  class?: string;
+  bleed?: boolean;
+}
+
+const { tag: Tag = 'div', class: className, bleed } = Astro.props;
+const classes = ['grid', className].filter(Boolean).join(' ');
+---
+
+{bleed ? (
+  <div class="grid-bleed">
+    <Tag class={classes}>
+      <slot />
+    </Tag>
+  </div>
+) : (
+  <Tag class={classes}>
+    <slot />
+  </Tag>
+)}
