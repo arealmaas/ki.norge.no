@@ -32,6 +32,10 @@ html {
   font-family: var(--ds-font-family);
 }
 
+html, body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
