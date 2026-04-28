@@ -40,7 +40,6 @@ const COMING_SOON_HTML = `<!doctype html>
 <body>
   <div class="card">
     <h1>KI Norge</h1>
-    <p>Arenaen for innovativ og ansvarlig utvikling og bruk av kunstig intelligens i offentlig sektor er snart klar. Vi jobber med de siste detaljene.</p>
   </div>
 </body>
 </html>`;
