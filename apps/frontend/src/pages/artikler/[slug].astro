@@ -475,18 +475,32 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
   }
 
   .more-articles-heading {
-    font-size: 40px;
+    font-size: 32px;
     font-weight: 700;
     color: #000;
-    margin: 0 0 32px;
+    margin: 0 0 24px;
     line-height: 1.2;
     letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 1024px) {
+    .more-articles-heading {
+      font-size: 40px;
+      margin-bottom: 32px;
+    }
   }
 
   .more-articles-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .more-articles-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
   }
 
   @media (min-width: 1024px) {
@@ -502,7 +516,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
     background: rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     padding: 24px;
-    height: 384px;
+    min-height: 280px;
     overflow: hidden;
     text-decoration: none;
     color: inherit;
