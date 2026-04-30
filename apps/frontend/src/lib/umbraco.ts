@@ -614,6 +614,8 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
 
   switch (contentType) {
     case 'artikkel':
+    case 'case':
+      // Case has identical shape to Artikkel (mirror content type)
       return {
         ...base,
         tittel: props.tittel as string || item.name,
@@ -1178,7 +1180,27 @@ export async function getSide(slug: string, options: FetchOptions = {}) {
   return fetchBySlug<Side>('side', slug, options);
 }
 
-// ── Eksempel (Case) API functions ───────────────────────────────
+// ── Case API (new content type, replaces Eksempel) ──────────────
+
+export interface Case extends Artikkel {
+  // Same shape as Artikkel for now (mirror content type).
+  // Add case-specific fields here when they diverge.
+}
+
+export async function getCaser(options: FetchOptions = {}) {
+  return fetchCollection<Case>('case', {
+    skip: 0,
+    take: 50,
+    sort: ['publishedAt:desc'],
+    ...options,
+  });
+}
+
+export async function getCase(slug: string, options: FetchOptions = {}) {
+  return fetchBySlug<Case>('case', slug, options);
+}
+
+// ── Eksempel (legacy, will be removed once content migrates to Case) ──
 
 export async function getEksempler(options: FetchOptions = {}) {
   return fetchCollection<Eksempel>('eksempel', {

@@ -75,6 +75,7 @@ public class ContentSeeder : IAsyncComponent
             var artiklerFolder = CreateFolder("artikler", "Artikler");
             var siderFolder = CreateFolder("sider", "Sider");
             var eksemplerFolder = CreateFolder("eksempler", "Eksempler");
+            var caserFolder = CreateFolder("caser", "Caser");
             var veiledningerFolder = CreateFolder("veiledninger", "Veiledninger");
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
@@ -100,6 +101,7 @@ public class ContentSeeder : IAsyncComponent
             SeedArticles(artiklerFolder.Id);
             SeedPages(siderFolder.Id);
             SeedExamples(eksemplerFolder.Id);
+            SeedCases(caserFolder.Id);
             SeedVeiledninger(veiledningerFolder.Id);
             SeedFAQ(faqFolder.Id, merkelappMap);
             SeedOrdbokOppslag(ordbokFolder.Id);
@@ -555,6 +557,48 @@ public class ContentSeeder : IAsyncComponent
 
     // HeroBlock removed — replaced by InfoBox for now, will become Fremheving in task 5.
 
+    // ── New module helpers (Fremheving, Prosessteg, Forfatter og dato variants) ──
+
+    private (string, Dictionary<string, object>) Fremheving(string? tittel, string html, bool visBakgrunn = true, bool visAnforselstegn = false, string? kilde = null) =>
+        ("artikkelFremheving", new Dictionary<string, object>
+        {
+            ["tittel"] = tittel ?? "",
+            ["tekst"] = html,
+            ["visBakgrunn"] = visBakgrunn ? "1" : "0",
+            ["visAnforselstegn"] = visAnforselstegn ? "1" : "0",
+            ["kilde"] = kilde ?? "",
+        });
+
+    private (string, Dictionary<string, object>) Byline(string navn, string? stilling = null, string? virksomhet = null, string? dato = null) =>
+        ("artikkelByline", new Dictionary<string, object>
+        {
+            ["navn"] = navn,
+            ["stilling"] = stilling ?? "",
+            ["virksomhet"] = virksomhet ?? "",
+            ["dato"] = dato ?? "",
+        });
+
+    private (string, Dictionary<string, object>) InnholdFra(string virksomhet, string? dato = null) =>
+        ("artikkelInnholdFra", new Dictionary<string, object>
+        {
+            ["virksomhet"] = virksomhet,
+            ["dato"] = dato ?? "",
+        });
+
+    private (string, Dictionary<string, object>) Kontaktkort(string navn, string? stilling = null, string? virksomhet = null, string? epost = null, string? telefon = null, string? tittel = null) =>
+        ("artikkelKontaktkort", new Dictionary<string, object>
+        {
+            ["tittel"] = tittel ?? "",
+            ["navn"] = navn,
+            ["stilling"] = stilling ?? "",
+            ["virksomhet"] = virksomhet ?? "",
+            ["epost"] = epost ?? "",
+            ["telefon"] = telefon ?? "",
+        });
+
+    private (string, Dictionary<string, object>) Trekkspill(string tittel, string innhold) =>
+        ("artikkelTrekkspill", new Dictionary<string, object> { ["tittel"] = tittel, ["innhold"] = innhold });
+
     // ── Artikler ──────────────────────────────────────────────
 
     private void SeedArticles(int parentId)
@@ -889,6 +933,60 @@ norsk, samisk, engelsk og de mest utbredte innvandrerspråkene.</p>");
         eFull.SetValue("seoTittel", "Kunnskapsassistenten – KI for kunnskapsarbeid i staten");
         eFull.SetValue("seoBeskrivelse", "Kunnskapsassistenten er et KI-verktøy som støtter faglige vurderinger og utredningsprosesser i offentlig sektor.");
         SaveAndPublish(eFull);
+    }
+
+    // ── Caser (new content type, mirror of artikkel) ──────────
+
+    private void SeedCases(int parentId)
+    {
+        // Case 1: minimal — just Artikkelhode, no body modules
+        var c1 = Create("case", "Test-case uten moduler", parentId);
+        c1.SetValue("tittel", "Test-case uten moduler");
+        c1.SetValue("slug", "test-case-uten-moduler");
+        c1.SetValue("ingress", "Dette er en case uten body-moduler. Kun Artikkelhode-feltene (tittel + ingress + bilde + bakgrunn).");
+        c1.SetValue("bakgrunn", "hvit");
+        SaveAndPublish(c1);
+
+        // Case 2: mixed — a few common modules
+        var c2 = Create("case", "Test-case med blandet innhold", parentId);
+        c2.SetValue("tittel", "Test-case med blandet innhold");
+        c2.SetValue("slug", "test-case-med-blandet-innhold");
+        c2.SetValue("ingress", "En typisk case med tekst, bilde og en byline.");
+        c2.SetValue("bakgrunn", "lyseblaa");
+        c2.SetValue("innhold", BuildArticleBlockList(
+            Byline("Sara Neziri", "Rådgiver", "Digitaliseringsdirektoratet", "2026-04-15"),
+            TextBlock(@"<p>Dette er en kortfattet case som demonstrerer en typisk struktur:
+en byline øverst, deretter brødtekst, og til slutt en innhold-fra-organisasjon-blokk.</p>
+<h2>Bakgrunn</h2>
+<p>Eksempelteksten er kort fordi formålet er å verifisere at modulene rendres korrekt.</p>"),
+            InnholdFra("Direktoratet for medisinske produkter (DMP)", "2026-04-20")
+        ));
+        SaveAndPublish(c2);
+
+        // Case 3: comprehensive — uses most available modules
+        var c3 = Create("case", "Test-case med alle moduler", parentId);
+        c3.SetValue("tittel", "Test-case med alle moduler");
+        c3.SetValue("slug", "test-case-med-alle-moduler");
+        c3.SetValue("ingress", "En komplett case som bruker hver av de tilgjengelige modulene minst én gang. Brukes for å verifisere visning på frontend.");
+        c3.SetValue("bakgrunn", "lyseblaa");
+        c3.SetValue("innhold", BuildArticleBlockList(
+            Byline("Per Persen", "Seniorrådgiver", "Digdir", "2026-04-10"),
+            TextBlock(@"<p>Dette er en omfattende test-case som inneholder eksempler på hver modultype.
+Den brukes til å verifisere visuell rendering, mobilvisning og editor-UX.</p>
+<h2>Hvorfor brukes denne casen?</h2>
+<p>For å sikre at alle moduler virker som forventet før vi går i produksjon.</p>"),
+            Fremheving("Faktaboks-eksempel", "<p>Dette er en standard Fremheving med lyseblå bakgrunn. Brukes for å fremheve faktainformasjon.</p>"),
+            Fremheving(null, "<p>Dette er et sitat-eksempel uten tittel.</p>", visBakgrunn: false, visAnforselstegn: true, kilde: "Anonym kilde"),
+            Trekkspill("Hva er en case?", "<p>En case er et eksempel på hvordan KI brukes i praksis i offentlig sektor.</p>"),
+            Trekkspill("Hvordan brukes denne testen?", "<p>For å verifisere at editor og frontend fungerer som forventet.</p>"),
+            TextBlock(@"<h2>Mer informasjon</h2>
+<p>Etter alle modulene avsluttes casen med kontaktinfo og en innhold-fra-blokk.</p>"),
+            Kontaktkort("Kari Nordmann", "Prosjektleder", "Digdir", "kari@digdir.no", "+47 12 34 56 78", "Spørsmål om casen?"),
+            InnholdFra("Stavanger kommune", "2026-04-25")
+        ));
+        SaveAndPublish(c3);
+
+        Console.WriteLine("ContentSeeder: Seeded 3 test cases");
     }
 
     // ── Veiledninger ───────────────────────────────────────────

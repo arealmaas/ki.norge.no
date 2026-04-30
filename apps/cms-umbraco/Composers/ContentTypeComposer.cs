@@ -48,6 +48,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListVeiledningKortDt = null!;
     private IDataType _blockListVerktoyKortDt = null!;
     private IDataType _blockListProsessStegItemsDt = null!;
+    private IDataType _blockListCaseDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
@@ -141,11 +142,18 @@ public class ContentTypeComponent : IAsyncComponent
             // any modules that didn't exist when CreateBlockListDataTypes() ran.
             RefreshMultiBlockListAllowedModules("Block List - Artikkel Innhold", BaseArticleModules);
 
+            // Refresh Case block list too
+            RefreshMultiBlockListAllowedModules("Block List - Case Innhold", CaseModules);
+
             if (_contentTypeService.Get("merkelapp") == null)
                 CreateMerkelapp();
             if (_contentTypeService.Get("artikkel") == null)
                 CreateArtikkel();
             MigrateArtikkelType();
+            if (_contentTypeService.Get("case") == null)
+                CreateCase();
+            else
+                MigrateCaseType();
             if (_contentTypeService.Get("side") == null)
                 CreateSide();
 
@@ -180,6 +188,7 @@ public class ContentTypeComponent : IAsyncComponent
             CreateContainerIfMissing("artikler", "Artikler", "icon-newspaper-alt", "artikkel");
             CreateContainerIfMissing("sider", "Sider", "icon-document", "side");
             CreateContainerIfMissing("eksempler", "Eksempler", "icon-science", "eksempel");
+            CreateContainerIfMissing("caser", "Caser", "icon-science", "case");
             if (_contentTypeService.Get("veiledninger") == null)
             {
                 var guideType = _contentTypeService.Get("veiledningGuide");
@@ -728,6 +737,10 @@ public class ContentTypeComponent : IAsyncComponent
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
             BaseArticleModules);
+        // Case has its own block list so it can diverge from artikkel later (currently identical)
+        _blockListCaseDt = CreateOrGetMultiBlockListDataType(
+            "Block List - Case Innhold",
+            CaseModules);
         _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
             "Block List - Sandkasse Steg", "sandkasseSteg");
         _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(
@@ -1081,6 +1094,65 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    /// <summary>
+    /// Case content type — structurally identical to artikkel for now, but with its own
+    /// Block List data type so editors and developers can later add case-specific modules.
+    /// </summary>
+    private IContentType CreateCase()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "case",
+            Name = "Case",
+            Description = "Case-eksempler fra offentlig sektor",
+            Icon = "icon-science",
+            AllowedAsRoot = false,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        AddArtikkelhodeFields(ct);
+        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListCaseDt, description: "Hovedinnhold"), "innhold");
+
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    private void MigrateCaseType()
+    {
+        var ct = _contentTypeService.Get("case");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        // Add Artikkelhode fields if missing (idempotent, in case of incremental schema changes)
+        if (!ct.PropertyTypes.Any(p => p.Alias == "ingress"))
+        {
+            ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, mandatory: true), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypes.Any(p => p.Alias == "artikkelBilde"))
+        {
+            ct.AddPropertyType(Prop("artikkelBilde", "Hovedbilde", _mediaPickerDt), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypes.Any(p => p.Alias == "bildeAlt"))
+        {
+            ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypes.Any(p => p.Alias == "bakgrunn"))
+        {
+            ct.AddPropertyType(Prop("bakgrunn", "Bakgrunn", _bakgrunnDropdownDt), "innhold");
+            changed = true;
+        }
+
+        if (changed)
+            _contentTypeService.Save(ct);
     }
 
     /// <summary>
