@@ -61,6 +61,31 @@ WebApplication app = builder.Build();
 
 await app.BootUmbracoAsync();
 
+// Diagnostic endpoint — check composer state (before Umbraco middleware)
+app.MapGet("/api/diagnostics", (Umbraco.Cms.Core.Services.IContentTypeService cts,
+    Umbraco.Cms.Core.Services.IDataTypeService dts) =>
+{
+    var artikkel = cts.Get("artikkel");
+    var hasIngress = artikkel?.PropertyTypes.Any(p => p.Alias == "ingress") ?? false;
+    var hasBilde = artikkel?.PropertyTypes.Any(p => p.Alias == "artikkelBilde") ?? false;
+
+    var rteDts = dts.GetByEditorAlias("Umbraco.RichText").ToList();
+    var toolbarInfo = rteDts.Select(dt =>
+    {
+        var config = dt.ConfigurationData;
+        var toolbar = config?.TryGetValue("toolbar", out var tb) == true
+            ? System.Text.Json.JsonSerializer.Serialize(tb)
+            : "none";
+        return new { dt.Name, dt.Id, ToolbarPreview = toolbar.Length > 200 ? toolbar.Substring(0, 200) : toolbar };
+    });
+
+    return Results.Ok(new
+    {
+        artikkelFields = new { hasIngress, hasBilde },
+        richTextDataTypes = toolbarInfo
+    });
+});
+
 app.UseUmbraco()
     .WithMiddleware(u =>
     {

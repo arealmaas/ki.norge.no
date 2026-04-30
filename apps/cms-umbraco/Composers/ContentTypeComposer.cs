@@ -28,11 +28,13 @@ public class ContentTypeComponent : IAsyncComponent
     // Data types (resolved at init time)
     private IDataType _textStringDt = null!;
     private IDataType _textAreaDt = null!;
-    private IDataType _richTextDt = null!;
+    private IDataType _richTextDt = null!;            // Standard RichText (full toolbar)
+    private IDataType _richTextDtRestricted = null!;  // Restricted RichText (no headings, no source editor)
     private IDataType _numericDt = null!;
     private IDataType _mediaPickerDt = null!;
     private IDataType _contentPickerDt = null!;
     private IDataType _calloutVariantDt = null!;
+    private IDataType _bakgrunnDropdownDt = null!;    // Hvit / Lys blå dropdown for Artikkelhode
 
     // Block List data types (created at init time)
     private IDataType _blockListAccordionDt = null!;
@@ -183,8 +185,9 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateOrdbokOppslag();
             CreateContainerIfMissing("ordbokSamling", "KI-ordbok", "icon-book-alt", "ordbokOppslag");
 
-            // Ensure RichText toolbar has heading selector
-            EnsureRichTextHeadings();
+            // RichText data types are ensured by ResolveDataTypes() at the very start of this method.
+            // Standard + Restricted variants get correct toolbar+extensions config every startup.
+            // No need to call again here.
         }
         catch (Exception ex)
         {
@@ -199,16 +202,47 @@ public class ContentTypeComponent : IAsyncComponent
     {
         _textStringDt = FindDataType(Constants.PropertyEditors.Aliases.TextBox);
         _textAreaDt = FindDataType(Constants.PropertyEditors.Aliases.TextArea);
-        // NOTE: Rich text editor heading support (H1, H2, H3, etc.) must be configured
-        // in the Umbraco backoffice: Settings → Data Types → Rich Text Editor → ensure
-        // "Styles" or "Format" dropdown is enabled in the toolbar configuration.
-        // Umbraco 17's default RTE (TinyMCE) supports headings but they may need to be
-        // explicitly enabled in the toolbar.
-        _richTextDt = FindDataType(Constants.PropertyEditors.Aliases.RichText);
+        // RichText: ensure both standard and restricted variants exist with correct config.
+        // Toolbar/extension configs live in StandardToolbar/StandardExtensions and
+        // RestrictedToolbar/RestrictedExtensions constants near EnsureRichTextDataTypes().
+        EnsureRichTextDataTypes();
+        _richTextDt = FindRichTextByName(StandardRichTextName);
+        _richTextDtRestricted = FindRichTextByName(RestrictedRichTextName);
         _numericDt = FindDataType(Constants.PropertyEditors.Aliases.Integer);
         _mediaPickerDt = FindDataType(Constants.PropertyEditors.Aliases.MediaPicker3);
         _contentPickerDt = FindDataType(Constants.PropertyEditors.Aliases.ContentPicker);
         _calloutVariantDt = CreateOrGetCalloutVariantDropdown();
+        _bakgrunnDropdownDt = CreateOrGetBakgrunnDropdown();
+    }
+
+    private IDataType FindRichTextByName(string name)
+    {
+        return _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.RichText)
+            .FirstOrDefault(dt => dt.Name == name)
+            ?? throw new InvalidOperationException($"RichText data type '{name}' not found after EnsureRichTextDataTypes");
+    }
+
+    private IDataType CreateOrGetBakgrunnDropdown()
+    {
+        var existing = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.DropDownListFlexible)
+            .FirstOrDefault(dt => dt.Name == "Artikkelhode Bakgrunn");
+        if (existing != null) return existing;
+
+        var editor = _propertyEditors[Constants.PropertyEditors.Aliases.DropDownListFlexible]
+            ?? throw new InvalidOperationException("DropDownListFlexible editor not found");
+
+        var dt = new DataType(editor, _configSerializer)
+        {
+            Name = "Artikkelhode Bakgrunn",
+            DatabaseType = ValueStorageType.Nvarchar,
+            EditorUiAlias = "Umb.PropertyEditorUi.Dropdown",
+            ConfigurationData = new Dictionary<string, object>
+            {
+                ["items"] = new[] { "hvit", "lyseblaa" },
+            },
+        };
+        _dataTypeService.Save(dt);
+        return dt;
     }
 
     private IDataType CreateOrGetCalloutVariantDropdown()
@@ -485,8 +519,9 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Accordion Sections", "accordionSection");
         _blockListTipsDt = CreateOrGetBlockListDataType(
             "Block List - Tips", "tipItem");
-        _blockListEventsDt = CreateOrGetBlockListDataType(
-            "Block List - Events", "eventItem");
+        // Arrangement deaktivert for MVP — eventItem er ikke opprettet
+        // _blockListEventsDt = CreateOrGetBlockListDataType(
+        //     "Block List - Events", "eventItem");
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
             new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon", "artikkelTrekkspill", "artikkelSitat", "artikkelCallout" });
@@ -577,69 +612,126 @@ public class ContentTypeComponent : IAsyncComponent
         return dt;
     }
 
-    /// <summary>
-    /// Ensures the default RichText editor toolbar includes heading buttons.
-    /// The Heading extension is loaded but not shown in the toolbar by default.
-    /// This adds it as the first group so editors can set H2, H3, H4 etc.
-    /// Runs every startup and is idempotent (skips if already present).
-    /// </summary>
-    private void EnsureRichTextHeadings()
+    // ── RichText configurations ────────────────────────────────────────
+    // Single source of truth for ALL RichText editors in the CMS.
+    // To change a toolbar or add/remove a Tiptap feature: edit the lists below.
+    // To add a new RichText variant: add a new pair of constants and one EnsureRichTextDataType call.
+    //
+    // Removing an extension blocks the feature entirely (no paste, no drag-drop, no shortcut).
+    // Removing a toolbar button only hides it in UI — the extension must also be removed to fully block.
+
+    private const string StandardRichTextName = "Richtext editor";
+    private const string RestrictedRichTextName = "Richtext editor (begrenset)";
+
+    private static readonly List<List<List<string>>> StandardToolbar = new()
     {
-        var rteDt = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.RichText)
-            .FirstOrDefault(dt => dt.Name == "Richtext editor");
-        if (rteDt == null) return;
-
-        var config = rteDt.ConfigurationData;
-        if (config == null) return;
-
-        // Check if toolbar already has heading buttons
-        var configJson = System.Text.Json.JsonSerializer.Serialize(config);
-        if (configJson.Contains("Umb.Tiptap.Toolbar.Heading2")) return;
-
-        // Remove broken "Umb.Tiptap.Toolbar.Heading" if present, replace with
-        // individual heading buttons (H2, H3, H4). No H1 — that's the page title.
-        if (config.TryGetValue("toolbar", out var toolbarObj))
+        new()
         {
-            var toolbarJson = System.Text.Json.JsonSerializer.Serialize(toolbarObj);
-            var toolbar = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(toolbarJson);
-
-            if (toolbar.ValueKind == System.Text.Json.JsonValueKind.Array)
-            {
-                var rows = new List<List<List<string>>>();
-                foreach (var row in toolbar.EnumerateArray())
-                {
-                    var groups = new List<List<string>>();
-                    if (rows.Count == 0)
-                    {
-                        // Add H2/H3/H4 as first group
-                        groups.Add(new List<string>
-                        {
-                            "Umb.Tiptap.Toolbar.Heading2",
-                            "Umb.Tiptap.Toolbar.Heading3",
-                            "Umb.Tiptap.Toolbar.Heading4",
-                        });
-                    }
-                    foreach (var group in row.EnumerateArray())
-                    {
-                        var buttons = new List<string>();
-                        foreach (var btn in group.EnumerateArray())
-                        {
-                            var name = btn.GetString() ?? "";
-                            // Skip the broken generic "Heading" alias
-                            if (name == "Umb.Tiptap.Toolbar.Heading") continue;
-                            buttons.Add(name);
-                        }
-                        if (buttons.Count > 0) groups.Add(buttons);
-                    }
-                    rows.Add(groups);
-                }
-
-                config["toolbar"] = rows;
-                rteDt.ConfigurationData = config;
-                _dataTypeService.Save(rteDt);
-                Console.WriteLine("ContentTypeComposer: Added H2/H3/H4 to RichText toolbar");
-            }
+            new() { "Umb.Tiptap.Toolbar.Heading2", "Umb.Tiptap.Toolbar.Heading3", "Umb.Tiptap.Toolbar.Heading4" },
+            new() { "Umb.Tiptap.Toolbar.SourceEditor" },
+            new() { "Umb.Tiptap.Toolbar.Bold", "Umb.Tiptap.Toolbar.Italic", "Umb.Tiptap.Toolbar.Underline" },
+            new() { "Umb.Tiptap.Toolbar.TextAlignLeft", "Umb.Tiptap.Toolbar.TextAlignCenter", "Umb.Tiptap.Toolbar.TextAlignRight" },
+            new() { "Umb.Tiptap.Toolbar.BulletList", "Umb.Tiptap.Toolbar.OrderedList" },
+            new() { "Umb.Tiptap.Toolbar.Blockquote" },
+            new() { "Umb.Tiptap.Toolbar.Link", "Umb.Tiptap.Toolbar.Unlink" },
         }
+    };
+
+    private static readonly List<string> StandardExtensions = new()
+    {
+        "Umb.Tiptap.RichTextEssentials",
+        "Umb.Tiptap.Anchor",
+        "Umb.Tiptap.Block",
+        "Umb.Tiptap.Blockquote",
+        "Umb.Tiptap.Bold",
+        "Umb.Tiptap.BulletList",
+        "Umb.Tiptap.CodeBlock",
+        "Umb.Tiptap.Heading",
+        "Umb.Tiptap.HtmlAttributeClass",
+        "Umb.Tiptap.HtmlAttributeDataset",
+        "Umb.Tiptap.HtmlAttributeId",
+        "Umb.Tiptap.HtmlAttributeStyle",
+        "Umb.Tiptap.HtmlTagDiv",
+        "Umb.Tiptap.HtmlTagSpan",
+        "Umb.Tiptap.Italic",
+        "Umb.Tiptap.Link",
+        "Umb.Tiptap.OrderedList",
+        "Umb.Tiptap.Strike",
+        "Umb.Tiptap.Subscript",
+        "Umb.Tiptap.Superscript",
+        "Umb.Tiptap.Table",
+        "Umb.Tiptap.TextAlign",
+        "Umb.Tiptap.TextDirection",
+        "Umb.Tiptap.TextIndent",
+        "Umb.Tiptap.TrailingNode",
+        "Umb.Tiptap.Underline",
+        // Excluded: Image, Embed, HorizontalRule, Figure, MediaUpload
+    };
+
+    // Restricted: for highlight blocks (Fremheving) and process step descriptions.
+    // No headings (block is itself a highlight, no nested sections), no source editor,
+    // no alignment, no blockquote (handled by visAnforselstegn toggle).
+    private static readonly List<List<List<string>>> RestrictedToolbar = new()
+    {
+        new()
+        {
+            new() { "Umb.Tiptap.Toolbar.Bold", "Umb.Tiptap.Toolbar.Italic" },
+            new() { "Umb.Tiptap.Toolbar.BulletList", "Umb.Tiptap.Toolbar.OrderedList" },
+            new() { "Umb.Tiptap.Toolbar.Link", "Umb.Tiptap.Toolbar.Unlink" },
+        }
+    };
+
+    private static readonly List<string> RestrictedExtensions = new()
+    {
+        "Umb.Tiptap.RichTextEssentials",
+        "Umb.Tiptap.Bold",
+        "Umb.Tiptap.BulletList",
+        "Umb.Tiptap.HtmlAttributeClass",
+        "Umb.Tiptap.HtmlAttributeId",
+        "Umb.Tiptap.Italic",
+        "Umb.Tiptap.Link",
+        "Umb.Tiptap.OrderedList",
+        "Umb.Tiptap.TrailingNode",
+    };
+
+    /// <summary>
+    /// Ensures all named RichText data types exist with correct toolbar+extensions config.
+    /// Runs every startup and overwrites the config to match constants above.
+    /// </summary>
+    private void EnsureRichTextDataTypes()
+    {
+        EnsureRichTextDataType(StandardRichTextName, StandardToolbar, StandardExtensions);
+        EnsureRichTextDataType(RestrictedRichTextName, RestrictedToolbar, RestrictedExtensions);
+    }
+
+    private IDataType EnsureRichTextDataType(string name, List<List<List<string>>> toolbar, List<string> extensions)
+    {
+        var existing = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.RichText)
+            .FirstOrDefault(dt => dt.Name == name);
+
+        if (existing == null)
+        {
+            // Create new variant by cloning the editor reference from any existing RichText DT
+            var template = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.RichText).First();
+            var editor = _propertyEditors[Constants.PropertyEditors.Aliases.RichText]
+                ?? throw new InvalidOperationException("RichText editor not found");
+            existing = new DataType(editor, _configSerializer)
+            {
+                Name = name,
+                DatabaseType = ValueStorageType.Ntext,
+                EditorUiAlias = template.EditorUiAlias,
+                ConfigurationData = new Dictionary<string, object>(),
+            };
+            _dataTypeService.Save(existing);
+            Console.WriteLine($"ContentTypeComposer: Created RichText data type '{name}'");
+        }
+
+        var config = existing.ConfigurationData ?? new Dictionary<string, object>();
+        config["toolbar"] = toolbar;
+        config["extensions"] = extensions;
+        existing.ConfigurationData = config;
+        _dataTypeService.Save(existing);
+        return existing;
     }
 
     // --- Container helper ---
@@ -718,6 +810,8 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, description: "Kort introduksjonstekst som vises under tittelen"), "innhold");
+        ct.AddPropertyType(Prop("artikkelBilde", "Artikkel-bilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen"), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Hovedinnhold"), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
@@ -732,11 +826,31 @@ public class ContentTypeComponent : IAsyncComponent
     {
         var ct = _contentTypeService.Get("artikkel");
         if (ct == null) return;
+
+        // Migrate block list data type
         var prop = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "innhold");
-        if (prop == null) return;
-        if (prop.DataTypeId == _blockListArtikkelDt.Id) return; // already migrated
-        prop.DataTypeId = _blockListArtikkelDt.Id;
-        _contentTypeService.Save(ct);
+        if (prop != null && prop.DataTypeId != _blockListArtikkelDt.Id)
+        {
+            prop.DataTypeId = _blockListArtikkelDt.Id;
+        }
+
+        // Add ingress field if missing
+        bool changed = false;
+        if (!ct.PropertyTypes.Any(p => p.Alias == "ingress"))
+        {
+            ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, description: "Kort introduksjonstekst som vises under tittelen"), "innhold");
+            changed = true;
+        }
+
+        // Add artikkelBilde field if missing
+        if (!ct.PropertyTypes.Any(p => p.Alias == "artikkelBilde"))
+        {
+            ct.AddPropertyType(Prop("artikkelBilde", "Artikkel-bilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen"), "innhold");
+            changed = true;
+        }
+
+        if (changed)
+            _contentTypeService.Save(ct);
     }
 
     private IContentType CreateSide()
@@ -1021,9 +1135,9 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("sandkasseTekst", "Tekst", _richTextDt), "sandkassen");
         ct.AddPropertyType(Prop("sandkasseUrl", "URL", _textStringDt), "sandkassen");
 
-        // Tab: Arrangementer
-        ct.AddPropertyGroup("arrangementer", "Arrangementer");
-        ct.AddPropertyType(Prop("arrangementer", "Arrangementer", _blockListEventsDt), "arrangementer");
+        // Tab: Arrangementer — deaktivert for MVP
+        // ct.AddPropertyGroup("arrangementer", "Arrangementer");
+        // ct.AddPropertyType(Prop("arrangementer", "Arrangementer", _blockListEventsDt), "arrangementer");
 
         // Tab: Veiledning
         ct.AddPropertyGroup("veiledning", "Veiledning");

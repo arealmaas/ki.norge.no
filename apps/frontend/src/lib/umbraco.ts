@@ -77,6 +77,8 @@ export interface Artikkel {
   documentId: string;
   tittel: string;
   slug: string;
+  ingress?: string;
+  artikkelBilde?: UmbracoMedia;
   innhold?: UmbracoBlock[];
   seoTittel?: string;
   seoBeskrivelse?: string;
@@ -557,6 +559,8 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
         ...base,
         tittel: props.tittel as string || item.name,
         slug: props.slug as string || '',
+        ingress: props.ingress as string || '',
+        artikkelBilde: mapMedia(props.artikkelBilde),
         innhold: mapArtikkelBlocks(props.innhold),
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',

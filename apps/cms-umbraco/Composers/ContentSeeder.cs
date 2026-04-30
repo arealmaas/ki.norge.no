@@ -565,6 +565,7 @@ public class ContentSeeder : IAsyncComponent
         var a1 = Create("artikkel", "Ny nasjonal strategi for kunstig intelligens", parentId);
         a1.SetValue("tittel", "Ny nasjonal strategi for kunstig intelligens");
         a1.SetValue("slug", "ny-nasjonal-strategi-for-kunstig-intelligens");
+        a1.SetValue("ingress", "Regjeringen har lansert en oppdatert nasjonal strategi for kunstig intelligens med vekt på ansvarlig bruk, åpenhet og tillit i offentlig sektor.");
         a1.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>Regjeringen har lansert en oppdatert nasjonal strategi for kunstig intelligens. Strategien legger vekt på ansvarlig bruk av KI i offentlig sektor, med fokus på åpenhet, personvern og tillit.</p>
 <p>Strategien følger opp EUs AI Act og setter rammer for hvordan norske virksomheter kan ta i bruk KI på en trygg og tillitvekkende måte.</p>"),
@@ -583,6 +584,7 @@ public class ContentSeeder : IAsyncComponent
         var a2 = Create("artikkel", "Kommuner tar i bruk KI for bedre innbyggertjenester", parentId);
         a2.SetValue("tittel", "Kommuner tar i bruk KI for bedre innbyggertjenester");
         a2.SetValue("slug", "kommuner-tar-i-bruk-ki-for-bedre-innbyggertjenester");
+        a2.SetValue("ingress", "Flere norske kommuner eksperimenterer med kunstig intelligens for å forbedre tjenestene til innbyggerne, fra automatisert saksbehandling til prediktivt vedlikehold.");
         a2.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>Flere norske kommuner har begynt å eksperimentere med kunstig intelligens for å forbedre tjenestene til innbyggerne. Fra automatisert saksbehandling til chatboter for innbyggerdialog — mulighetene er mange.</p>
 <p>Stavanger kommune bruker maskinlæring for å predikere vedlikeholdsbehov på kommunale bygg, mens Trondheim har utviklet en KI-basert chatbot som hjelper innbyggere med å finne riktig tjeneste. Bergen kommune tester automatisk klassifisering av innkommende henvendelser, noe som har redusert svartiden med 40 prosent.</p>")
@@ -618,6 +620,7 @@ public class ContentSeeder : IAsyncComponent
         var a5 = Create("artikkel", "EU AI Act: Hva betyr det for norsk offentlig sektor?", parentId);
         a5.SetValue("tittel", "EU AI Act: Hva betyr det for norsk offentlig sektor?");
         a5.SetValue("slug", "eu-ai-act-hva-betyr-det-for-norsk-offentlig-sektor");
+        a5.SetValue("ingress", "EU har vedtatt verdens første helhetlige regulering av kunstig intelligens. Slik påvirker det norske offentlige virksomheter gjennom EØS-avtalen.");
         a5.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>EUs forordning om kunstig intelligens (AI Act) trådte i kraft i 2024 og innføres gradvis frem mot 2026. Gjennom EØS-avtalen vil regelverket også gjelde i Norge. Hva betyr dette i praksis for offentlige virksomheter?</p>
 <h2>Risikobasert tilnærming</h2>
@@ -731,6 +734,7 @@ public class ContentSeeder : IAsyncComponent
         var aFull = Create("artikkel", "KI-regnekraft i Norge: Status, utvikling og behov fremover", parentId);
         aFull.SetValue("tittel", "KI-regnekraft i Norge: Status, utvikling og behov fremover");
         aFull.SetValue("slug", "ki-regnekraft-i-norge");
+        aFull.SetValue("ingress", "Regnekraft er en grunnleggende forutsetning for utvikling og bruk av moderne kunstig intelligens. Etter hvert som modellene blir større og mer datakrevende, øker behovet for nasjonal kapasitet.");
         aFull.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>Regnekraft er en grunnleggende forutsetning for utvikling, tilpasning og bruk av moderne kunstig intelligens. Etter hvert som avanserte KI-modeller blir større, mer komplekse og mer datakrevende, øker også behovet for nasjonal kapasitet til å trene, kjøre og videreutvikle dem.</p>"),
             TextBlock(@"<h2>Hva menes med KI-infrastruktur?</h2>

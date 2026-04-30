@@ -49,6 +49,7 @@
   margin: 0 auto;
   padding: 0 var(--grid-min-margin);
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── Kolonne-klasser ─────────────────────────────────────
