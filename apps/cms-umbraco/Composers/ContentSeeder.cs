@@ -553,8 +553,7 @@ public class ContentSeeder : IAsyncComponent
     private (string, Dictionary<string, object>) InfoBox(string title, string html) =>
         ("artikkelInfoBoks", new Dictionary<string, object> { ["tittel"] = title, ["innhold"] = html });
 
-    private (string, Dictionary<string, object>) HeroBlock(string title, string html) =>
-        ("artikkelHero", new Dictionary<string, object> { ["tittel"] = title, ["tekst"] = html });
+    // HeroBlock removed — replaced by InfoBox for now, will become Fremheving in task 5.
 
     // ── Artikler ──────────────────────────────────────────────
 
@@ -686,7 +685,7 @@ public class ContentSeeder : IAsyncComponent
 <li>Transparens: Kan de registrerte forstå hvordan beslutninger tas?</li>
 <li>Sikkerhet: Er data og modeller tilstrekkelig beskyttet?</li>
 </ul>"),
-            HeroBlock("Når skal risikovurderingen gjøres?", @"<p>Datatilsynet anbefaler at risikovurderingen gjøres <strong>før</strong> systemet settes i produksjon, og at den oppdateres ved vesentlige endringer i modell, data eller bruksområde. Virksomheter som allerede har KI i drift bør gjennomføre en vurdering så snart som mulig.</p>")
+            InfoBox("Når skal risikovurderingen gjøres?", @"<p>Datatilsynet anbefaler at risikovurderingen gjøres <strong>før</strong> systemet settes i produksjon, og at den oppdateres ved vesentlige endringer i modell, data eller bruksområde. Virksomheter som allerede har KI i drift bør gjennomføre en vurdering så snart som mulig.</p>")
         ));
         a8.SetValue("seoTittel", "Datatilsynets risikovurdering for KI — en gjennomgang");
         a8.SetValue("seoBeskrivelse", "Oppsummering av Datatilsynets veileder for risikovurdering av KI-systemer som behandler personopplysninger.");
@@ -699,7 +698,7 @@ public class ContentSeeder : IAsyncComponent
             TextBlock(@"<p>Flere norske kommuner tester nå generativ KI — store språkmodeller som kan skrive tekst, oppsummere dokumenter og svare på spørsmål. Hva har de lært så langt?</p>
 <h2>Bruksområder som fungerer</h2>
 <p>Kommunene rapporterer best resultater for intern bruk: utkast til brev og vedtak, oppsummering av lange saksdokumenter, og oversettelse til klart språk. Her sparer saksbehandlere mye tid.</p>"),
-            HeroBlock("Utfordringer med utadrettet bruk", @"<p>Utadrettet bruk — som chatboter mot innbyggere — krever mer forsiktighet. Feilaktige svar (hallusinasjoner) kan få alvorlige konsekvenser når det gjelder rettigheter og tjenester. Kommunene anbefaler å starte internt før man vurderer innbyggerrettede løsninger.</p>"),
+            InfoBox("Utfordringer med utadrettet bruk", @"<p>Utadrettet bruk — som chatboter mot innbyggere — krever mer forsiktighet. Feilaktige svar (hallusinasjoner) kan få alvorlige konsekvenser når det gjelder rettigheter og tjenester. Kommunene anbefaler å starte internt før man vurderer innbyggerrettede løsninger.</p>"),
             InfoBox("Anbefalinger fra pilotene", @"<ul>
 <li>Start med intern bruk der feiltoleransen er høyere</li>
 <li>Etabler tydelige retningslinjer for hva som kan og ikke kan deles med KI</li>
@@ -719,7 +718,7 @@ public class ContentSeeder : IAsyncComponent
 <h2>Juridiske krav</h2>
 <p>Forvaltningsloven krever at vedtak begrunnes. GDPR gir den registrerte rett til informasjon om automatiserte beslutninger. AI Act stiller ytterligere krav til dokumentasjon og transparens for høyrisiko-systemer.</p>"),
             InfoBox("Tekniske tilnærminger", @"<p>Forklarbarhet kan implementeres på ulike nivåer: fra enkle beslutningsregler og featureviktighet til mer avanserte teknikker som SHAP-verdier og kontrafaktiske forklaringer.</p>"),
-            HeroBlock("Praktiske råd for forklarbarhet", @"<ul>
+            InfoBox("Praktiske råd for forklarbarhet", @"<ul>
 <li>Tilpass forklaringen til mottakeren — innbygger, saksbehandler og revisor trenger ulik detaljeringsgrad</li>
 <li>Dokumenter modellens virkemåte ved utvikling, ikke i etterkant</li>
 <li>Test forklaringene med reelle brukere — gir de faktisk mening?</li>
@@ -746,7 +745,7 @@ public class ContentSeeder : IAsyncComponent
 <li>Regulatoriske mekanismer, inkludert tilsyn, sandkasser og ansvarlig bruk av KI.</li>
 </ul>
 <p>Samlet skal infrastrukturen støtte forskning, innovasjon og bruk av KI i Norge.</p>"),
-            HeroBlock("Status for KI-infrastruktur i Norge", @"<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
+            InfoBox("Status for KI-infrastruktur i Norge", @"<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
 <p>Sigma2 åpnet i 2025 en ny nasjonal KI-fabrikk som huser Norges kraftigste superdatamaskin, <strong>Olivia</strong>. Maskinen inngår i det europeiske LUMI AI Factory-nettverket og er tilgjengelig for forskningsmiljøer, offentlig sektor og deler av næringslivet.</p>"),
             TextBlock(@"<h2>Nasjonale språkmodeller og datagrunnlag</h2>
 <p>Nasjonalbiblioteket har fått et utvidet mandat til å klargjøre norske og samiske data for KI-trening. Dette inkluderer blant annet en nasjonal lisensordning for bruk av avisinnhold, inngått i samarbeid med Kopinor. Målet er å sikre tilgang til kvalitetsdata som gjenspeiler norske forhold.</p>

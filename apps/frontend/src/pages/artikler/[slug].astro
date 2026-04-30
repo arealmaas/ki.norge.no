@@ -31,31 +31,46 @@ const articleJsonLd = articleSchema({
 // Fetch other articles for "Flere artikler" section
 const allArticlesRes = await getArtikler(10);
 const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 3);
+
+const bakgrunn = article.bakgrunn || 'hvit';
+const isLightBlueBg = bakgrunn === 'lyseblaa';
 ---
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd).replace(/</g, '\\u003c')} />
   <div class="article-page grid">
-    <!-- Ingress: title + ingress + image -->
-    <section class={`article-hero ${heroImage ? 'col-center-10' : 'col-center-6'}`}>
-      <div class="article-hero-inner">
-        <div class="article-hero-text">
-          <h1 class="article-title">{article.tittel}</h1>
-          {article.ingress ? (
-            <p class="article-ingress">{article.ingress}</p>
-          ) : article.innhold ? (
-            <p class="article-ingress">{getPlainText(article.innhold, 300)}</p>
-          ) : null}
-        </div>
-        {heroImage?.url && (
-          <div class="article-hero-image">
-            <img src={getMediaUrl(heroImage)} alt={article.tittel} class="article-hero-img" />
+    <!-- Artikkelhode: title + ingress + image, optionally on full-bleed colored background -->
+    <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : (heroImage ? 'col-center-10' : 'col-center-6')}`}>
+      {isLightBlueBg ? (
+        <div class={`grid article-hero-bg-grid`}>
+          <div class={`article-hero-inner ${heroImage ? 'col-center-10' : 'col-center-6'}`}>
+            <div class="article-hero-text">
+              <h1 class="article-title">{article.tittel}</h1>
+              {article.ingress && <p class="article-ingress">{article.ingress}</p>}
+            </div>
+            {heroImage?.url && (
+              <div class="article-hero-image">
+                <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div class="article-hero-inner">
+          <div class="article-hero-text">
+            <h1 class="article-title">{article.tittel}</h1>
+            {article.ingress && <p class="article-ingress">{article.ingress}</p>}
+          </div>
+          {heroImage?.url && (
+            <div class="article-hero-image">
+              <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" />
+            </div>
+          )}
+        </div>
+      )}
     </section>
 
-    <!-- Body blocks: each is col-center-6 except hero which bleeds -->
+    <!-- Body blocks: each is col-center-6 -->
     {article.innhold?.map(block => {
         if (block.contentType === 'artikkelInfoBoks') {
           return (
@@ -66,13 +81,12 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
           );
         }
         if (block.contentType === 'artikkelHero') {
+          // Legacy artikkelHero block — element type removed, render as InfoBox-style fallback
           return (
-            <section class="article-hero-block col-all">
-              <div class="article-hero-block-inner">
-                <h2 class="article-hero-block-title">{block.content.tittel}</h2>
-                {block.content.tekst && <div class="article-hero-block-body" set:html={block.content.tekst} />}
-              </div>
-            </section>
+            <div class="article-info-box col-center-6">
+              {block.content.tittel && <h3 class="info-box-title">{block.content.tittel}</h3>}
+              {block.content.tekst && <div class="info-box-body" set:html={block.content.tekst} />}
+            </div>
           );
         }
         if (block.contentType === 'artikkelTrekkspill') {
@@ -152,13 +166,26 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
 
 <style>
   .article-page {
-    padding-top: var(--ds-size-4);
+    padding-top: 0; /* hero handles its own top padding (incl. clearance for absolute header) */
     row-gap: 48px; /* vertikal avstand mellom grid-barn */
   }
 
-  /* Hero / Ingress */
+  /* Hero / Ingress / Artikkelhode */
   .article-hero {
     padding: 100px 0;
+  }
+
+  /* Light-blue full-bleed background variant: extends edge-to-edge,
+     including up behind the transparent site header */
+  .article-hero--bg-lyseblaa {
+    background: #e5f2f7;
+    padding: 140px 0 80px; /* extra top padding so content clears header */
+    margin: 0;
+  }
+
+  /* When in bg-lyseblaa, the inner grid wrapper handles column placement */
+  .article-hero-bg-grid {
+    /* uses .grid class — already styled by grid.css */
   }
 
   .article-hero-inner {
@@ -401,45 +428,8 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
     color: rgba(0,0,0,0.75);
   }
 
-  /* Hero block - full-width dark banner */
-  .article-hero-block {
-    background: #1b4656;
-    padding: 40px 24px;
-    text-align: center;
-  }
-  @media (min-width: 878px) {
-    .article-hero-block {
-      padding: 64px 24px;
-    }
-  }
-  .article-hero-block-inner {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .article-hero-block-title {
-    font-size: 28px;
-    font-weight: 600;
-    color: white;
-    margin: 0 0 20px;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-  }
-  @media (min-width: 640px) {
-    .article-hero-block-title {
-      font-size: 36px;
-      margin: 0 0 24px;
-    }
-  }
-  .article-hero-block-body {
-    font-size: 18px;
-    line-height: 1.7;
-    color: rgba(255,255,255,0.85);
-  }
-  @media (min-width: 640px) {
-    .article-hero-block-body {
-      font-size: 21px;
-    }
-  }
+  /* Legacy artikkelHero block — element type removed.
+     If old content still has these blocks, they fall back to InfoBox styling. */
 
   /* Image section */
   .article-image-section {

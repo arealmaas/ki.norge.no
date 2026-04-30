@@ -86,8 +86,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateArtikkelTekstElement();
             if (_contentTypeService.Get("artikkelInfoBoks") == null)
                 CreateArtikkelInfoBoksElement();
-            if (_contentTypeService.Get("artikkelHero") == null)
-                CreateArtikkelHeroElement();
+            // artikkelHero element type is deprecated (replaced by Artikkelhode top-level fields).
+            // Existing seed data may still reference it; renderer handles missing type gracefully.
             if (_contentTypeService.Get("artikkelBildeSeksjon") == null)
                 CreateArtikkelBildeSeksjonElement();
             if (_contentTypeService.Get("artikkelTrekkspill") == null)
@@ -388,22 +388,7 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
-    private IContentType CreateArtikkelHeroElement()
-    {
-        var ct = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "artikkelHero",
-            Name = "Artikkel Hero",
-            Description = "Full-bredde hero-banner (#1b4656 bakgrunn, hvit tekst)",
-            Icon = "icon-thumbnail-list",
-            IsElement = true,
-        };
-        ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("tekst", "Tekst", _richTextDt), "innhold");
-        _contentTypeService.Save(ct);
-        return ct;
-    }
+    // CreateArtikkelHeroElement removed — replaced by Artikkelhode top-level fields on artikkel/case.
 
     private IContentType CreateArtikkelTrekkspillElement()
     {
@@ -524,7 +509,7 @@ public class ContentTypeComponent : IAsyncComponent
         //     "Block List - Events", "eventItem");
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
-            new[] { "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon", "artikkelTrekkspill", "artikkelSitat", "artikkelCallout" });
+            BaseArticleModules);
         _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
             "Block List - Sandkasse Steg", "sandkasseSteg");
         _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(
@@ -588,12 +573,18 @@ public class ContentTypeComponent : IAsyncComponent
             return existing;
         }
 
+        // Skip missing element types so the block list can be created during incremental
+        // development. Missing types are logged so they can be tracked down.
         var blocks = elementTypeAliases.Select(alias =>
         {
-            var elementType = _contentTypeService.Get(alias)
-                ?? throw new InvalidOperationException($"Element type '{alias}' not found");
+            var elementType = _contentTypeService.Get(alias);
+            if (elementType == null)
+            {
+                Console.WriteLine($"ContentTypeComposer: Element type '{alias}' not found, skipping in block list '{name}'");
+                return null;
+            }
             return new { contentElementTypeKey = elementType.Key };
-        }).ToArray();
+        }).Where(b => b != null).ToArray();
 
         var blockListEditor = _propertyEditors[Constants.PropertyEditors.Aliases.BlockList]
             ?? throw new InvalidOperationException("Block List property editor not found");
@@ -611,6 +602,31 @@ public class ContentTypeComponent : IAsyncComponent
         _dataTypeService.Save(dt);
         return dt;
     }
+
+    // ── Module lists ───────────────────────────────────────────────────
+    // Single source of truth for which element types are allowed in each
+    // content type's body Block List. To add a new module everywhere:
+    // add it to BaseArticleModules. To diverge case from artikkel later:
+    // build CaseModules as BaseArticleModules.Concat(...).ToArray().
+
+    private static readonly string[] BaseArticleModules =
+    {
+        "artikkelTekst",
+        "artikkelBildeSeksjon",
+        "artikkelTrekkspill",
+        // New unified module replacing InfoBoks + Callout + Sitat
+        "artikkelFremheving",
+        // Process steps (container + nested items)
+        "artikkelProsessteg",
+        // Author/contact variants
+        "artikkelByline",
+        "artikkelInnholdFra",
+        "artikkelKontaktkort",
+        // Legacy (still in DB, will be removed once no content references them):
+        // "artikkelHero", "artikkelInfoBoks", "artikkelCallout", "artikkelSitat"
+    };
+
+    private static readonly string[] CaseModules = BaseArticleModules;
 
     // ── RichText configurations ────────────────────────────────────────
     // Single source of truth for ALL RichText editors in the CMS.
@@ -808,10 +824,7 @@ public class ContentTypeComponent : IAsyncComponent
             AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, description: "Kort introduksjonstekst som vises under tittelen"), "innhold");
-        ct.AddPropertyType(Prop("artikkelBilde", "Artikkel-bilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen"), "innhold");
+        AddArtikkelhodeFields(ct);
         ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Hovedinnhold"), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
@@ -820,6 +833,20 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    /// <summary>
+    /// Adds the standard Artikkelhode field set (title, slug, ingress, image, alt, background)
+    /// to a content type. Used by both artikkel and case so the editor experience is identical.
+    /// </summary>
+    private void AddArtikkelhodeFields(IContentType ct)
+    {
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true, description: "URL-vennlig identifikator. Genereres automatisk fra tittel hvis tom."), "innhold");
+        ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, mandatory: true, description: "Kort introduksjonstekst som vises under tittelen."), "innhold");
+        ct.AddPropertyType(Prop("artikkelBilde", "Hovedbilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen (eller under på mobil)."), "innhold");
+        ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
+        ct.AddPropertyType(Prop("bakgrunn", "Bakgrunn", _bakgrunnDropdownDt, description: "Velg bakgrunnsfarge for artikkelhodet. Standard er hvit."), "innhold");
     }
 
     private void MigrateArtikkelType()
@@ -834,18 +861,27 @@ public class ContentTypeComponent : IAsyncComponent
             prop.DataTypeId = _blockListArtikkelDt.Id;
         }
 
-        // Add ingress field if missing
         bool changed = false;
+
+        // Add Artikkelhode fields if missing (idempotent)
         if (!ct.PropertyTypes.Any(p => p.Alias == "ingress"))
         {
-            ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, description: "Kort introduksjonstekst som vises under tittelen"), "innhold");
+            ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, mandatory: true, description: "Kort introduksjonstekst som vises under tittelen."), "innhold");
             changed = true;
         }
-
-        // Add artikkelBilde field if missing
         if (!ct.PropertyTypes.Any(p => p.Alias == "artikkelBilde"))
         {
-            ct.AddPropertyType(Prop("artikkelBilde", "Artikkel-bilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen"), "innhold");
+            ct.AddPropertyType(Prop("artikkelBilde", "Hovedbilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen (eller under på mobil)."), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypes.Any(p => p.Alias == "bildeAlt"))
+        {
+            ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypes.Any(p => p.Alias == "bakgrunn"))
+        {
+            ct.AddPropertyType(Prop("bakgrunn", "Bakgrunn", _bakgrunnDropdownDt, description: "Velg bakgrunnsfarge for artikkelhodet. Standard er hvit."), "innhold");
             changed = true;
         }
 
