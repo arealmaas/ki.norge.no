@@ -35,6 +35,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _contentPickerDt = null!;
     private IDataType _calloutVariantDt = null!;
     private IDataType _bakgrunnDropdownDt = null!;    // Hvit / Lys blå dropdown for Artikkelhode
+    private IDataType _trueFalseDt = null!;           // Boolean checkbox
 
     // Block List data types (created at init time)
     private IDataType _blockListAccordionDt = null!;
@@ -100,6 +101,8 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateArtikkelSitatElement();
             if (_contentTypeService.Get("artikkelCallout") == null)
                 CreateArtikkelCalloutElement();
+            if (_contentTypeService.Get("artikkelFremheving") == null)
+                CreateArtikkelFremhevingElement();
 
             // Sandkasse element types
             if (_contentTypeService.Get("sandkasseSteg") == null)
@@ -217,6 +220,7 @@ public class ContentTypeComponent : IAsyncComponent
         _contentPickerDt = FindDataType(Constants.PropertyEditors.Aliases.ContentPicker);
         _calloutVariantDt = CreateOrGetCalloutVariantDropdown();
         _bakgrunnDropdownDt = CreateOrGetBakgrunnDropdown();
+        _trueFalseDt = FindDataType(Constants.PropertyEditors.Aliases.Boolean);
     }
 
     private IDataType FindRichTextByName(string name)
@@ -453,6 +457,33 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("variant", "Variant", _calloutVariantDt, description: "Velg type varselboks"), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// Unified highlight block. Toggles control whether it shows as a colored fact box,
+    /// a quote with « », or includes an image. Replaces artikkelInfoBoks, artikkelCallout,
+    /// and artikkelSitat.
+    /// </summary>
+    private IContentType CreateArtikkelFremhevingElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelFremheving",
+            Name = "Fremheving",
+            Description = "Uthevet boks med valgfritt bilde, bakgrunnsfarge og sitat-tegn. Brukes for fakta, høydepunkter og sitater.",
+            Icon = "icon-favorite",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, description: "Valgfri overskrift over teksten"), "innhold");
+        ct.AddPropertyType(Prop("tekst", "Tekst", _richTextDtRestricted, mandatory: true, description: "Hovedteksten i fremhevingen. Bare grunnleggende formatering tillatt (fet, kursiv, lister, lenker)."), "innhold");
+        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt, description: "Valgfritt bilde til venstre for teksten på desktop, over på mobil"), "innhold");
+        ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
+        ct.AddPropertyType(Prop("visBakgrunn", "Vis bakgrunnsfarge", _trueFalseDt, description: "Slå på lyseblå bakgrunn (Faktaboks-stil). Standard på."), "innhold");
+        ct.AddPropertyType(Prop("visAnforselstegn", "Vis anførselstegn", _trueFalseDt, description: "Slå på «...» rundt teksten (Sitat-stil). Standard av."), "innhold");
+        ct.AddPropertyType(Prop("kilde", "Kilde", _textStringDt, description: "Valgfri kilde/citat-attribusjon, vises under teksten"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }

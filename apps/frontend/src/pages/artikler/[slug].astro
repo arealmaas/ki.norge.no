@@ -72,6 +72,42 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 
     <!-- Body blocks: each is col-center-6 -->
     {article.innhold?.map(block => {
+        if (block.contentType === 'artikkelFremheving') {
+          const c = block.content;
+          const classes = [
+            'article-fremheving',
+            'col-center-6',
+            c.visBakgrunn ? 'article-fremheving--bg' : '',
+            c.visAnforselstegn ? 'article-fremheving--quote' : '',
+            c.bilde?.url ? 'article-fremheving--with-image' : '',
+          ].filter(Boolean).join(' ');
+          return (
+            <div class={classes}>
+              {c.bilde?.url && (
+                <div class="article-fremheving-image">
+                  <img src={getMediaUrl(c.bilde)} alt={c.bildeAlt || ''} />
+                </div>
+              )}
+              <div class="article-fremheving-content">
+                {c.tittel && <h3 class="article-fremheving-title">{c.tittel}</h3>}
+                {c.visAnforselstegn ? (
+                  <blockquote class="article-fremheving-text article-fremheving-text--quote">
+                    <span aria-hidden="true" class="article-fremheving-quote-mark article-fremheving-quote-mark--open">«</span>
+                    <div set:html={c.tekst} />
+                    <span aria-hidden="true" class="article-fremheving-quote-mark article-fremheving-quote-mark--close">»</span>
+                  </blockquote>
+                ) : (
+                  <div class="article-fremheving-text" set:html={c.tekst} />
+                )}
+                {c.kilde && (
+                  <footer class="article-fremheving-source">
+                    <cite>{c.kilde}</cite>
+                  </footer>
+                )}
+              </div>
+            </div>
+          );
+        }
         if (block.contentType === 'artikkelInfoBoks') {
           return (
             <div class="article-info-box col-center-6">
@@ -409,7 +445,84 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
     margin-bottom: 0;
   }
 
-  /* Info box */
+  /* Fremheving (unified highlight block) */
+  .article-fremheving {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border-radius: 24px;
+    padding: 32px;
+    margin: 16px 0;
+  }
+  .article-fremheving--bg {
+    background: #e5f2f7;
+  }
+  @media (min-width: 768px) {
+    .article-fremheving--with-image {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+    .article-fremheving-image {
+      flex-shrink: 0;
+      width: 35%;
+    }
+  }
+  .article-fremheving-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+  }
+  .article-fremheving-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .article-fremheving-title {
+    font-size: 21px;
+    font-weight: 500;
+    color: #1a2a6d;
+    margin: 0 0 16px;
+  }
+  .article-fremheving-text {
+    font-size: 18px;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.8);
+  }
+  .article-fremheving-text :global(p) {
+    margin: 0 0 12px;
+  }
+  .article-fremheving-text :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  /* Quote variant: « and » Norwegian quote marks */
+  .article-fremheving-text--quote {
+    position: relative;
+    font-style: italic;
+    margin: 0;
+  }
+  .article-fremheving-quote-mark {
+    font-size: 2.5em;
+    font-style: normal;
+    color: rgba(0, 0, 0, 0.4);
+    line-height: 0.5;
+    vertical-align: -0.2em;
+  }
+  .article-fremheving-quote-mark--open {
+    margin-right: 0.1em;
+  }
+  .article-fremheving-quote-mark--close {
+    margin-left: 0.1em;
+  }
+  .article-fremheving-source {
+    margin-top: 12px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.55);
+  }
+  .article-fremheving-source cite {
+    font-style: normal;
+  }
+
+  /* Legacy Info box (artikkelInfoBoks) — kept for back-compat */
   .article-info-box {
     background: #e5f2f7;
     border-radius: 24px;

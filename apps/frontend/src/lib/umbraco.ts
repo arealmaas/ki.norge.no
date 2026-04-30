@@ -72,6 +72,19 @@ export interface ArtikkelBildeSeksjonBlock {
   bildetekst?: string;
 }
 
+export interface ArtikkelFremhevingBlock {
+  contentType: 'artikkelFremheving';
+  content: {
+    tittel?: string;
+    tekst: string; // HTML from restricted RichText
+    bilde?: UmbracoMedia;
+    bildeAlt?: string;
+    visBakgrunn: boolean;
+    visAnforselstegn: boolean;
+    kilde?: string;
+  };
+}
+
 // Content types matching Umbraco document type schemas
 export interface Artikkel {
   id: string;
@@ -814,6 +827,21 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
       }
       if (ct === 'artikkelBildeSeksjon') {
         return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildeAlt: props.bildeAlt || '', bildetekst: props.bildetekst || '' } };
+      }
+      if (ct === 'artikkelFremheving') {
+        const tekst = props.tekst?.tag === '#root' ? richTextToHtml(props.tekst) : (typeof props.tekst === 'string' ? props.tekst : '');
+        // Defaults: visBakgrunn=true (Faktaboks-stil), visAnforselstegn=false
+        const visBakgrunn = props.visBakgrunn === false ? false : true;
+        const visAnforselstegn = props.visAnforselstegn === true;
+        return { contentType: 'artikkelFremheving', content: {
+          tittel: props.tittel || '',
+          tekst,
+          bilde: mapMedia(props.bilde),
+          bildeAlt: props.bildeAlt || '',
+          visBakgrunn,
+          visAnforselstegn,
+          kilde: props.kilde || '',
+        } };
       }
 
       // Fallback: treat as tekst block (legacy rich text)
