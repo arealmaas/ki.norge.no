@@ -72,6 +72,52 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 
     <!-- Body blocks: each is col-center-6 -->
     {article.innhold?.map(block => {
+        if (block.contentType === 'artikkelByline') {
+          const c = block.content;
+          const date = c.dato || article.publishedAt;
+          const formatted = date ? new Date(date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+          const parts = [c.navn, c.stilling, c.virksomhet ? `i ${c.virksomhet}` : ''].filter(Boolean).join(' ');
+          if (!parts && !formatted) return null; // hide if all empty
+          return (
+            <div class="article-byline col-center-6">
+              {parts && <span class="article-byline-author">{parts}</span>}
+              {parts && formatted && <span class="article-byline-sep">·</span>}
+              {formatted && <time class="article-byline-date" datetime={date}>{formatted}</time>}
+            </div>
+          );
+        }
+        if (block.contentType === 'artikkelInnholdFra') {
+          const c = block.content;
+          if (!c.virksomhet && !c.dato) return null;
+          const date = c.dato || article.updatedAt || article.publishedAt;
+          const formatted = date ? new Date(date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+          return (
+            <aside class="article-innhold-fra col-center-6">
+              {c.virksomhet && (
+                <>
+                  <span class="article-innhold-fra-label">Innhold fra</span>
+                  <strong class="article-innhold-fra-org">{c.virksomhet}</strong>
+                </>
+              )}
+              {formatted && (
+                <span class="article-innhold-fra-date">Sist oppdatert {formatted}</span>
+              )}
+            </aside>
+          );
+        }
+        if (block.contentType === 'artikkelKontaktkort') {
+          const c = block.content;
+          return (
+            <aside class="article-kontaktkort col-center-6">
+              {c.tittel && <h3 class="article-kontaktkort-title">{c.tittel}</h3>}
+              <p class="article-kontaktkort-name">{c.navn}</p>
+              {c.stilling && <p class="article-kontaktkort-row">{c.stilling}</p>}
+              {c.virksomhet && <p class="article-kontaktkort-row">{c.virksomhet}</p>}
+              {c.epost && <p class="article-kontaktkort-row"><a href={`mailto:${c.epost}`}>{c.epost}</a></p>}
+              {c.telefon && <p class="article-kontaktkort-row"><a href={`tel:${c.telefon.replace(/\s/g, '')}`}>{c.telefon}</a></p>}
+            </aside>
+          );
+        }
         if (block.contentType === 'artikkelProsessteg') {
           const c = block.content;
           return (
@@ -462,6 +508,82 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 
   .article-callout-body :global(p:last-child) {
     margin-bottom: 0;
+  }
+
+  /* Byline (personal author) */
+  .article-byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.7);
+  }
+  .article-byline-author {
+    font-weight: 500;
+    color: #000;
+  }
+  .article-byline-sep {
+    color: rgba(0, 0, 0, 0.4);
+  }
+  .article-byline-date {
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  /* Innhold fra organisasjon */
+  .article-innhold-fra {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  .article-innhold-fra-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.55);
+  }
+  .article-innhold-fra-org {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+  }
+  .article-innhold-fra-date {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.55);
+  }
+
+  /* Kontaktkort */
+  .article-kontaktkort {
+    background: #e5f2f7;
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .article-kontaktkort-title {
+    font-size: 21px;
+    font-weight: 500;
+    color: #1a2a6d;
+    margin: 0 0 16px;
+  }
+  .article-kontaktkort-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+  }
+  .article-kontaktkort-row {
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.75);
+    margin: 0;
+  }
+  .article-kontaktkort-row a {
+    color: #1a2a6d;
+    text-decoration: none;
+  }
+  .article-kontaktkort-row a:hover {
+    text-decoration: underline;
   }
 
   /* Prosessteg (numbered process steps) */

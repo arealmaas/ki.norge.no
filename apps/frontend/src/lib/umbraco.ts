@@ -98,6 +98,36 @@ export interface ArtikkelProsessStegBlock {
   };
 }
 
+export interface ArtikkelBylineBlock {
+  contentType: 'artikkelByline';
+  content: {
+    navn?: string;
+    stilling?: string;
+    virksomhet?: string;
+    dato?: string; // ISO date
+  };
+}
+
+export interface ArtikkelInnholdFraBlock {
+  contentType: 'artikkelInnholdFra';
+  content: {
+    virksomhet: string;
+    dato?: string; // ISO date
+  };
+}
+
+export interface ArtikkelKontaktkortBlock {
+  contentType: 'artikkelKontaktkort';
+  content: {
+    tittel?: string;
+    navn: string;
+    stilling?: string;
+    virksomhet?: string;
+    epost: string;
+    telefon?: string;
+  };
+}
+
 // Content types matching Umbraco document type schemas
 export interface Artikkel {
   id: string;
@@ -840,6 +870,30 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
       }
       if (ct === 'artikkelBildeSeksjon') {
         return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildeAlt: props.bildeAlt || '', bildetekst: props.bildetekst || '' } };
+      }
+      if (ct === 'artikkelByline') {
+        return { contentType: 'artikkelByline', content: {
+          navn: props.navn || '',
+          stilling: props.stilling || '',
+          virksomhet: props.virksomhet || '',
+          dato: props.dato || '',
+        } };
+      }
+      if (ct === 'artikkelInnholdFra') {
+        return { contentType: 'artikkelInnholdFra', content: {
+          virksomhet: props.virksomhet || '',
+          dato: props.dato || '',
+        } };
+      }
+      if (ct === 'artikkelKontaktkort') {
+        return { contentType: 'artikkelKontaktkort', content: {
+          tittel: props.tittel || '',
+          navn: props.navn || '',
+          stilling: props.stilling || '',
+          virksomhet: props.virksomhet || '',
+          epost: props.epost || '',
+          telefon: props.telefon || '',
+        } };
       }
       if (ct === 'artikkelProsessteg') {
         // Nested Block List: props.steg has items, each with content.beskrivelse RichText

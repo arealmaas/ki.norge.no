@@ -36,6 +36,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _calloutVariantDt = null!;
     private IDataType _bakgrunnDropdownDt = null!;    // Hvit / Lys blå dropdown for Artikkelhode
     private IDataType _trueFalseDt = null!;           // Boolean checkbox
+    private IDataType _datePickerDt = null!;          // Date picker
 
     // Block List data types (created at init time)
     private IDataType _blockListAccordionDt = null!;
@@ -107,6 +108,13 @@ public class ContentTypeComponent : IAsyncComponent
             // Prosessteg item must be created before the container (container's Block List references item)
             if (_contentTypeService.Get("artikkelProsessStegItem") == null)
                 CreateArtikkelProsessStegItemElement();
+            // Forfatter og dato variants
+            if (_contentTypeService.Get("artikkelByline") == null)
+                CreateArtikkelBylineElement();
+            if (_contentTypeService.Get("artikkelInnholdFra") == null)
+                CreateArtikkelInnholdFraElement();
+            if (_contentTypeService.Get("artikkelKontaktkort") == null)
+                CreateArtikkelKontaktkortElement();
 
             // Sandkasse element types
             if (_contentTypeService.Get("sandkasseSteg") == null)
@@ -233,6 +241,14 @@ public class ContentTypeComponent : IAsyncComponent
         _calloutVariantDt = CreateOrGetCalloutVariantDropdown();
         _bakgrunnDropdownDt = CreateOrGetBakgrunnDropdown();
         _trueFalseDt = FindDataType(Constants.PropertyEditors.Aliases.Boolean);
+        _datePickerDt = FindDataTypeByName(Constants.PropertyEditors.Aliases.DateTime, "Date Picker");
+    }
+
+    private IDataType FindDataTypeByName(string editorAlias, string name)
+    {
+        return _dataTypeService.GetByEditorAlias(editorAlias).FirstOrDefault(dt => dt.Name == name)
+            ?? _dataTypeService.GetByEditorAlias(editorAlias).FirstOrDefault()
+            ?? throw new InvalidOperationException($"No DataType found for editor {editorAlias}");
     }
 
     private IDataType FindRichTextByName(string name)
@@ -469,6 +485,75 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("variant", "Variant", _calloutVariantDt, description: "Velg type varselboks"), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// Author byline. Person name + role + organization + date.
+    /// Date defaults to article publishedAt if empty (handled in frontend).
+    /// </summary>
+    private IContentType CreateArtikkelBylineElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelByline",
+            Name = "Forfatter (byline)",
+            Description = "Personlig forfatter-byline. Vis navn, stilling, virksomhet og dato. Skjules hvis alle felt er tomme.",
+            Icon = "icon-user",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("navn", "Navn", _textStringDt, description: "Forfatterens navn, eller 'Av redaksjonen'"), "innhold");
+        ct.AddPropertyType(Prop("stilling", "Stilling", _textStringDt, description: "F.eks. 'Rådgiver'"), "innhold");
+        ct.AddPropertyType(Prop("virksomhet", "Virksomhet", _textStringDt, description: "F.eks. 'Digitaliseringsdirektoratet'"), "innhold");
+        ct.AddPropertyType(Prop("dato", "Dato", _datePickerDt, description: "Dato for artikkelen. Hvis tom brukes artikkelens publiseringsdato."), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// "Innhold fra [organisasjon]" footer block. Used when content was contributed by
+    /// another organization rather than authored by a person. Typically placed at the bottom.
+    /// </summary>
+    private IContentType CreateArtikkelInnholdFraElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelInnholdFra",
+            Name = "Innhold fra organisasjon",
+            Description = "Markerer at innholdet kommer fra en annen virksomhet (ikke en navngitt forfatter).",
+            Icon = "icon-shield",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("virksomhet", "Virksomhet", _textStringDt, mandatory: true, description: "Navn på virksomheten som har levert innholdet"), "innhold");
+        ct.AddPropertyType(Prop("dato", "Sist oppdatert", _datePickerDt, description: "Dato for siste oppdatering. Hvis tom brukes artikkelens oppdateringsdato."), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// Contact card with background color. Designed for cases and about-us pages,
+    /// but available on all content types per the same-everywhere principle.
+    /// </summary>
+    private IContentType CreateArtikkelKontaktkortElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelKontaktkort",
+            Name = "Kontaktkort",
+            Description = "Kontaktkort med navn, stilling, virksomhet, e-post og telefon. Lyseblå bakgrunn.",
+            Icon = "icon-message",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, description: "Valgfri overskrift, f.eks. 'Kontaktperson' eller 'Spørsmål?'"), "innhold");
+        ct.AddPropertyType(Prop("navn", "Navn", _textStringDt, mandatory: true, description: "Kontaktpersonens navn"), "innhold");
+        ct.AddPropertyType(Prop("stilling", "Stilling", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("virksomhet", "Virksomhet", _textStringDt, description: "Anbefalt sammen med eller i stedet for e-post for å gjøre personen lett å finne"), "innhold");
+        ct.AddPropertyType(Prop("epost", "E-post", _textStringDt, mandatory: true, description: "Kontaktens e-postadresse"), "innhold");
+        ct.AddPropertyType(Prop("telefon", "Telefon", _textStringDt, description: "Valgfritt telefonnummer"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
