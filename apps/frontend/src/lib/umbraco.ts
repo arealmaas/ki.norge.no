@@ -68,6 +68,7 @@ export interface ArtikkelCalloutBlock {
 export interface ArtikkelBildeSeksjonBlock {
   contentType: 'artikkelBildeSeksjon';
   bilde?: UmbracoMedia;
+  bildeAlt?: string;
   bildetekst?: string;
 }
 
@@ -812,7 +813,7 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
         return { contentType: 'artikkelCallout', content: { tittel: props.tittel || '', innhold: html, variant: props.variant || 'info' } };
       }
       if (ct === 'artikkelBildeSeksjon') {
-        return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildetekst: props.bildetekst || '' } };
+        return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildeAlt: props.bildeAlt || '', bildetekst: props.bildetekst || '' } };
       }
 
       // Fallback: treat as tekst block (legacy rich text)

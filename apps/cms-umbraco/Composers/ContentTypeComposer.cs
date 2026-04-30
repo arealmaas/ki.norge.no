@@ -90,6 +90,8 @@ public class ContentTypeComponent : IAsyncComponent
             // Existing seed data may still reference it; renderer handles missing type gracefully.
             if (_contentTypeService.Get("artikkelBildeSeksjon") == null)
                 CreateArtikkelBildeSeksjonElement();
+            else
+                MigrateArtikkelBildeSeksjon();
             if (_contentTypeService.Get("artikkelTrekkspill") == null)
                 CreateArtikkelTrekkspillElement();
             if (_contentTypeService.Get("artikkelSitat") == null)
@@ -447,16 +449,51 @@ public class ContentTypeComponent : IAsyncComponent
         var ct = new ContentType(_shortStringHelper, -1)
         {
             Alias = "artikkelBildeSeksjon",
-            Name = "Artikkel Bildeseksjon",
-            Description = "Bildeseksjon i en artikkel",
+            Name = "Bilde",
+            Description = "Bilde med valgfri bildetekst og fotokreditering",
             Icon = "icon-picture",
             IsElement = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
-        ct.AddPropertyType(Prop("bildetekst", "Bildetekst", _textStringDt), "innhold");
+        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
+        ct.AddPropertyType(Prop("bildetekst", "Bildetekst", _textStringDt, description: "Bildetekst og evt. fotograf/kilde, f.eks. 'Foto: Dag Alveng'"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateArtikkelBildeSeksjon()
+    {
+        var ct = _contentTypeService.Get("artikkelBildeSeksjon");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        // Rename to "Bilde" and update description
+        if (ct.Name != "Bilde")
+        {
+            ct.Name = "Bilde";
+            ct.Description = "Bilde med valgfri bildetekst og fotokreditering";
+            changed = true;
+        }
+
+        // Add bildeAlt if missing
+        if (!ct.PropertyTypes.Any(p => p.Alias == "bildeAlt"))
+        {
+            ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
+            changed = true;
+        }
+
+        // Make bilde mandatory
+        var bildeProp = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "bilde");
+        if (bildeProp != null && !bildeProp.Mandatory)
+        {
+            bildeProp.Mandatory = true;
+            changed = true;
+        }
+
+        if (changed)
+            _contentTypeService.Save(ct);
     }
 
     // --- Sandkasse element types ---

@@ -127,7 +127,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
           return (
             <figure class="article-image-section col-center-6">
               {block.content.bilde?.url ? (
-                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildetekst || ''} class="stub-img" />
+                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildeAlt || ''} class="stub-img" />
               ) : (
                 <div class="article-image-placeholder"></div>
               )}
