@@ -46,6 +46,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListSandkasseFaqDt = null!;
     private IDataType _blockListVeiledningKortDt = null!;
     private IDataType _blockListVerktoyKortDt = null!;
+    private IDataType _blockListProsessStegItemsDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
@@ -103,6 +104,9 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateArtikkelCalloutElement();
             if (_contentTypeService.Get("artikkelFremheving") == null)
                 CreateArtikkelFremhevingElement();
+            // Prosessteg item must be created before the container (container's Block List references item)
+            if (_contentTypeService.Get("artikkelProsessStegItem") == null)
+                CreateArtikkelProsessStegItemElement();
 
             // Sandkasse element types
             if (_contentTypeService.Get("sandkasseSteg") == null)
@@ -120,6 +124,14 @@ public class ContentTypeComponent : IAsyncComponent
             MigrateVerktoyKort();
 
             CreateBlockListDataTypes();
+
+            // Prosessteg container depends on _blockListProsessStegItemsDt being created above
+            if (_contentTypeService.Get("artikkelProsessteg") == null)
+                CreateArtikkelProsessStegElement();
+
+            // After all element types are created, refresh the Artikkel block list to include
+            // any modules that didn't exist when CreateBlockListDataTypes() ran.
+            RefreshMultiBlockListAllowedModules("Block List - Artikkel Innhold", BaseArticleModules);
 
             if (_contentTypeService.Get("merkelapp") == null)
                 CreateMerkelapp();
@@ -462,6 +474,46 @@ public class ContentTypeComponent : IAsyncComponent
     }
 
     /// <summary>
+    /// Single step within a Prosessteg container. Auto-numbered by position in frontend.
+    /// </summary>
+    private IContentType CreateArtikkelProsessStegItemElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelProsessStegItem",
+            Name = "Prosesstegg-element",
+            Description = "Et enkelt steg i en prosess. Nummereres automatisk fra rekkefølge.",
+            Icon = "icon-list",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Etikett", _textStringDt, description: "Valgfri etikett ved siden av nummeret. Standard: 'Steg'. Kan overstyres til f.eks. 'Fase' eller 'Idé'."), "innhold");
+        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _richTextDtRestricted, mandatory: true, description: "Beskrivelse av dette steget. Bare grunnleggende formatering tillatt."), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// Container for a numbered list of process steps. Allows ≥1 nested ProsessStegItem.
+    /// </summary>
+    private IContentType CreateArtikkelProsessStegElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelProsessteg",
+            Name = "Prosessteg",
+            Description = "Nummerert liste over steg i en prosess. Hvert steg får automatisk nummer.",
+            Icon = "icon-ordered-list",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, description: "Valgfri overskrift over hele prosessen, f.eks. 'Slik foregår prosessen'"), "innhold");
+        ct.AddPropertyType(Prop("steg", "Steg", _blockListProsessStegItemsDt, mandatory: true, description: "Legg til ett eller flere steg. Nummereres automatisk."), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
     /// Unified highlight block. Toggles control whether it shows as a colored fact box,
     /// a quote with « », or includes an image. Replaces artikkelInfoBoks, artikkelCallout,
     /// and artikkelSitat.
@@ -599,6 +651,9 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Veiledning Kort", "veiledningKort");
         _blockListVerktoyKortDt = CreateOrGetBlockListDataType(
             "Block List - Verktøy Kort", "verktoyKort");
+        // Used by artikkelProsessteg (container) to nest artikkelProsessStegItem children
+        _blockListProsessStegItemsDt = CreateOrGetBlockListDataType(
+            "Block List - Prosessteg Items", "artikkelProsessStegItem");
     }
 
     private IDataType CreateOrGetBlockListDataType(string name, string elementTypeAlias)
@@ -637,6 +692,33 @@ public class ContentTypeComponent : IAsyncComponent
         };
         _dataTypeService.Save(dt);
         return dt;
+    }
+
+    /// <summary>
+    /// Updates an existing Block List data type's allowed element types to match the given list.
+    /// Use this to add/remove modules after initial creation. Idempotent.
+    /// </summary>
+    private void RefreshMultiBlockListAllowedModules(string name, string[] elementTypeAliases)
+    {
+        var dt = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.BlockList)
+            .FirstOrDefault(d => d.Name == name);
+        if (dt == null) return;
+
+        var blocks = elementTypeAliases.Select(alias =>
+        {
+            var elementType = _contentTypeService.Get(alias);
+            if (elementType == null)
+            {
+                Console.WriteLine($"ContentTypeComposer: Element type '{alias}' not found, skipping in block list '{name}' (refresh)");
+                return (object?)null;
+            }
+            return new { contentElementTypeKey = elementType.Key };
+        }).Where(b => b != null).ToArray();
+
+        var config = dt.ConfigurationData ?? new Dictionary<string, object>();
+        config["blocks"] = blocks;
+        dt.ConfigurationData = config;
+        _dataTypeService.Save(dt);
     }
 
     private IDataType CreateOrGetMultiBlockListDataType(string name, string[] elementTypeAliases)

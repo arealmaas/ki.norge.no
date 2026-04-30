@@ -85,6 +85,19 @@ export interface ArtikkelFremhevingBlock {
   };
 }
 
+export interface ProsessStegItem {
+  tittel?: string; // optional label, defaults to no label if empty (placeholder "Steg" in CMS)
+  beskrivelse: string; // HTML from restricted RichText
+}
+
+export interface ArtikkelProsessStegBlock {
+  contentType: 'artikkelProsessteg';
+  content: {
+    tittel?: string;
+    steg: ProsessStegItem[];
+  };
+}
+
 // Content types matching Umbraco document type schemas
 export interface Artikkel {
   id: string;
@@ -827,6 +840,19 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
       }
       if (ct === 'artikkelBildeSeksjon') {
         return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildeAlt: props.bildeAlt || '', bildetekst: props.bildetekst || '' } };
+      }
+      if (ct === 'artikkelProsessteg') {
+        // Nested Block List: props.steg has items, each with content.beskrivelse RichText
+        const stegItems = (props.steg as any)?.items || [];
+        const steg: ProsessStegItem[] = stegItems.map((item: any) => {
+          const itemContent = item.content || item;
+          const itemProps = itemContent.properties || itemContent;
+          const beskrivelse = itemProps.beskrivelse?.tag === '#root'
+            ? richTextToHtml(itemProps.beskrivelse)
+            : (typeof itemProps.beskrivelse === 'string' ? itemProps.beskrivelse : '');
+          return { tittel: itemProps.tittel || '', beskrivelse };
+        });
+        return { contentType: 'artikkelProsessteg', content: { tittel: props.tittel || '', steg } };
       }
       if (ct === 'artikkelFremheving') {
         const tekst = props.tekst?.tag === '#root' ? richTextToHtml(props.tekst) : (typeof props.tekst === 'string' ? props.tekst : '');

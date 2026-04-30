@@ -72,6 +72,25 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 
     <!-- Body blocks: each is col-center-6 -->
     {article.innhold?.map(block => {
+        if (block.contentType === 'artikkelProsessteg') {
+          const c = block.content;
+          return (
+            <section class="article-prosessteg col-center-6">
+              {c.tittel && <h2 class="article-prosessteg-title">{c.tittel}</h2>}
+              <ol class="article-prosessteg-list">
+                {c.steg.map((s, i) => (
+                  <li class="article-prosessteg-item">
+                    <div class="article-prosessteg-header">
+                      <span class="article-prosessteg-number">{i + 1}</span>
+                      {s.tittel && <span class="article-prosessteg-label">{s.tittel}</span>}
+                    </div>
+                    <div class="article-prosessteg-body" set:html={s.beskrivelse} />
+                  </li>
+                ))}
+              </ol>
+            </section>
+          );
+        }
         if (block.contentType === 'artikkelFremheving') {
           const c = block.content;
           const classes = [
@@ -442,6 +461,63 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
   }
 
   .article-callout-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+
+  /* Prosessteg (numbered process steps) */
+  .article-prosessteg {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .article-prosessteg-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .article-prosessteg-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+    counter-reset: prosessteg;
+  }
+  .article-prosessteg-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .article-prosessteg-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  .article-prosessteg-number {
+    font-size: 64px;
+    font-weight: 600;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.43);
+    letter-spacing: 0.024px;
+  }
+  .article-prosessteg-label {
+    font-size: 24px;
+    font-weight: 500;
+    color: #000;
+    letter-spacing: 0.012px;
+  }
+  .article-prosessteg-body {
+    font-size: 18px;
+    line-height: 1.45;
+    color: rgba(0, 0, 0, 0.7);
+  }
+  .article-prosessteg-body :global(p) {
+    margin: 0 0 8px;
+  }
+  .article-prosessteg-body :global(p:last-child) {
     margin-bottom: 0;
   }
 
