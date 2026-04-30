@@ -84,6 +84,8 @@ public class ContentTypeComponent : IAsyncComponent
             // Article element types
             if (_contentTypeService.Get("artikkelTekst") == null)
                 CreateArtikkelTekstElement();
+            else
+                MigrateArtikkelTekst();
             if (_contentTypeService.Get("artikkelInfoBoks") == null)
                 CreateArtikkelInfoBoksElement();
             // artikkelHero element type is deprecated (replaced by Artikkelhode top-level fields).
@@ -362,8 +364,8 @@ public class ContentTypeComponent : IAsyncComponent
         var ct = new ContentType(_shortStringHelper, -1)
         {
             Alias = "artikkelTekst",
-            Name = "Artikkel Tekst",
-            Description = "Rik tekst-blokk i en artikkel",
+            Name = "Brødtekst",
+            Description = "Rik tekstblokk med overskrifter (H2/H3/H4), lister, lenker, fet, kursiv og blockquote",
             Icon = "icon-edit",
             IsElement = true,
         };
@@ -371,6 +373,17 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("innhold", "Innhold", _richTextDt), "innhold");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateArtikkelTekst()
+    {
+        var ct = _contentTypeService.Get("artikkelTekst");
+        if (ct == null) return;
+        if (ct.Name == "Brødtekst") return;
+
+        ct.Name = "Brødtekst";
+        ct.Description = "Rik tekstblokk med overskrifter (H2/H3/H4), lister, lenker, fet, kursiv og blockquote";
+        _contentTypeService.Save(ct);
     }
 
     private IContentType CreateArtikkelInfoBoksElement()
