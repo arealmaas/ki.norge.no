@@ -363,13 +363,13 @@ public class ContentTypeComponent : IAsyncComponent
         {
             Alias = "accordionSection",
             Name = "Accordion Section",
-            Description = "En seksjon i en trekkspill-liste",
+            Description = "Legacy trekkspill-element. Bruk Trekkspill-modulen i artikkel-innhold i stedet.",
             Icon = "icon-list",
             IsElement = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("title", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("body", "Innhold", _richTextDt), "innhold");
+        ct.AddPropertyType(Prop("title", "Tittel", _textStringDt, mandatory: true, description: "Synlig tittel på trekkspillet (klikkes for å åpne)"), "innhold");
+        ct.AddPropertyType(Prop("body", "Innhold", _richTextDt, description: "Innhold som vises når trekkspillet åpnes"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -380,14 +380,14 @@ public class ContentTypeComponent : IAsyncComponent
         {
             Alias = "tipItem",
             Name = "Tips",
-            Description = "Et tips-element",
+            Description = "Et tips-kort. Brukes i tre-tips-seksjonen på forsiden.",
             Icon = "icon-lightbulb",
             IsElement = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("tipsTitle", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("tipsTekst", "Tekst", _richTextDt), "innhold");
-        ct.AddPropertyType(Prop("tipsBilde", "Bilde", _mediaPickerDt), "innhold");
+        ct.AddPropertyType(Prop("tipsTitle", "Tittel", _textStringDt, mandatory: true, description: "Kort, presis tittel — vises som overskrift på tipset"), "innhold");
+        ct.AddPropertyType(Prop("tipsTekst", "Tekst", _richTextDt, description: "1-3 setninger som forklarer tipset"), "innhold");
+        ct.AddPropertyType(Prop("tipsBilde", "Bilde", _mediaPickerDt, description: "Valgfritt illustrasjonsbilde"), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -473,8 +473,8 @@ public class ContentTypeComponent : IAsyncComponent
         var ct = new ContentType(_shortStringHelper, -1)
         {
             Alias = "artikkelTrekkspill",
-            Name = "Artikkel Trekkspill",
-            Description = "Accordion med tittel og innhold som kan utvides",
+            Name = "Trekkspill",
+            Description = "Klikkbar tittel som åpner skjult innhold under. Bra for bonus-info, ofte stilte spørsmål, eller detaljer leseren kan hoppe over.",
             Icon = "icon-list",
             IsElement = true,
         };

@@ -268,14 +268,14 @@ properties:
           port: 8080
         initialDelaySeconds: 60
         periodSeconds: 30
-        failureThreshold: 5
+        failureThreshold: 10
       - type: readiness
         httpGet:
           path: /api/health/ready
           port: 8080
-        initialDelaySeconds: 90
+        initialDelaySeconds: 60
         periodSeconds: 30
-        failureThreshold: 5
+        failureThreshold: 10
     volumes:
     - name: umbracomedia
       storageName: umbracomedia
