@@ -41,7 +41,6 @@ public class ContentTypeComponent : IAsyncComponent
     // Block List data types (created at init time)
     private IDataType _blockListAccordionDt = null!;
     private IDataType _blockListTipsDt = null!;
-    private IDataType _blockListEventsDt = null!;
     private IDataType _blockListArtikkelDt = null!;
     private IDataType _blockListSandkasseStegDt = null!;
     private IDataType _blockListSandkasseFaqDt = null!;
@@ -82,9 +81,6 @@ public class ContentTypeComponent : IAsyncComponent
                 CreateTipItemElement();
             else
                 MigrateTipItemElement();
-            // Arrangement deaktivert for MVP
-            // if (_contentTypeService.Get("eventItem") == null)
-            //     CreateEventItemElement();
 
             // Article element types
             if (_contentTypeService.Get("artikkelTekst") == null)
@@ -234,10 +230,6 @@ public class ContentTypeComponent : IAsyncComponent
             // Migrate existing faqSamling container display name
             MigrateFaqSamlingName();
             CreateContainerIfMissing("merkelapper", "Merkelapper", "icon-tags", "merkelapp");
-            // Ikonvelger deaktivert — ble ikke bra nok for redaktørene
-            // if (_contentTypeService.Get("tilgjengeligIkon") == null)
-            //     CreateTilgjengeligIkon();
-            // CreateContainerIfMissing("tilgjengeligeIkoner", "Tilgjengelige ikoner", "icon-picture", "tilgjengeligIkon");
 
             if (_contentTypeService.Get("ordbokOppslag") == null)
                 CreateOrdbokOppslag();
@@ -399,25 +391,6 @@ public class ContentTypeComponent : IAsyncComponent
         if (ct.PropertyTypeExists("tipsBilde")) return;
         ct.AddPropertyType(Prop("tipsBilde", "Bilde", _mediaPickerDt), "innhold");
         _contentTypeService.Save(ct);
-    }
-
-    private IContentType CreateEventItemElement()
-    {
-        var ct = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "eventItem",
-            Name = "Arrangement",
-            Description = "Et arrangement-element",
-            Icon = "icon-calendar",
-            IsElement = true,
-        };
-        ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("eventTittel", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("eventDato", "Dato", _textStringDt), "innhold");
-        ct.AddPropertyType(Prop("eventSted", "Sted", _textStringDt), "innhold");
-        ct.AddPropertyType(Prop("eventUrl", "URL", _textStringDt), "innhold");
-        _contentTypeService.Save(ct);
-        return ct;
     }
 
     // --- Article element types ---
@@ -753,9 +726,6 @@ public class ContentTypeComponent : IAsyncComponent
             "Block List - Accordion Sections", "accordionSection");
         _blockListTipsDt = CreateOrGetBlockListDataType(
             "Block List - Tips", "tipItem");
-        // Arrangement deaktivert for MVP — eventItem er ikke opprettet
-        // _blockListEventsDt = CreateOrGetBlockListDataType(
-        //     "Block List - Events", "eventItem");
         _blockListArtikkelDt = CreateOrGetMultiBlockListDataType(
             "Block List - Artikkel Innhold",
             BaseArticleModules);
@@ -1063,23 +1033,6 @@ public class ContentTypeComponent : IAsyncComponent
     }
 
     // --- Document types ---
-
-    private IContentType CreateTilgjengeligIkon()
-    {
-        var ct = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "tilgjengeligIkon",
-            Name = "Tilgjengelig ikon",
-            Description = "Et ikon fra Aksel-ikonpakken som er tilgjengelig for redaktører",
-            Icon = "icon-picture",
-            AllowedAsRoot = false,
-        };
-        ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("navn", "Ikonnavn", _textStringDt, mandatory: true, description: "Det engelske navnet på ikonet fra aksel.nav.no/ikoner (f.eks. HandHeart, Package, Calculator)"), "innhold");
-        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textStringDt, description: "Kort norsk beskrivelse av ikonet (f.eks. Hjerte i hånd, Pakke, Kalkulator)"), "innhold");
-        _contentTypeService.Save(ct);
-        return ct;
-    }
 
     private IContentType CreateMerkelapp()
     {
@@ -1597,10 +1550,6 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("sandkasseTittel", "Tittel", _textStringDt), "sandkassen");
         ct.AddPropertyType(Prop("sandkasseTekst", "Tekst", _richTextDt), "sandkassen");
         ct.AddPropertyType(Prop("sandkasseUrl", "URL", _textStringDt), "sandkassen");
-
-        // Tab: Arrangementer — deaktivert for MVP
-        // ct.AddPropertyGroup("arrangementer", "Arrangementer");
-        // ct.AddPropertyType(Prop("arrangementer", "Arrangementer", _blockListEventsDt), "arrangementer");
 
         // Tab: Veiledning
         ct.AddPropertyGroup("veiledning", "Veiledning");
