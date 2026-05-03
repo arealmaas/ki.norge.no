@@ -94,11 +94,10 @@ public class ContentSeeder : IAsyncComponent
             var veiledningerFolder = CreateFolder("veiledninger", "Veiledninger");
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
-            var ikonerFolder = CreateFolder("tilgjengeligeIkoner", "Tilgjengelige ikoner");
             var ordbokFolder = CreateFolder("ordbokSamling", "KI-ordbok");
 
-            // Seed icons and media
-            SeedIkoner(ikonerFolder.Id);
+            // Ikoner deaktivert — bruk Media-mappe i stedet for ikon-content type.
+            // Cleanup of existing ikoner content done in RunStructureMigrations.
 
             // Seed media images
             SeedMedia();
@@ -137,6 +136,23 @@ public class ContentSeeder : IAsyncComponent
     private void RunStructureMigrations()
     {
         ForceForsideToTop();
+        RemoveIkonerContent();
+    }
+
+    /// <summary>
+    /// Deletes the "Tilgjengelige ikoner" container and all its child icon nodes.
+    /// Idempotent — only runs if the container still exists. Editors should use a
+    /// Media folder named "Ikoner" for icon images instead.
+    /// </summary>
+    private void RemoveIkonerContent()
+    {
+        var ikonerFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "tilgjengeligeIkoner");
+        if (ikonerFolder == null) return;
+
+        // DeleteAsync would be cleaner but Delete on the parent cascades to children
+        _contentService.Delete(ikonerFolder);
+        Console.WriteLine("ContentSeeder: Removed Ikoner container and all child nodes");
     }
 
     /// <summary>
@@ -1538,37 +1554,7 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
         return map;
     }
 
-    // ── Ikoner ──────────────────────────────────────────────────
-
-    private void SeedIkoner(int parentId)
-    {
-        var icons = new[]
-        {
-            ("HandHeart", "Hjerte i hånd"),
-            ("Package", "Pakke"),
-            ("Calculator", "Kalkulator"),
-            ("Office2", "Kontorbygg"),
-            ("SocialAid", "Sosialhjelp"),
-            ("FeedingBottle", "Tåteflaske"),
-            ("Clock", "Klokke"),
-            ("Bookmark", "Bokmerke"),
-            ("LocationPin", "Stedmarkør"),
-            ("Braille", "Blindeskrift"),
-            ("HandShakeHeart", "Håndtrykk med hjerte"),
-            ("Search", "Søk"),
-            ("PersonChat", "Person i samtale"),
-            ("EnvelopeClosed", "Konvolutt"),
-            ("ChevronRight", "Pil høyre"),
-        };
-
-        foreach (var (navn, beskrivelse) in icons)
-        {
-            var ikon = Create("tilgjengeligIkon", beskrivelse, parentId);
-            ikon.SetValue("navn", navn);
-            ikon.SetValue("beskrivelse", beskrivelse);
-            SaveAndPublish(ikon);
-        }
-    }
+    // SeedIkoner removed — Ikoner content type deactivated. Use Media folder instead.
 
     private string Udi(IContent content) => $"umb://document/{content.Key:N}";
 
