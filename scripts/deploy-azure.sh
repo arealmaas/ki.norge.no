@@ -235,6 +235,8 @@ properties:
         value: FileSystemMainDomLock
       - name: UMBRACO__CMS__UNATTENDED__INSTALLUNATTENDED
         value: 'true'
+      - name: UMBRACO__CMS__UNATTENDED__UPGRADEUNATTENDED
+        value: 'true'
       - name: UMBRACO__CMS__UNATTENDED__UNATTENDEDUSERNAME
         value: 'admin'
       - name: UMBRACO__CMS__UNATTENDED__UNATTENDEDUSEREMAIL
