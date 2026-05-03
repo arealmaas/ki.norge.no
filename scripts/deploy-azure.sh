@@ -150,6 +150,25 @@ az containerapp env storage set \
   --access-mode ReadWrite >/dev/null 2>&1 || echo "  (storage 'umbracomedia' not yet defined — manual setup required first time)"
 echo "OK"
 
+# --- Tag currently-deployed image as :prev for rollback ---
+# Pulls digest of whatever's running now and re-tags it as :prev so we can
+# roll back fast if the new image breaks. Best-effort — fails quietly on
+# first deploy or if no current image exists.
+echo "==> Tagging current images as :prev for rollback safety"
+for app in cms frontend; do
+  case "$app" in
+    cms) current_ref=$(az containerapp show -g "${RESOURCE_GROUP}" -n "${UMBRACO_APP_NAME}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null | sed "s|${ACR_NAME}.azurecr.io/||") ;;
+    frontend) current_ref=$(az containerapp show -g "${RESOURCE_GROUP}" -n "${FRONTEND_APP_NAME}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null | sed "s|${ACR_NAME}.azurecr.io/||") ;;
+  esac
+  if [ -n "${current_ref:-}" ]; then
+    az acr import --name "${ACR_NAME}" --source "${ACR_NAME}.azurecr.io/${current_ref}" --image "ki-norge/${app}:prev" --force >/dev/null 2>&1 \
+      && echo "  ${app}: ${current_ref} → :prev" \
+      || echo "  ${app}: skip (no previous image)"
+  else
+    echo "  ${app}: skip (first deploy)"
+  fi
+done
+
 # --- Build images (remote ACR build) ---
 echo "==> Building CMS image: ${UMBRACO_IMAGE}"
 az acr build \
