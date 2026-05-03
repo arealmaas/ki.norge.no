@@ -150,6 +150,48 @@ public class ContentSeeder : IAsyncComponent
         RemoveDuplicateSandkasseUnderSider();
         FlattenOmOssSeksjonerToBlocks();
         MigrateEksempelToCase();
+        FixBakgrunnDropdownValues();
+    }
+
+    /// <summary>
+    /// Fixes the bakgrunn dropdown field on artikkel and case content.
+    /// The DropDown.Flexible editor stores values as JSON array, but earlier code
+    /// set plain strings ("hvit", "lyseblaa") which breaks the Delivery API.
+    /// This migration finds non-JSON values and either wraps them in JSON array form
+    /// or clears them. Idempotent.
+    /// </summary>
+    private void FixBakgrunnDropdownValues()
+    {
+        var allTypes = new[] { "artikkel", "case" };
+        int fixedCount = 0;
+
+        foreach (var alias in allTypes)
+        {
+            // Get all root content of these types — case lives under caser, so check children too
+            var allContent = _contentService.GetRootContent()
+                .SelectMany(root => _contentService.GetPagedDescendants(root.Id, 0, int.MaxValue, out _))
+                .Concat(_contentService.GetRootContent())
+                .Where(c => c.ContentType.Alias == alias)
+                .ToList();
+
+            foreach (var c in allContent)
+            {
+                if (!c.HasProperty("bakgrunn")) continue;
+                var raw = c.GetValue<string>("bakgrunn");
+                if (string.IsNullOrEmpty(raw)) continue;
+                if (raw.StartsWith("[")) continue; // already JSON array
+
+                // Wrap plain string in JSON array
+                var fixedValue = $"[\"{raw}\"]";
+                c.SetValue("bakgrunn", fixedValue);
+                _contentService.Save(c);
+                if (c.Published) _contentService.Publish(c, new[] { "*" });
+                fixedCount++;
+            }
+        }
+
+        if (fixedCount > 0)
+            Console.WriteLine($"ContentSeeder: Fixed bakgrunn dropdown JSON format on {fixedCount} content nodes");
     }
 
     /// <summary>
@@ -262,7 +304,7 @@ public class ContentSeeder : IAsyncComponent
             var ingressText = StripHtml(beskrivelse);
             if (ingressText.Length > 250) ingressText = ingressText.Substring(0, 247) + "...";
             nytt.SetValue("ingress", ingressText);
-            nytt.SetValue("bakgrunn", "hvit");
+            // Don't set bakgrunn — dropdown stores JSON array format, default empty is fine
 
             // artikkelBilde: copy bilde value (MediaPicker)
             var bilde = eks.GetValue("bilde");
@@ -1405,7 +1447,7 @@ norsk, samisk, engelsk og de mest utbredte innvandrerspråkene.</p>");
         c1.SetValue("tittel", "Test-case uten moduler");
         c1.SetValue("slug", "test-case-uten-moduler");
         c1.SetValue("ingress", "Dette er en case uten body-moduler. Kun Artikkelhode-feltene (tittel + ingress + bilde + bakgrunn).");
-        c1.SetValue("bakgrunn", "hvit");
+        // bakgrunn omitted — defaults to empty (frontend treats as 'hvit')
         SaveAndPublish(c1);
 
         // Case 2: mixed — a few common modules
