@@ -1951,12 +1951,11 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
         };
 
         var map = new Dictionary<string, IContent>();
-        foreach (var (navn, slug, beskrivelse) in tags)
+        foreach (var (navn, slug, _) in tags)
         {
             var m = Create("merkelapp", navn, parentId);
             m.SetValue("navn", navn);
-            m.SetValue("slug", slug);
-            m.SetValue("beskrivelse", beskrivelse);
+            m.SetValue("slug", slug); // overridden by MerkelappSlugHandler on save anyway
             SaveAndPublish(m);
             map[slug] = m;
         }

@@ -1093,11 +1093,10 @@ public class ContentTypeComponent : IAsyncComponent
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("navn", "Navn", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textAreaDt), "innhold");
-        // Slug lives in a hidden "Teknisk" group so editors don't have to think about it.
-        // Used for stable filter URLs (eks /artikler?tag=helse).
-        ct.AddPropertyGroup("teknisk", "Teknisk (ikke endre)");
-        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, description: "Auto-generert fra navn ved lagring. Ikke endre uten god grunn — endring her bryter eksisterende lenker."), "teknisk");
+        // Slug stays in DB for stable filter URLs (eks /artikler?tag=helse) but is hidden
+        // from editor UI. Auto-generated from navn on save by MerkelappSavingHandler.
+        ct.AddPropertyGroup("teknisk", "Teknisk (skjult)");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, description: "Auto-generert fra navn ved lagring."), "teknisk");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -1109,11 +1108,19 @@ public class ContentTypeComponent : IAsyncComponent
 
         bool changed = false;
 
+        // Remove beskrivelse field if present
+        var beskrivelseProp = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "beskrivelse");
+        if (beskrivelseProp != null)
+        {
+            ct.RemovePropertyType("beskrivelse");
+            changed = true;
+        }
+
         var slugProp = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "slug");
         if (slugProp != null && slugProp.Mandatory)
         {
             slugProp.Mandatory = false;
-            slugProp.Description = "Auto-generert fra navn ved lagring. Ikke endre uten god grunn — endring her bryter eksisterende lenker.";
+            slugProp.Description = "Auto-generert fra navn ved lagring.";
             changed = true;
         }
 
@@ -1126,7 +1133,7 @@ public class ContentTypeComponent : IAsyncComponent
         if (changed)
         {
             _contentTypeService.Save(ct);
-            Console.WriteLine("ContentTypeComposer: Migrated Merkelapp (slug optional + description)");
+            Console.WriteLine("ContentTypeComposer: Migrated Merkelapp (beskrivelse removed, slug auto)");
         }
     }
 
