@@ -389,9 +389,9 @@ properties:
         failureThreshold: 3
       - type: readiness
         httpGet:
-          path: /api/health
+          path: /api/health/ready
           port: 4321
-        periodSeconds: 10
+        periodSeconds: 30
         failureThreshold: 3
 PROBES
 
