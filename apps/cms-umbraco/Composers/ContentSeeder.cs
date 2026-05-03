@@ -328,17 +328,25 @@ public class ContentSeeder : IAsyncComponent
     }
 
     /// <summary>
-    /// Forces Forside to sortOrder = 0 so it always appears at the top of the root content tree.
+    /// Forces Forside to the top of the root content tree by re-sorting ALL root items.
+    /// Forside first (sortOrder 0), everything else after in their current order.
     /// </summary>
     private void ForceForsideToTop()
     {
-        var forside = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "forside");
+        var rootItems = _contentService.GetRootContent().ToList();
+        var forside = rootItems.FirstOrDefault(c => c.ContentType.Alias == "forside");
         if (forside == null) return;
-        if (forside.SortOrder == 0) return;
 
-        forside.SortOrder = 0;
-        _contentService.Save(forside);
-        Console.WriteLine("ContentSeeder: Forced Forside to sortOrder 0");
+        // Already at the top?
+        if (rootItems[0].Id == forside.Id) return;
+
+        // Reorder: Forside first, then everything else preserving their relative order
+        var newOrder = new List<IContent> { forside };
+        newOrder.AddRange(rootItems.Where(c => c.Id != forside.Id));
+
+        // ContentService.Sort takes the ordered list and assigns sortOrder by position
+        _contentService.Sort(newOrder.Select(c => c.Id));
+        Console.WriteLine("ContentSeeder: Re-sorted root content with Forside at top");
     }
 
     private IContent CreateFolder(string contentTypeAlias, string name)
