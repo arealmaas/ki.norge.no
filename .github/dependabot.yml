@@ -1,0 +1,50 @@
+version: 2
+updates:
+  # Frontend (Astro/React/Deno-runtime npm deps)
+  - package-ecosystem: "npm"
+    directory: "/apps/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "frontend"
+    groups:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      digdir:
+        patterns:
+          - "@digdir/*"
+          - "@navikt/*"
+
+  # CMS (.NET 10 / Umbraco)
+  - package-ecosystem: "nuget"
+    directory: "/apps/cms-umbraco"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "cms"
+    groups:
+      umbraco:
+        patterns:
+          - "Umbraco.*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "ci"
