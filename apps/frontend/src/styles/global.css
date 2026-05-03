@@ -59,3 +59,92 @@ body {
 }
 
 /* TODO: sok.astro still uses Material Symbols — migrate to Aksel icons when /sok is prioritized */
+
+/* ── External links: visual indicator (issue #145) ──────────────────
+ * Marks links to other domains with a subtle ↗ icon after the link text.
+ * Triggered by: <a> with href starting with http/https AND not pointing to
+ * our own domain. Editor doesn't need to do anything — pure CSS.
+ */
+main a[href^="http://"]:not([href*="ki.norge.no"]):not([href*="greentree-c9e56a64"])::after,
+main a[href^="https://"]:not([href*="ki.norge.no"]):not([href*="greentree-c9e56a64"])::after {
+  content: "↗";
+  display: inline-block;
+  margin-left: 0.2em;
+  font-size: 0.85em;
+  vertical-align: baseline;
+  color: currentColor;
+  opacity: 0.7;
+  text-decoration: none;
+}
+
+/* Don't add the indicator to image-wrapping links */
+main a:has(> img)::after {
+  content: none;
+}
+
+/* ── Reduce motion respect (UU-krav) ──────────────────
+ * For users who set prefers-reduced-motion, disable transitions and animations.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Print stylesheet (også grunnlag for PDF-eksport #143) ──────────────────
+ * Strip backgrounds, hide non-content chrome, dark text on white.
+ */
+@media print {
+  header, footer, nav, .header, .footer,
+  .skip-link, [data-print-hide] {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    color: black !important;
+  }
+
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  a {
+    color: black !important;
+    text-decoration: underline;
+  }
+
+  /* Show external link URL inline so reader can find it on paper */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #555;
+    word-wrap: break-word;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid breaking blocks across pages */
+  .article-fremheving, .article-prosessteg-item, .article-info-box {
+    page-break-inside: avoid;
+  }
+}

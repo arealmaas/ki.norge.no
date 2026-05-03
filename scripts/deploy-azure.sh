@@ -135,6 +135,21 @@ az storage container create \
   --only-show-errors >/dev/null 2>&1 || true
 echo "OK"
 
+# --- Re-set environment storage account key (idempotent, prevents recurring VolumeMountFailure) ---
+# Background: Container Apps env-level storage definitions occasionally lose their account key
+# (Azure quirk seen 2026-04-30). When this happens, the file mount fails with "Permission denied"
+# and the container can't start. Setting the key on every deploy is cheap insurance.
+echo "==> Refreshing env storage account key for media mount"
+az containerapp env storage set \
+  --name "${CONTAINERAPPS_ENV}" \
+  --resource-group "${RESOURCE_GROUP}" \
+  --storage-name umbracomedia \
+  --azure-file-account-name "${STORAGE_ACCOUNT}" \
+  --azure-file-account-key "${STORAGE_KEY}" \
+  --azure-file-share-name umbraco-data \
+  --access-mode ReadWrite >/dev/null 2>&1 || echo "  (storage 'umbracomedia' not yet defined — manual setup required first time)"
+echo "OK"
+
 # --- Build images (remote ACR build) ---
 echo "==> Building CMS image: ${UMBRACO_IMAGE}"
 az acr build \
