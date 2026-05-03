@@ -1,21 +1,31 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
-import { getCaser, getMediaUrl, type Case } from '../../lib/umbraco';
+import { getCaser, getCaserOversikt, getMediaUrl, type Case } from '../../lib/umbraco';
 
 let cases: Case[] = [];
+let oversikt = null;
 try {
-  const res = await getCaser();
-  cases = res.data;
+  const [oversiktData, casesRes] = await Promise.all([
+    getCaserOversikt(),
+    getCaser(),
+  ]);
+  oversikt = oversiktData;
+  cases = casesRes.data;
 } catch (e) {
   console.error('Failed to fetch caser:', e);
 }
+
+const heroTittel = oversikt?.heroTittel || 'Caser';
+const heroIngress = oversikt?.heroIngress || 'Lær av andre offentlige virksomheters erfaringer med kunstig intelligens.';
+const seoTitle = oversikt?.seoTittel || heroTittel;
+const seoDesc = oversikt?.seoBeskrivelse || heroIngress;
 ---
 
-<Layout title="Caser" description="Lær av andre offentlige virksomheters erfaringer med kunstig intelligens.">
+<Layout title={seoTitle} description={seoDesc}>
   <div class="caser-page grid">
     <div class="caser-title-bar col-center-6">
-      <h1 class="caser-title">Caser</h1>
-      <p class="caser-lead">Lær av andre offentlige virksomheters erfaringer med kunstig intelligens.</p>
+      <h1 class="caser-title">{heroTittel}</h1>
+      <p class="caser-lead">{heroIngress}</p>
     </div>
 
     <div class="caser-grid col-center-10">

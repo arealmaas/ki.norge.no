@@ -197,7 +197,12 @@ public class ContentTypeComponent : IAsyncComponent
             // but no new Side can be created. Editors must use specific content types.
             LockSiderContainer();
             CreateContainerIfMissing("eksempler", "Eksempler", "icon-science", "eksempel");
-            CreateContainerIfMissing("caser", "Caser", "icon-science", "case");
+            // Caser is an editable overview page that ALSO holds case content as children.
+            // Not a bare container — has fields for hero/intro on /caser.
+            if (_contentTypeService.Get("caser") == null)
+                CreateCaserOversikt();
+            else
+                MigrateCaserOversikt();
             if (_contentTypeService.Get("veiledninger") == null)
             {
                 var guideType = _contentTypeService.Get("veiledningGuide");
@@ -223,7 +228,9 @@ public class ContentTypeComponent : IAsyncComponent
             MigrateVeiledningerContainer();
             // Migration for veiledningGuide: allow veiledningSteg as child (so steg can nest)
             MigrateVeiledningGuideAllowedChildren();
-            CreateContainerIfMissing("faqSamling", "FAQ", "icon-help-alt", "faq");
+            CreateContainerIfMissing("faqSamling", "Ofte stilte spørsmål", "icon-help-alt", "faq");
+            // Migrate existing faqSamling container display name
+            MigrateFaqSamlingName();
             CreateContainerIfMissing("merkelapper", "Merkelapper", "icon-tags", "merkelapp");
             // Ikonvelger deaktivert — ble ikke bra nok for redaktørene
             // if (_contentTypeService.Get("tilgjengeligIkon") == null)
@@ -1451,7 +1458,7 @@ public class ContentTypeComponent : IAsyncComponent
             Name = "Om Oss",
             Description = "Om Oss-siden",
             Icon = "icon-umb-members",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,  // lives under Sider container
         };
 
         ct.AddPropertyGroup("innhold", "Innhold");
@@ -1750,15 +1757,121 @@ public class ContentTypeComponent : IAsyncComponent
     /// Removes "side" from the sider container's AllowedContentTypes so editors
     /// can't create new Side pages. Existing Side content stays untouched.
     /// </summary>
+    /// <summary>
+    /// Creates the Caser overview content type — editable page that also holds case children.
+    /// Editor clicks "Caser" in tree → sees a form for the overview page heading and lead.
+    /// Frontend /caser/index.astro reads these fields.
+    /// </summary>
+    private IContentType CreateCaserOversikt()
+    {
+        var caseType = _contentTypeService.Get("case");
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "caser",
+            Name = "Caser",
+            Description = "Oversiktsside for caser. Redigerbart hode + case-barn under.",
+            Icon = "icon-science",
+            AllowedAsRoot = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("heroTittel", "Tittel", _textStringDt, mandatory: true, description: "Vises som overskrift på /caser"), "innhold");
+        ct.AddPropertyType(Prop("heroIngress", "Ingress", _textAreaDt, description: "Kort introduksjonstekst under tittelen på /caser"), "innhold");
+
+        ct.AddPropertyGroup("seo", "SEO");
+        ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+        ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+
+        if (caseType != null)
+        {
+            ct.AllowedContentTypes = new[]
+            {
+                new ContentTypeSort(caseType.Key, 0, caseType.Alias)
+            };
+        }
+
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// Migrates existing bare 'caser' container to editable overview page by adding fields.
+    /// Idempotent.
+    /// </summary>
+    private void MigrateCaserOversikt()
+    {
+        var ct = _contentTypeService.Get("caser");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        if (ct.Description != "Oversiktsside for caser. Redigerbart hode + case-barn under.")
+        {
+            ct.Description = "Oversiktsside for caser. Redigerbart hode + case-barn under.";
+            changed = true;
+        }
+
+        if (!ct.PropertyTypeExists("heroTittel"))
+        {
+            if (!ct.PropertyGroups.Any(g => g.Alias == "innhold"))
+                ct.AddPropertyGroup("innhold", "Innhold");
+            ct.AddPropertyType(Prop("heroTittel", "Tittel", _textStringDt, mandatory: false, description: "Vises som overskrift på /caser"), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypeExists("heroIngress"))
+        {
+            ct.AddPropertyType(Prop("heroIngress", "Ingress", _textAreaDt, description: "Kort introduksjonstekst under tittelen på /caser"), "innhold");
+            changed = true;
+        }
+        if (!ct.PropertyTypeExists("seoTittel"))
+        {
+            if (!ct.PropertyGroups.Any(g => g.Alias == "seo"))
+                ct.AddPropertyGroup("seo", "SEO");
+            ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+            ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+            ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _contentTypeService.Save(ct);
+            Console.WriteLine("ContentTypeComposer: Migrated caser to editable overview page");
+        }
+    }
+
+    private void MigrateFaqSamlingName()
+    {
+        var ct = _contentTypeService.Get("faqSamling");
+        if (ct == null) return;
+        if (ct.Name == "Ofte stilte spørsmål") return;
+        ct.Name = "Ofte stilte spørsmål";
+        _contentTypeService.Save(ct);
+        Console.WriteLine("ContentTypeComposer: Renamed faqSamling to 'Ofte stilte spørsmål'");
+    }
+
+    /// <summary>
+    /// Sider container is a catch-all for static single pages.
+    /// Allowed children: omOss only (other simple pages can be added later).
+    /// "side" content type is NOT allowed (deprecated — kept for legacy kontakt).
+    /// </summary>
     private void LockSiderContainer()
     {
         var ct = _contentTypeService.Get("sider");
         if (ct == null) return;
-        if (ct.AllowedContentTypes == null || !ct.AllowedContentTypes.Any()) return;
 
-        ct.AllowedContentTypes = Array.Empty<ContentTypeSort>();
+        var omOssType = _contentTypeService.Get("omOss");
+        var desired = omOssType != null
+            ? new[] { new ContentTypeSort(omOssType.Key, 0, omOssType.Alias) }
+            : Array.Empty<ContentTypeSort>();
+
+        var current = ct.AllowedContentTypes?.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray() ?? Array.Empty<string>();
+        var want = desired.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray();
+        if (current.SequenceEqual(want)) return;
+
+        ct.AllowedContentTypes = desired;
         _contentTypeService.Save(ct);
-        Console.WriteLine("ContentTypeComposer: Locked sider container (no new Side creation)");
+        Console.WriteLine("ContentTypeComposer: Updated sider AllowedContentTypes (omOss allowed)");
     }
 
     private void MigrateVeiledningerContainer()

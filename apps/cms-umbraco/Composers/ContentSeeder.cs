@@ -141,10 +141,165 @@ public class ContentSeeder : IAsyncComponent
         ForceForsideToTop();
         RemoveIkonerContent();
         RenameVeiledningerToVeiledning();
+        RenameFaqContainerNode();
+        MoveOmOssIntoSider();
+        ClearFaqKategoriReferences();
         MoveVeiledningOversiktUnderVeiledning();
         NestVeiledningStegUnderGuide();
         RemoveDuplicateSandkasseUnderSider();
         FlattenOmOssSeksjonerToBlocks();
+        MigrateEksempelToCase();
+    }
+
+    private void RenameFaqContainerNode()
+    {
+        var faq = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "faqSamling");
+        if (faq == null) return;
+        if (faq.Name == "Ofte stilte spørsmål") return;
+        faq.Name = "Ofte stilte spørsmål";
+        _contentService.Save(faq);
+        Console.WriteLine("ContentSeeder: Renamed FAQ folder to 'Ofte stilte spørsmål'");
+    }
+
+    /// <summary>
+    /// Migrates each existing eksempel content node to a new case node under Caser folder.
+    /// Maps fields: tittel/slug direct, beskrivelse → ingress (plain text) + first Brødtekst
+    /// block, resultater → second Brødtekst block, organisasjon → InnholdFra block at end,
+    /// bilde → artikkelBilde, seo* direct.
+    /// After migrating all, deletes the original Eksempler container content node and its children.
+    /// Idempotent: skips eksempel content where a case with the same slug already exists under Caser.
+    /// </summary>
+    private void MigrateEksempelToCase()
+    {
+        var eksemplerContainer = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "eksempler");
+        if (eksemplerContainer == null) return;
+
+        var caserContainer = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "caser");
+        if (caserContainer == null) return;
+
+        var caseType = _contentTypeService.Get("case");
+        var brodtekstType = _contentTypeService.Get("artikkelTekst");
+        var innholdFraType = _contentTypeService.Get("artikkelInnholdFra");
+        if (caseType == null || brodtekstType == null) return;
+
+        var existingCaseSlugs = _contentService.GetPagedChildren(caserContainer.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "case")
+            .Select(c => c.GetValue<string>("slug") ?? "")
+            .ToHashSet();
+
+        var eksempler = _contentService.GetPagedChildren(eksemplerContainer.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "eksempel")
+            .ToList();
+
+        int migrated = 0;
+        foreach (var eks in eksempler)
+        {
+            var slug = eks.GetValue<string>("slug") ?? "";
+            if (string.IsNullOrEmpty(slug) || existingCaseSlugs.Contains(slug)) continue;
+
+            var nytt = _contentService.Create(eks.Name ?? "Case", caserContainer.Id, "case");
+            nytt.SetValue("tittel", eks.GetValue<string>("tittel") ?? eks.Name ?? "");
+            nytt.SetValue("slug", slug);
+
+            var beskrivelse = eks.GetValue<string>("beskrivelse") ?? "";
+            var resultater = eks.GetValue<string>("resultater") ?? "";
+
+            // Ingress: first 200 chars of beskrivelse plain text
+            var ingressText = StripHtml(beskrivelse);
+            if (ingressText.Length > 250) ingressText = ingressText.Substring(0, 247) + "...";
+            nytt.SetValue("ingress", ingressText);
+            nytt.SetValue("bakgrunn", "hvit");
+
+            // artikkelBilde: copy bilde value (MediaPicker)
+            var bilde = eks.GetValue("bilde");
+            if (bilde != null) nytt.SetValue("artikkelBilde", bilde);
+
+            // Body Block List: Brødtekst(beskrivelse), Brødtekst(resultater), optional InnholdFra
+            var blocks = new List<(string, Dictionary<string, object>)>();
+            if (!string.IsNullOrWhiteSpace(beskrivelse))
+                blocks.Add(("artikkelTekst", new Dictionary<string, object> { ["innhold"] = beskrivelse }));
+            if (!string.IsNullOrWhiteSpace(resultater))
+                blocks.Add(("artikkelTekst", new Dictionary<string, object> { ["innhold"] = $"<h2>Resultater</h2>{resultater}" }));
+            var organisasjon = eks.GetValue<string>("organisasjon");
+            if (!string.IsNullOrWhiteSpace(organisasjon) && innholdFraType != null)
+                blocks.Add(("artikkelInnholdFra", new Dictionary<string, object> { ["virksomhet"] = organisasjon }));
+
+            if (blocks.Count > 0)
+                nytt.SetValue("innhold", BuildArticleBlockList(blocks.ToArray()));
+
+            // SEO direct copy
+            nytt.SetValue("seoTittel", eks.GetValue<string>("seoTittel") ?? "");
+            nytt.SetValue("seoBeskrivelse", eks.GetValue<string>("seoBeskrivelse") ?? "");
+            var seoBilde = eks.GetValue("seoBilde");
+            if (seoBilde != null) nytt.SetValue("seoBilde", seoBilde);
+
+            _contentService.Save(nytt);
+            _contentService.Publish(nytt, new[] { "*" });
+            migrated++;
+        }
+
+        // Delete the entire Eksempler container (cascades to children)
+        if (migrated > 0 || eksempler.Count > 0)
+        {
+            _contentService.Delete(eksemplerContainer);
+            Console.WriteLine($"ContentSeeder: Migrated {migrated} eksempel(s) to case under Caser, deleted Eksempler container");
+        }
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return "";
+        return System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", " ")
+            .Replace("&nbsp;", " ")
+            .Trim();
+    }
+
+    /// <summary>
+    /// Clears the kategori field on all FAQ items. The kategori field is a content
+    /// picker pointing at merkelapper, which blocks editor from deleting merkelapper
+    /// (Umbraco enforces referential integrity). After clearing, merkelapper can be
+    /// freely deleted. Kategori was a demo-only field anyway.
+    /// </summary>
+    private void ClearFaqKategoriReferences()
+    {
+        var faqContainer = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "faqSamling");
+        if (faqContainer == null) return;
+
+        var faqs = _contentService.GetPagedChildren(faqContainer.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "faq")
+            .ToList();
+
+        int cleared = 0;
+        foreach (var faq in faqs)
+        {
+            var current = faq.GetValue<string>("kategori");
+            if (string.IsNullOrEmpty(current)) continue;
+            faq.SetValue("kategori", "");
+            _contentService.Save(faq);
+            cleared++;
+        }
+        if (cleared > 0)
+            Console.WriteLine($"ContentSeeder: Cleared kategori on {cleared} FAQ items (now safe to delete merkelapper)");
+    }
+
+    /// <summary>
+    /// Moves the standalone "Om Oss" content node from root into the Sider container.
+    /// </summary>
+    private void MoveOmOssIntoSider()
+    {
+        var omOss = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "omOss");
+        if (omOss == null) return;
+
+        var sider = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "sider");
+        if (sider == null) return;
+
+        if (omOss.ParentId == sider.Id) return;
+
+        _contentService.Move(omOss, sider.Id);
+        Console.WriteLine("ContentSeeder: Moved Om Oss into Sider container");
     }
 
     /// <summary>

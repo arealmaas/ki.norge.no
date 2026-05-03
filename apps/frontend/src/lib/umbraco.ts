@@ -621,6 +621,16 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
   };
 
   switch (contentType) {
+    case 'caser':
+      return {
+        ...base,
+        heroTittel: props.heroTittel as string || '',
+        heroIngress: props.heroIngress as string || '',
+        seoTittel: props.seoTittel as string || '',
+        seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
+      } as T;
+
     case 'artikkel':
     case 'case':
       // Case has identical shape to Artikkel (mirror content type)
@@ -1209,6 +1219,24 @@ export async function getSide(slug: string, options: FetchOptions = {}) {
 export interface Case extends Artikkel {
   // Same shape as Artikkel for now (mirror content type).
   // Add case-specific fields here when they diverge.
+}
+
+export interface CaserOversikt {
+  id: string;
+  documentId: string;
+  heroTittel?: string;
+  heroIngress?: string;
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
+export async function getCaserOversikt(options: FetchOptions = {}): Promise<CaserOversikt | null> {
+  const result = await fetchCollection<CaserOversikt>('caser', { ...options, take: 1 });
+  return result.data[0] || null;
 }
 
 export async function getCaser(options: FetchOptions = {}) {
