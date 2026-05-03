@@ -2,7 +2,7 @@
 import Layout from '../../components/layout/Layout.astro';
 
 import { getCase, getCaser, getPlainText, getMediaUrl, type Case } from '../../lib/umbraco';
-import { articleSchema } from '../../lib/seo';
+import { caseSchema, breadcrumbSchema } from '../../lib/seo';
 
 const { slug } = Astro.params;
 const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
@@ -20,13 +20,19 @@ const seoDesc = article.seoBeskrivelse || article.ingress || getPlainText(articl
 const heroImage = article.artikkelBilde || article.seoBilde;
 const seoImage = article.seoBilde?.url || article.artikkelBilde?.url;
 
-const articleJsonLd = articleSchema({
+const articleJsonLd = caseSchema({
   headline: seoTitle,
   description: seoDesc,
   slug: slug!,
   datePublished: article.publishedAt,
   dateModified: article.updatedAt || article.publishedAt,
 });
+
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: 'Forside', url: '/' },
+  { name: 'Caser', url: '/caser' },
+  { name: article.tittel, url: `/caser/${slug}` },
+]);
 
 // Fetch other cases for "Flere caser" section
 const allCasesRes = await getCaser({ take: 10 });
@@ -38,6 +44,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd).replace(/</g, '\\u003c')} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
   <div class="article-page grid">
     <!-- Artikkelhode: title + ingress + image, optionally on full-bleed colored background -->
     <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : (heroImage ? 'col-center-10' : 'col-center-6')}`}>

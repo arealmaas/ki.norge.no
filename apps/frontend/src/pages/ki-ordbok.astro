@@ -1,6 +1,7 @@
 ---
 import Layout from '../components/layout/Layout.astro';
 import { getOrdbokOppslag } from '../lib/umbraco';
+import { definedTermSetSchema } from '../lib/seo';
 
 interface OrdEntry {
   term: string;
@@ -269,12 +270,17 @@ if (currentGroup.entries.length > 0) {
 const currentPage = parseInt(Astro.url.searchParams.get('side') || '0');
 const activePage = Math.max(0, Math.min(currentPage, allGroups.length - 1));
 const activeGroup = allGroups[activePage];
+
+const ordbokJsonLd = definedTermSetSchema(
+  ordliste.map((e) => ({ term: e.term, definition: e.definisjon, alternativTerm: e.altTerm })),
+);
 ---
 
 <Layout
   title="KI Ordboka"
   description="KI ordboken forklarer vanlige begreper innen kunstig intelligens. Søk etter et ord eller bla deg gjennom listen."
 >
+  <script type="application/ld+json" set:html={JSON.stringify(ordbokJsonLd).replace(/</g, '\\u003c')} />
   <div class="ordbok-page">
     <div class="ordbok-header">
       <h1 class="ordbok-title">KI Ordboka</h1>
