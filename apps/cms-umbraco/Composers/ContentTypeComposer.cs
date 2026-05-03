@@ -187,6 +187,9 @@ public class ContentTypeComponent : IAsyncComponent
             // Create container types if missing
             CreateContainerIfMissing("artikler", "Artikler", "icon-newspaper-alt", "artikkel");
             CreateContainerIfMissing("sider", "Sider", "icon-document", "side");
+            // Lock sider container: existing Side children (kontakt, om-oss) stay,
+            // but no new Side can be created. Editors must use specific content types.
+            LockSiderContainer();
             CreateContainerIfMissing("eksempler", "Eksempler", "icon-science", "eksempel");
             CreateContainerIfMissing("caser", "Caser", "icon-science", "case");
             if (_contentTypeService.Get("veiledninger") == null)
@@ -1657,6 +1660,21 @@ public class ContentTypeComponent : IAsyncComponent
 
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    /// <summary>
+    /// Removes "side" from the sider container's AllowedContentTypes so editors
+    /// can't create new Side pages. Existing Side content stays untouched.
+    /// </summary>
+    private void LockSiderContainer()
+    {
+        var ct = _contentTypeService.Get("sider");
+        if (ct == null) return;
+        if (ct.AllowedContentTypes == null || !ct.AllowedContentTypes.Any()) return;
+
+        ct.AllowedContentTypes = Array.Empty<ContentTypeSort>();
+        _contentTypeService.Save(ct);
+        Console.WriteLine("ContentTypeComposer: Locked sider container (no new Side creation)");
     }
 
     private void MigrateVeiledningerContainer()
