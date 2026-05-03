@@ -1,14 +1,25 @@
 import type { APIRoute } from 'astro';
 
-/**
- * Liveness probe — process is alive, no upstream check.
- * Used by Container Apps to detect if the app needs to be restarted.
- * Always returns 200 unless the Astro runtime itself is dead (in which case
- * the request never reaches here).
- */
+const startTime = Date.now();
+
+const buildSha =
+  import.meta.env.BUILD_SHA ||
+  import.meta.env.GITHUB_SHA ||
+  'unknown';
+
+const buildDate =
+  import.meta.env.BUILD_DATE ||
+  'unknown';
+
 export const GET: APIRoute = async () => {
+  const uptimeSec = Math.floor((Date.now() - startTime) / 1000);
   return new Response(
-    JSON.stringify({ status: 'ok', ts: new Date().toISOString() }),
+    JSON.stringify({
+      status: 'ok',
+      ts: new Date().toISOString(),
+      uptimeSec,
+      build: { sha: buildSha, date: buildDate },
+    }),
     {
       status: 200,
       headers: {
