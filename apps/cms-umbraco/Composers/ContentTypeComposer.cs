@@ -1860,20 +1860,52 @@ public class ContentTypeComponent : IAsyncComponent
     }
 
     /// <summary>
-    /// Sider container is a catch-all for static single pages.
-    /// Allowed children: omOss, sandkasse, side (the legacy "kontakt" type).
-    /// Editor can move any of these into Sider via UI.
+    /// Sider is a catch-all FOLDER for static pages — purely organizational, no rendering of its own.
+    /// Allows ALL existing content types as children EXCEPT:
+    ///   - "side" (legacy generic page type — no new ones should be created; existing kontakt stays)
+    ///   - "merkelapp" (lives in its own Merkelapper container)
+    ///   - "case", "artikkel", "ordbokOppslag", "veiledningGuide", "veiledningSteg", "faq" (children
+    ///     of their own containers)
+    ///   - "forside" (always lives at root, top of tree)
+    ///   - container types themselves
+    /// Result: editor can drag Om Oss, Sandkasse, KI-ordbok (the page) into Sider freely.
+    /// New "side" content can never be created.
     /// </summary>
     private void LockSiderContainer()
     {
         var ct = _contentTypeService.Get("sider");
         if (ct == null) return;
 
-        var aliasesToAllow = new[] { "omOss", "sandkasse", "side", "ordbokSamling" };
-        var allowed = aliasesToAllow
-            .Select(a => _contentTypeService.Get(a))
-            .Where(t => t != null)
-            .Select((t, i) => new ContentTypeSort(t!.Key, i, t.Alias))
+        // Excluded: types that should not live under Sider
+        var excluded = new HashSet<string>
+        {
+            "side",            // legacy — no new generic Side pages
+            "merkelapp",       // tag, not a page
+            "case",            // child of caser
+            "artikkel",        // child of artikler
+            "eksempel",        // legacy
+            "ordbokOppslag",   // child of ordbokSamling
+            "veiledningGuide", // child of veiledninger
+            "veiledningSteg",  // child of veiledningGuide
+            "faq",             // child of faqSamling
+            "forside",         // always at root
+            // Containers themselves (sider can't contain other containers)
+            "sider", "artikler", "caser", "eksempler", "veiledninger",
+            "faqSamling", "merkelapper", "ordbokSamling", "tilgjengeligeIkoner",
+            // Block list element types
+            "artikkelTekst", "artikkelInfoBoks", "artikkelHero", "artikkelBildeSeksjon",
+            "artikkelTrekkspill", "artikkelSitat", "artikkelCallout", "artikkelFremheving",
+            "artikkelProsessteg", "artikkelProsessStegItem", "artikkelByline",
+            "artikkelInnholdFra", "artikkelKontaktkort", "omOssBlokk", "omOssSeksjon",
+            "accordionSection", "tipItem", "eventItem", "sandkasseSteg", "sandkasseFaq",
+            "veiledningKort", "verktoyKort", "tilgjengeligIkon"
+        };
+
+        // Collect every non-excluded, non-element content type
+        var allTypes = _contentTypeService.GetAll().ToList();
+        var allowed = allTypes
+            .Where(t => !t.IsElement && !excluded.Contains(t.Alias))
+            .Select((t, i) => new ContentTypeSort(t.Key, i, t.Alias))
             .ToArray();
 
         var current = ct.AllowedContentTypes?.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray() ?? Array.Empty<string>();
@@ -1882,7 +1914,7 @@ public class ContentTypeComponent : IAsyncComponent
 
         ct.AllowedContentTypes = allowed;
         _contentTypeService.Save(ct);
-        Console.WriteLine($"ContentTypeComposer: Updated sider AllowedContentTypes ({string.Join(", ", want)})");
+        Console.WriteLine($"ContentTypeComposer: Updated sider AllowedContentTypes — catch-all ({allowed.Length} types: {string.Join(", ", want)})");
     }
 
     private void MigrateVeiledningerContainer()
