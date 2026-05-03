@@ -61,7 +61,12 @@ public class ContentSeeder : IAsyncComponent
     {
         if (_runtimeState.Level < RuntimeLevel.Run) return Task.CompletedTask;
 
-        // Skip ALL seeding (including migrations) when LAUNCH_MODE=production.
+        // Structure migrations always run (idempotent fixes for content tree organization).
+        // These don't create new content — they reorganize, sort, or remove existing items.
+        try { RunStructureMigrations(); }
+        catch (Exception ex) { Console.WriteLine($"ContentSeeder RunStructureMigrations: {ex.Message}"); }
+
+        // Skip ALL seeding when LAUNCH_MODE=production.
         // Prevents seeder from re-creating content that editors deleted on prod.
         // For fresh installs / local dev, leave LAUNCH_MODE unset.
         var launchMode = Environment.GetEnvironmentVariable("LAUNCH_MODE")?.ToLowerInvariant();
@@ -126,6 +131,27 @@ public class ContentSeeder : IAsyncComponent
     }
 
     public Task TerminateAsync(bool isRestarting, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    // ── Structure migrations (idempotent, run on every startup including LAUNCH_MODE=production) ──
+
+    private void RunStructureMigrations()
+    {
+        ForceForsideToTop();
+    }
+
+    /// <summary>
+    /// Forces Forside to sortOrder = 0 so it always appears at the top of the root content tree.
+    /// </summary>
+    private void ForceForsideToTop()
+    {
+        var forside = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "forside");
+        if (forside == null) return;
+        if (forside.SortOrder == 0) return;
+
+        forside.SortOrder = 0;
+        _contentService.Save(forside);
+        Console.WriteLine("ContentSeeder: Forced Forside to sortOrder 0");
+    }
 
     private IContent CreateFolder(string contentTypeAlias, string name)
     {
