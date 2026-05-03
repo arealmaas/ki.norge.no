@@ -47,6 +47,15 @@ See `CLAUDE.md` for fuller context on architecture, content types, and key decis
 - Minimal colon usage
 - See `~/.claude/skills/STYLE.md` for the full guide
 
+## Browser support
+
+We target the last two stable major versions of Chrome, Firefox, Safari, and
+Edge. Mobile Safari and Chrome on iOS/Android (last two majors) are also in
+scope. We don't support IE, legacy Edge, or Opera Mini.
+
+If a feature requires polyfills for these targets, document the trade-off in
+the PR.
+
 ## Deployment
 
 Manual via `bash scripts/deploy-azure.sh`. Requires Azure PIM activation first

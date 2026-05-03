@@ -1,0 +1,11 @@
+# CODEOWNERS — auto-assign reviewers for PRs.
+# Last matching pattern wins. Owners are auto-requested on PR open.
+# Until a team is set up, all default to @larsekhansen.
+
+*                                  @larsekhansen
+
+# Specific directories
+/apps/frontend/                    @larsekhansen
+/apps/cms-umbraco/                 @larsekhansen
+/scripts/                          @larsekhansen
+/.github/                          @larsekhansen
