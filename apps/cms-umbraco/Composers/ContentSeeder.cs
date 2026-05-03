@@ -140,6 +140,29 @@ public class ContentSeeder : IAsyncComponent
         RenameVeiledningerToVeiledning();
         MoveVeiledningOversiktUnderVeiledning();
         NestVeiledningStegUnderGuide();
+        RemoveDuplicateSandkasseUnderSider();
+    }
+
+    /// <summary>
+    /// Removes any "sandkasse" content node nested under the sider container.
+    /// The top-level sandkasse stays. Idempotent.
+    /// </summary>
+    private void RemoveDuplicateSandkasseUnderSider()
+    {
+        var siderFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "sider");
+        if (siderFolder == null) return;
+
+        var children = _contentService.GetPagedChildren(siderFolder.Id, 0, int.MaxValue, out _);
+        var sandkasseDuplicates = children
+            .Where(c => c.ContentType.Alias == "sandkasse" || (c.ContentType.Alias == "side" && (c.Name?.ToLowerInvariant().Contains("sandkasse") ?? false)))
+            .ToList();
+
+        foreach (var dup in sandkasseDuplicates)
+        {
+            _contentService.Delete(dup);
+            Console.WriteLine($"ContentSeeder: Removed duplicate '{dup.Name}' under Sider");
+        }
     }
 
     /// <summary>
