@@ -147,6 +147,8 @@ public class ContentTypeComponent : IAsyncComponent
 
             if (_contentTypeService.Get("merkelapp") == null)
                 CreateMerkelapp();
+            else
+                MigrateMerkelapp();
             if (_contentTypeService.Get("artikkel") == null)
                 CreateArtikkel();
             MigrateArtikkelType();
@@ -1069,16 +1071,47 @@ public class ContentTypeComponent : IAsyncComponent
         {
             Alias = "merkelapp",
             Name = "Merkelapp",
-            Description = "Merkelapp/tag for kategorisering",
+            Description = "Tag for kategorisering. Bare metadata — vises ikke som egen side.",
             Icon = "icon-tag",
             AllowedAsRoot = false,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         ct.AddPropertyType(Prop("navn", "Navn", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _textAreaDt), "innhold");
+        // Slug lives in a hidden "Teknisk" group so editors don't have to think about it.
+        // Used for stable filter URLs (eks /artikler?tag=helse).
+        ct.AddPropertyGroup("teknisk", "Teknisk (ikke endre)");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, description: "Auto-generert fra navn ved lagring. Ikke endre uten god grunn — endring her bryter eksisterende lenker."), "teknisk");
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateMerkelapp()
+    {
+        var ct = _contentTypeService.Get("merkelapp");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        var slugProp = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "slug");
+        if (slugProp != null && slugProp.Mandatory)
+        {
+            slugProp.Mandatory = false;
+            slugProp.Description = "Auto-generert fra navn ved lagring. Ikke endre uten god grunn — endring her bryter eksisterende lenker.";
+            changed = true;
+        }
+
+        if (ct.Description != "Tag for kategorisering. Bare metadata — vises ikke som egen side.")
+        {
+            ct.Description = "Tag for kategorisering. Bare metadata — vises ikke som egen side.";
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _contentTypeService.Save(ct);
+            Console.WriteLine("ContentTypeComposer: Migrated Merkelapp (slug optional + description)");
+        }
     }
 
     private IContentType CreateArtikkel()
