@@ -1861,26 +1861,28 @@ public class ContentTypeComponent : IAsyncComponent
 
     /// <summary>
     /// Sider container is a catch-all for static single pages.
-    /// Allowed children: omOss only (other simple pages can be added later).
-    /// "side" content type is NOT allowed (deprecated — kept for legacy kontakt).
+    /// Allowed children: omOss, sandkasse, side (the legacy "kontakt" type).
+    /// Editor can move any of these into Sider via UI.
     /// </summary>
     private void LockSiderContainer()
     {
         var ct = _contentTypeService.Get("sider");
         if (ct == null) return;
 
-        var omOssType = _contentTypeService.Get("omOss");
-        var desired = omOssType != null
-            ? new[] { new ContentTypeSort(omOssType.Key, 0, omOssType.Alias) }
-            : Array.Empty<ContentTypeSort>();
+        var aliasesToAllow = new[] { "omOss", "sandkasse", "side", "ordbokSamling" };
+        var allowed = aliasesToAllow
+            .Select(a => _contentTypeService.Get(a))
+            .Where(t => t != null)
+            .Select((t, i) => new ContentTypeSort(t!.Key, i, t.Alias))
+            .ToArray();
 
         var current = ct.AllowedContentTypes?.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray() ?? Array.Empty<string>();
-        var want = desired.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray();
+        var want = allowed.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray();
         if (current.SequenceEqual(want)) return;
 
-        ct.AllowedContentTypes = desired;
+        ct.AllowedContentTypes = allowed;
         _contentTypeService.Save(ct);
-        Console.WriteLine("ContentTypeComposer: Updated sider AllowedContentTypes (omOss allowed)");
+        Console.WriteLine($"ContentTypeComposer: Updated sider AllowedContentTypes ({string.Join(", ", want)})");
     }
 
     private void MigrateVeiledningerContainer()

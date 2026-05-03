@@ -1246,7 +1246,7 @@ export async function getCaser(options: FetchOptions = {}) {
   return fetchCollection<Case>('case', {
     skip: 0,
     take: 50,
-    sort: ['publishedAt:desc'],
+    sort: 'updateDate:desc',
     ...options,
   });
 }
