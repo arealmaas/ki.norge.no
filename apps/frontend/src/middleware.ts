@@ -96,6 +96,45 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const response = await next();
 
+  // ── Security headers (apply to all responses) ──
+  // Defends against clickjacking, MIME sniffing, leaking referrer to other origins,
+  // and protocol downgrade. CSP is intentionally loose for now (allows inline styles
+  // because Astro inlines critical CSS, and Google Fonts is allowed); tighten later.
+  if (!response.headers.has('X-Frame-Options')) {
+    response.headers.set('X-Frame-Options', 'DENY');
+  }
+  if (!response.headers.has('X-Content-Type-Options')) {
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+  }
+  if (!response.headers.has('Referrer-Policy')) {
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  }
+  if (!response.headers.has('Permissions-Policy')) {
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=()');
+  }
+  if (!response.headers.has('Strict-Transport-Security')) {
+    // 1 year, include subdomains, preload-eligible. Container Apps already terminates TLS.
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  if (!response.headers.has('Content-Security-Policy')) {
+    // Loose CSP — allows inline styles (Astro), Google Fonts, and same-origin scripts.
+    // Tighten by removing 'unsafe-inline' from style-src once Astro can be configured to nonce.
+    response.headers.set(
+      'Content-Security-Policy',
+      [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com data:",
+        "img-src 'self' data: https://ki-norge-cms.greentree-c9e56a64.norwayeast.azurecontainerapps.io https://cms.ki.norge.no",
+        "connect-src 'self' https://ki-norge-cms.greentree-c9e56a64.norwayeast.azurecontainerapps.io https://cms.ki.norge.no",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ].join('; '),
+    );
+  }
+
   // Don't cache preview, API, or admin routes
   if (isPreview || isApiRoute || isAdminRoute) {
     response.headers.set('Cache-Control', 'private, no-store');

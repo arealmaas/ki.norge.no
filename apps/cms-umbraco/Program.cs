@@ -61,6 +61,26 @@ WebApplication app = builder.Build();
 
 await app.BootUmbracoAsync();
 
+// ── Health endpoints (before Umbraco middleware so they always respond) ──
+// /api/health: liveness — process is alive, no DB check. Used for fast probes.
+// /api/health/ready: readiness — DB reachable, Umbraco initialized. Used for traffic decisions.
+app.MapGet("/api/health", () => Results.Ok(new { status = "ok", ts = DateTime.UtcNow }));
+
+app.MapGet("/api/health/ready", (Umbraco.Cms.Core.Services.IContentTypeService cts) =>
+{
+    try
+    {
+        // Read a known content type — proves DB connection + Umbraco initialized
+        var artikkel = cts.Get("artikkel");
+        if (artikkel == null) return Results.Json(new { status = "not_ready", reason = "artikkel content type missing" }, statusCode: 503);
+        return Results.Ok(new { status = "ready", ts = DateTime.UtcNow });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "not_ready", reason = ex.Message }, statusCode: 503);
+    }
+});
+
 // Diagnostic endpoint — check composer state (before Umbraco middleware)
 app.MapGet("/api/diagnostics", (Umbraco.Cms.Core.Services.IContentTypeService cts,
     Umbraco.Cms.Core.Services.IDataTypeService dts) =>

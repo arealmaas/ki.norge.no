@@ -246,6 +246,21 @@ properties:
       resources:
         cpu: 0.5
         memory: 1Gi
+      probes:
+      - type: liveness
+        httpGet:
+          path: /api/health
+          port: 8080
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        failureThreshold: 5
+      - type: readiness
+        httpGet:
+          path: /api/health/ready
+          port: 8080
+        initialDelaySeconds: 90
+        periodSeconds: 30
+        failureThreshold: 5
     volumes:
     - name: umbracomedia
       storageName: umbracomedia
