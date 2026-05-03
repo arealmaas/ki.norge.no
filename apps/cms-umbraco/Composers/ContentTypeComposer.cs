@@ -1534,31 +1534,31 @@ public class ContentTypeComponent : IAsyncComponent
 
         // Tab: Hero
         ct.AddPropertyGroup("hero", "Hero");
-        ct.AddPropertyType(Prop("heroTittel", "Hero-tittel", _textStringDt), "hero");
-        ct.AddPropertyType(Prop("heroTekst", "Hero-tekst", _richTextDt), "hero");
-        ct.AddPropertyType(Prop("nedtelling", "Nedtelling", _textStringDt), "hero");
+        ct.AddPropertyType(Prop("heroTittel", "Tittel", _textStringDt, description: "Hovedoverskriften øverst på sandkasse-siden"), "hero");
+        ct.AddPropertyType(Prop("heroTekst", "Ingress", _richTextDt, description: "Kort introduksjon under tittelen. Forklarer kort hva sandkassen er."), "hero");
+        ct.AddPropertyType(Prop("nedtelling", "Nedtelling", _textStringDt, description: "Valgfri tekst som viser nedtelling til neste søknadsfrist (eks 'Frist 15. juni')"), "hero");
 
         // Tab: Hvem
         ct.AddPropertyGroup("hvem", "Hvem");
-        ct.AddPropertyType(Prop("hvemTittel", "Hvem-tittel", _textStringDt), "hvem");
-        ct.AddPropertyType(Prop("hvemTekst", "Hvem-tekst", _richTextDt), "hvem");
-        ct.AddPropertyType(Prop("hvemBilde", "Hvem-bilde", _mediaPickerDt), "hvem");
+        ct.AddPropertyType(Prop("hvemTittel", "Tittel", _textStringDt, description: "Overskrift for 'Hvem kan søke'-seksjonen"), "hvem");
+        ct.AddPropertyType(Prop("hvemTekst", "Tekst", _richTextDt, description: "Forklarer hvem som kan søke om plass i sandkassen"), "hvem");
+        ct.AddPropertyType(Prop("hvemBilde", "Bilde", _mediaPickerDt, description: "Illustrasjon ved siden av teksten"), "hvem");
 
         // Tab: Prosess
         ct.AddPropertyGroup("prosess", "Prosess");
-        ct.AddPropertyType(Prop("prosessTittel", "Prosess-tittel", _textStringDt), "prosess");
-        ct.AddPropertyType(Prop("prosessSteg", "Prosess-steg", _blockListSandkasseStegDt), "prosess");
+        ct.AddPropertyType(Prop("prosessTittel", "Tittel", _textStringDt, description: "Overskrift for 'Slik foregår det'-seksjonen"), "prosess");
+        ct.AddPropertyType(Prop("prosessSteg", "Steg", _blockListSandkasseStegDt, description: "Legg til ett steg av gangen. Nummereres automatisk."), "prosess");
 
         // Tab: Resultat
         ct.AddPropertyGroup("resultat", "Resultat");
-        ct.AddPropertyType(Prop("resultatTittel", "Resultat-tittel", _textStringDt), "resultat");
-        ct.AddPropertyType(Prop("resultatTekst", "Resultat-tekst", _richTextDt), "resultat");
-        ct.AddPropertyType(Prop("resultatBilde", "Resultat-bilde", _mediaPickerDt), "resultat");
+        ct.AddPropertyType(Prop("resultatTittel", "Tittel", _textStringDt, description: "Overskrift for 'Hva sitter du igjen med'-seksjonen"), "resultat");
+        ct.AddPropertyType(Prop("resultatTekst", "Tekst", _richTextDt, description: "Forklarer hva deltagerne får ut av sandkassen"), "resultat");
+        ct.AddPropertyType(Prop("resultatBilde", "Bilde", _mediaPickerDt, description: "Illustrasjon ved siden av teksten"), "resultat");
 
         // Tab: FAQ
         ct.AddPropertyGroup("faq", "FAQ");
-        ct.AddPropertyType(Prop("faqTittel", "FAQ-tittel", _textStringDt), "faq");
-        ct.AddPropertyType(Prop("faqSeksjoner", "FAQ-seksjoner", _blockListSandkasseFaqDt), "faq");
+        ct.AddPropertyType(Prop("faqTittel", "Tittel", _textStringDt, description: "Overskrift for FAQ-seksjonen"), "faq");
+        ct.AddPropertyType(Prop("faqSeksjoner", "Spørsmål", _blockListSandkasseFaqDt, description: "Legg til spørsmål og svar. Vises som trekkspill."), "faq");
 
         // Tab: SEO
         ct.AddPropertyGroup("seo", "SEO");
