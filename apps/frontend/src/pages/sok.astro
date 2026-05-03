@@ -8,22 +8,26 @@ const query = Astro.url.searchParams.get('q')?.trim() || '';
 // Content type labels and route prefixes
 const typeLabels: Record<string, string> = {
   artikkel: 'Artikkel',
-  eksempel: 'Eksempel',
+  case: 'Case',
+  eksempel: 'Case', // legacy fallback for any pre-migration content
   veiledning: 'Veiledning',
   veiledningGuide: 'Veiledning',
   veiledningSteg: 'Veiledning',
   side: 'Side',
-  faq: 'FAQ',
+  faq: 'Ofte stilte spørsmål',
+  ordbokOppslag: 'Ordboka',
 };
 
 const typeRoutes: Record<string, string> = {
   artikkel: '/artikler/',
-  eksempel: '/eksempler/',
+  case: '/caser/',
+  eksempel: '/caser/', // legacy fallback
   veiledning: '/veiledning/',
   veiledningGuide: '/veiledning/',
   veiledningSteg: '/veiledning/',
   side: '/',
   faq: '/faq',
+  ordbokOppslag: '/ki-ordbok#',
 };
 
 let results: SearchResult[] = [];
@@ -107,7 +111,7 @@ function formatDate(dateStr: string): string {
           <Paragraph size="small">Forslag:</Paragraph>
           <div class="suggestion-links">
             <Link href="/veiledning">Utforsk veiledninger</Link>
-            <Link href="/eksempler">Se eksempler</Link>
+            <Link href="/caser">Se caser</Link>
             <Link href="/artikler">Les artikler</Link>
           </div>
         </div>
