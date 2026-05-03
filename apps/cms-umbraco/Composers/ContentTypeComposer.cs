@@ -192,24 +192,28 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("veiledninger") == null)
             {
                 var guideType = _contentTypeService.Get("veiledningGuide");
-                var stegType = _contentTypeService.Get("veiledningSteg");
-                if (guideType != null && stegType != null)
+                var oversiktType = _contentTypeService.Get("veiledningOversikt");
+                if (guideType != null && oversiktType != null)
                 {
                     var ct = new ContentType(_shortStringHelper, -1)
                     {
                         Alias = "veiledninger",
-                        Name = "Veiledninger",
+                        Name = "Veiledning",
                         Icon = "icon-book-alt",
                         AllowedAsRoot = true,
                     };
                     ct.AllowedContentTypes = new[]
                     {
-                        new ContentTypeSort(guideType.Key, 0, guideType.Alias),
-                        new ContentTypeSort(stegType.Key, 1, stegType.Alias)
+                        new ContentTypeSort(oversiktType.Key, 0, oversiktType.Alias),
+                        new ContentTypeSort(guideType.Key, 1, guideType.Alias)
                     };
                     _contentTypeService.Save(ct);
                 }
             }
+            // Migration for existing veiledninger container: update name + allowed children
+            MigrateVeiledningerContainer();
+            // Migration for veiledningGuide: allow veiledningSteg as child (so steg can nest)
+            MigrateVeiledningGuideAllowedChildren();
             CreateContainerIfMissing("faqSamling", "FAQ", "icon-help-alt", "faq");
             CreateContainerIfMissing("merkelapper", "Merkelapper", "icon-tags", "merkelapp");
             // Ikonvelger deaktivert — ble ikke bra nok for redaktørene
@@ -1653,6 +1657,62 @@ public class ContentTypeComponent : IAsyncComponent
 
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    private void MigrateVeiledningerContainer()
+    {
+        var ct = _contentTypeService.Get("veiledninger");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        // Rename type display name (singular)
+        if (ct.Name != "Veiledning")
+        {
+            ct.Name = "Veiledning";
+            changed = true;
+        }
+
+        // Update allowed children: oversikt + guide (steg goes under guide, not in container)
+        var oversiktType = _contentTypeService.Get("veiledningOversikt");
+        var guideType = _contentTypeService.Get("veiledningGuide");
+        if (oversiktType != null && guideType != null)
+        {
+            var desired = new[]
+            {
+                new ContentTypeSort(oversiktType.Key, 0, oversiktType.Alias),
+                new ContentTypeSort(guideType.Key, 1, guideType.Alias)
+            };
+            var current = ct.AllowedContentTypes?.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray() ?? Array.Empty<string>();
+            var want = desired.OrderBy(a => a.Alias).Select(a => a.Alias).ToArray();
+            if (!current.SequenceEqual(want))
+            {
+                ct.AllowedContentTypes = desired;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            _contentTypeService.Save(ct);
+            Console.WriteLine("ContentTypeComposer: Migrated veiledninger container (name + allowed children)");
+        }
+    }
+
+    private void MigrateVeiledningGuideAllowedChildren()
+    {
+        var guideType = _contentTypeService.Get("veiledningGuide");
+        var stegType = _contentTypeService.Get("veiledningSteg");
+        if (guideType == null || stegType == null) return;
+
+        var current = guideType.AllowedContentTypes?.Select(a => a.Alias).ToList() ?? new List<string>();
+        if (current.Contains("veiledningSteg")) return;
+
+        var existing = guideType.AllowedContentTypes?.ToList() ?? new List<ContentTypeSort>();
+        existing.Add(new ContentTypeSort(stegType.Key, existing.Count, stegType.Alias));
+        guideType.AllowedContentTypes = existing;
+        _contentTypeService.Save(guideType);
+        Console.WriteLine("ContentTypeComposer: Allowed veiledningSteg under veiledningGuide");
     }
 
     private void MigrateForside()

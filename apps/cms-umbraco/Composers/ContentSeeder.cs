@@ -137,6 +137,77 @@ public class ContentSeeder : IAsyncComponent
     {
         ForceForsideToTop();
         RemoveIkonerContent();
+        RenameVeiledningerToVeiledning();
+        MoveVeiledningOversiktUnderVeiledning();
+        NestVeiledningStegUnderGuide();
+    }
+
+    /// <summary>
+    /// Renames the "Veiledninger" container to "Veiledning" (singular).
+    /// </summary>
+    private void RenameVeiledningerToVeiledning()
+    {
+        var folder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (folder == null) return;
+        if (folder.Name == "Veiledning") return;
+
+        folder.Name = "Veiledning";
+        _contentService.Save(folder);
+        Console.WriteLine("ContentSeeder: Renamed Veiledninger to Veiledning");
+    }
+
+    /// <summary>
+    /// Moves the standalone "Veiledning Oversikt" content node INSIDE the Veiledning folder
+    /// so the editor sees a single Veiledning section instead of two siblings.
+    /// </summary>
+    private void MoveVeiledningOversiktUnderVeiledning()
+    {
+        var oversikt = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledningOversikt");
+        if (oversikt == null) return;
+
+        var veiledningFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (veiledningFolder == null) return;
+
+        // Already inside?
+        if (oversikt.ParentId == veiledningFolder.Id) return;
+
+        _contentService.Move(oversikt, veiledningFolder.Id);
+        Console.WriteLine("ContentSeeder: Moved Veiledning Oversikt under Veiledning folder");
+    }
+
+    /// <summary>
+    /// Nests existing veiledningSteg nodes under their parent veiledningGuide based on guideSlug.
+    /// Currently many steg are flat siblings of guides; the website hierarchy expects steg as children of guide.
+    /// </summary>
+    private void NestVeiledningStegUnderGuide()
+    {
+        var veiledningFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (veiledningFolder == null) return;
+
+        // Get all guides currently under the folder, indexed by their slug
+        var guides = _contentService.GetPagedChildren(veiledningFolder.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "veiledningGuide")
+            .ToDictionary(g => g.GetValue<string>("slug") ?? "", g => g);
+
+        // Get all steg (flat children of folder) that have a guideSlug pointing to a known guide
+        var orphanSteg = _contentService.GetPagedChildren(veiledningFolder.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "veiledningSteg")
+            .ToList();
+
+        int moved = 0;
+        foreach (var steg in orphanSteg)
+        {
+            var guideSlug = steg.GetValue<string>("guideSlug");
+            if (string.IsNullOrEmpty(guideSlug) || !guides.TryGetValue(guideSlug, out var guide)) continue;
+            _contentService.Move(steg, guide.Id);
+            moved++;
+        }
+        if (moved > 0)
+            Console.WriteLine($"ContentSeeder: Nested {moved} VeiledningSteg under their parent VeiledningGuide");
     }
 
     /// <summary>
