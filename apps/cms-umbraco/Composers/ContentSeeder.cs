@@ -145,10 +145,62 @@ public class ContentSeeder : IAsyncComponent
         MoveOmOssIntoSider();
         ClearFaqKategoriReferences();
         MoveVeiledningOversiktUnderVeiledning();
+        FlattenVeiledningOversiktIntoContainer();
         NestVeiledningStegUnderGuide();
         RemoveDuplicateSandkasseUnderSider();
         FlattenOmOssSeksjonerToBlocks();
         MigrateEksempelToCase();
+    }
+
+    /// <summary>
+    /// Copies field values from the standalone Veiledning Oversikt content node onto the
+    /// Veiledning container content node, then deletes the standalone Oversikt node.
+    /// Editor can then click "Veiledning" in the tree and edit the overview directly.
+    /// Idempotent: skips if no Oversikt node exists or if container already has the values.
+    /// </summary>
+    private void FlattenVeiledningOversiktIntoContainer()
+    {
+        var container = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (container == null) return;
+
+        // Find Oversikt node — could be at root or already under container
+        var oversikt = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "veiledningOversikt");
+        if (oversikt == null)
+        {
+            // Check inside the container
+            oversikt = _contentService.GetPagedChildren(container.Id, 0, int.MaxValue, out _)
+                .FirstOrDefault(c => c.ContentType.Alias == "veiledningOversikt");
+        }
+        if (oversikt == null) return;
+
+        // Copy each property from Oversikt to container (only if container has the field)
+        var fieldsToCopy = new[] {
+            "heroLabel", "heroTittel", "heroTekst", "heroBilde",
+            "seksjon1Tittel", "seksjon1Kort",
+            "seksjon2Tittel", "seksjon2Kort",
+            "verktoyTittel", "verktoyKort",
+            "seoTittel", "seoBeskrivelse", "seoBilde"
+        };
+
+        bool changed = false;
+        foreach (var field in fieldsToCopy)
+        {
+            if (!container.Properties.Any(p => p.Alias == field)) continue;
+            var srcValue = oversikt.GetValue(field);
+            if (srcValue == null) continue;
+            container.SetValue(field, srcValue);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _contentService.Save(container);
+            _contentService.Publish(container, new[] { "*" });
+        }
+
+        // Delete the standalone Oversikt node (cascades any children, but it shouldn't have any)
+        _contentService.Delete(oversikt);
+        Console.WriteLine("ContentSeeder: Flattened Veiledning Oversikt into Veiledning container");
     }
 
     private void RenameFaqContainerNode()

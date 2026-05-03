@@ -824,6 +824,9 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
       } as T;
 
     case 'veiledningOversikt':
+    case 'veiledninger':
+      // veiledninger container now has the same fields as the old standalone Oversikt.
+      // Both cases mapped identically so transitional content still works.
       return {
         ...base,
         heroLabel: props.heroLabel as string || undefined,
@@ -1336,7 +1339,16 @@ export async function getSandkasse(options: FetchOptions = {}): Promise<Sandkass
 
 // ── Veiledning Oversikt API functions ────────────────────────────
 
+/**
+ * Fetches the Veiledning overview content. Prefers the new flat structure (fields on
+ * the 'veiledninger' container itself); falls back to legacy standalone 'veiledningOversikt'
+ * during the migration window.
+ */
 export async function getVeiledningOversikt(options: FetchOptions = {}): Promise<VeiledningOversikt | null> {
+  // Try new structure first
+  const flat = await fetchCollection<VeiledningOversikt>('veiledninger', { ...options, take: 1 });
+  if (flat.data[0]?.heroTittel) return flat.data[0];
+  // Fall back to legacy
   const result = await fetchCollection<VeiledningOversikt>('veiledningOversikt', { ...options, take: 1 });
   return result.data[0] || null;
 }

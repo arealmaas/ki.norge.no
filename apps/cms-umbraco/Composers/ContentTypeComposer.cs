@@ -224,10 +224,12 @@ public class ContentTypeComponent : IAsyncComponent
                     _contentTypeService.Save(ct);
                 }
             }
-            // Migration for existing veiledninger container: update name + allowed children
+            // Migration for existing veiledninger container: update name + allowed children + add oversikt fields
             MigrateVeiledningerContainer();
             // Migration for veiledningGuide: allow veiledningSteg as child (so steg can nest)
             MigrateVeiledningGuideAllowedChildren();
+            // Add oversikt fields to veiledninger so editor edits the overview page directly on the container
+            AddOversiktFieldsToVeiledninger();
             CreateContainerIfMissing("faqSamling", "Ofte stilte spørsmål", "icon-help-alt", "faq");
             // Migrate existing faqSamling container display name
             MigrateFaqSamlingName();
@@ -1911,6 +1913,83 @@ public class ContentTypeComponent : IAsyncComponent
         {
             _contentTypeService.Save(ct);
             Console.WriteLine("ContentTypeComposer: Migrated veiledninger container (name + allowed children)");
+        }
+    }
+
+    /// <summary>
+    /// Adds the same fields to "veiledninger" container that veiledningOversikt has,
+    /// so the editor can edit the overview page directly on the container (one click instead of two).
+    /// Idempotent.
+    /// </summary>
+    private void AddOversiktFieldsToVeiledninger()
+    {
+        var ct = _contentTypeService.Get("veiledninger");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        // Hero
+        if (!ct.PropertyGroups.Any(g => g.Alias == "hero"))
+        {
+            ct.AddPropertyGroup("hero", "Hero");
+            ct.AddPropertyType(Prop("heroLabel", "Hero-label", _textStringDt), "hero");
+            ct.AddPropertyType(Prop("heroTittel", "Hero-tittel", _textStringDt), "hero");
+            ct.AddPropertyType(Prop("heroTekst", "Hero-tekst", _textStringDt), "hero");
+            ct.AddPropertyType(Prop("heroBilde", "Hero-bilde", _mediaPickerDt), "hero");
+            changed = true;
+        }
+        // Seksjon 1
+        if (!ct.PropertyGroups.Any(g => g.Alias == "seksjon1"))
+        {
+            ct.AddPropertyGroup("seksjon1", "Seksjon 1");
+            ct.AddPropertyType(Prop("seksjon1Tittel", "Seksjon 1 tittel", _textStringDt), "seksjon1");
+            ct.AddPropertyType(Prop("seksjon1Kort", "Seksjon 1 kort", _blockListVeiledningKortDt), "seksjon1");
+            changed = true;
+        }
+        // Seksjon 2
+        if (!ct.PropertyGroups.Any(g => g.Alias == "seksjon2"))
+        {
+            ct.AddPropertyGroup("seksjon2", "Seksjon 2");
+            ct.AddPropertyType(Prop("seksjon2Tittel", "Seksjon 2 tittel", _textStringDt), "seksjon2");
+            ct.AddPropertyType(Prop("seksjon2Kort", "Seksjon 2 kort", _blockListVeiledningKortDt), "seksjon2");
+            changed = true;
+        }
+        // Verktøy
+        if (!ct.PropertyGroups.Any(g => g.Alias == "verktoy"))
+        {
+            ct.AddPropertyGroup("verktoy", "Verktøy");
+            ct.AddPropertyType(Prop("verktoyTittel", "Verktøy tittel", _textStringDt), "verktoy");
+            ct.AddPropertyType(Prop("verktoyKort", "Verktøy kort", _blockListVerktoyKortDt), "verktoy");
+            changed = true;
+        }
+        // SEO
+        if (!ct.PropertyGroups.Any(g => g.Alias == "seo"))
+        {
+            ct.AddPropertyGroup("seo", "SEO");
+            ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
+            ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
+            ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
+            changed = true;
+        }
+
+        // Remove veiledningOversikt from allowed children (only veiledningGuide stays)
+        var guideType = _contentTypeService.Get("veiledningGuide");
+        if (guideType != null)
+        {
+            var desired = new[] { new ContentTypeSort(guideType.Key, 0, guideType.Alias) };
+            var currentAliases = ct.AllowedContentTypes?.Select(a => a.Alias).OrderBy(a => a).ToArray() ?? Array.Empty<string>();
+            var wantAliases = new[] { "veiledningGuide" };
+            if (!currentAliases.SequenceEqual(wantAliases))
+            {
+                ct.AllowedContentTypes = desired;
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            _contentTypeService.Save(ct);
+            Console.WriteLine("ContentTypeComposer: Added oversikt fields to veiledninger container (no more separate Oversikt node)");
         }
     }
 
