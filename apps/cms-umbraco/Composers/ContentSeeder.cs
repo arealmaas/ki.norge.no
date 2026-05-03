@@ -135,6 +135,9 @@ public class ContentSeeder : IAsyncComponent
 
     private void RunStructureMigrations()
     {
+        // Create root folders if missing (idempotent — only creates if not present)
+        EnsureCaserFolderExists();
+        // Reorganize existing content
         ForceForsideToTop();
         RemoveIkonerContent();
         RenameVeiledningerToVeiledning();
@@ -142,6 +145,25 @@ public class ContentSeeder : IAsyncComponent
         NestVeiledningStegUnderGuide();
         RemoveDuplicateSandkasseUnderSider();
         FlattenOmOssSeksjonerToBlocks();
+    }
+
+    /// <summary>
+    /// Creates the "Caser" root folder if it doesn't exist. Idempotent.
+    /// Needed because the seeder is skipped on prod (LAUNCH_MODE=production) but
+    /// Caser was added after the seeder originally ran on prod.
+    /// </summary>
+    private void EnsureCaserFolderExists()
+    {
+        var existing = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "caser");
+        if (existing != null) return;
+
+        var ct = _contentTypeService.Get("caser");
+        if (ct == null) return;
+
+        var folder = _contentService.Create("Caser", -1, ct.Alias);
+        _contentService.Save(folder);
+        _contentService.Publish(folder, new[] { "*" });
+        Console.WriteLine("ContentSeeder: Created Caser root folder");
     }
 
     /// <summary>
