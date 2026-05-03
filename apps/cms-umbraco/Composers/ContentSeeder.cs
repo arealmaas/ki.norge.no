@@ -141,6 +141,84 @@ public class ContentSeeder : IAsyncComponent
         MoveVeiledningOversiktUnderVeiledning();
         NestVeiledningStegUnderGuide();
         RemoveDuplicateSandkasseUnderSider();
+        FlattenOmOssSeksjonerToBlocks();
+    }
+
+    /// <summary>
+    /// Reads existing omOssSeksjon child content nodes under the Om Oss page and
+    /// converts each into an omOssBlokk inside the omOss.seksjoner Block List.
+    /// Then deletes the migrated omOssSeksjon nodes. Idempotent: skips if seksjoner already populated.
+    /// </summary>
+    private void FlattenOmOssSeksjonerToBlocks()
+    {
+        var omOss = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "omOss");
+        if (omOss == null) return;
+
+        // If seksjoner already has blocks, don't overwrite
+        var existingBlocks = omOss.GetValue<string>("seksjoner");
+        if (!string.IsNullOrWhiteSpace(existingBlocks) && existingBlocks.Contains("contentData")) return;
+
+        var children = _contentService.GetPagedChildren(omOss.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "omOssSeksjon")
+            .OrderBy(c => c.GetValue<int>("rekkefolge"))
+            .ToList();
+
+        if (children.Count == 0) return;
+
+        // Need omOssBlokk content type to build blocks
+        var blokkType = _contentTypeService.Get("omOssBlokk");
+        if (blokkType == null) return;
+
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        foreach (var seksjon in children)
+        {
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            var data = new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = blokkType.Key.ToString(),
+                ["udi"] = udi,
+                ["tittel"] = seksjon.GetValue<string>("tittel") ?? "",
+                ["tekst"] = seksjon.GetValue<string>("tekst") ?? "",
+            };
+
+            // Bilde is a MediaPicker — store the same value if present
+            var bildeValue = seksjon.GetValue("bilde");
+            if (bildeValue != null) data["bilde"] = bildeValue;
+
+            contentData.Add(data);
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        omOss.SetValue("seksjoner", JsonSerializer.Serialize(blockList));
+        _contentService.Save(omOss);
+        _contentService.Publish(omOss, new[] { "*" });
+
+        // Delete migrated child nodes
+        foreach (var seksjon in children)
+        {
+            _contentService.Delete(seksjon);
+        }
+
+        Console.WriteLine($"ContentSeeder: Flattened {children.Count} Om Oss seksjoner into blocks on the page");
     }
 
     /// <summary>

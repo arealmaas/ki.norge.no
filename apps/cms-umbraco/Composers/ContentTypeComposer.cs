@@ -49,6 +49,7 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListVerktoyKortDt = null!;
     private IDataType _blockListProsessStegItemsDt = null!;
     private IDataType _blockListCaseDt = null!;
+    private IDataType _blockListOmOssDt = null!;
 
     public ContentTypeComponent(
         IContentTypeService contentTypeService,
@@ -109,6 +110,9 @@ public class ContentTypeComponent : IAsyncComponent
             // Prosessteg item must be created before the container (container's Block List references item)
             if (_contentTypeService.Get("artikkelProsessStegItem") == null)
                 CreateArtikkelProsessStegItemElement();
+            // Om Oss seksjon block (replaces standalone omOssSeksjon child content)
+            if (_contentTypeService.Get("omOssBlokk") == null)
+                CreateOmOssBlokkElement();
             // Forfatter og dato variants
             if (_contentTypeService.Get("artikkelByline") == null)
                 CreateArtikkelBylineElement();
@@ -761,6 +765,9 @@ public class ContentTypeComponent : IAsyncComponent
         // Used by artikkelProsessteg (container) to nest artikkelProsessStegItem children
         _blockListProsessStegItemsDt = CreateOrGetBlockListDataType(
             "Block List - Prosessteg Items", "artikkelProsessStegItem");
+        // Block list for Om Oss seksjoner (replaces standalone omOssSeksjon child content)
+        _blockListOmOssDt = CreateOrGetBlockListDataType(
+            "Block List - Om Oss Seksjoner", "omOssBlokk");
     }
 
     private IDataType CreateOrGetBlockListDataType(string name, string elementTypeAlias)
@@ -1389,13 +1396,18 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
+    /// <summary>
+    /// DEPRECATED: omOssSeksjon was a standalone child content type under omOss.
+    /// Replaced by omOssBlokk (element type) inside a Block List on omOss.
+    /// Existing omOssSeksjon content is migrated by MigrateOmOssToBlocks.
+    /// </summary>
     private IContentType CreateOmOssSeksjon()
     {
         var ct = new ContentType(_shortStringHelper, -1)
         {
             Alias = "omOssSeksjon",
-            Name = "Om Oss Seksjon",
-            Description = "En seksjon på Om Oss-siden",
+            Name = "Om Oss Seksjon (utgår)",
+            Description = "Utgår — bruk seksjon-blokker på Om Oss i stedet",
             Icon = "icon-document",
             AllowedAsRoot = false,
         };
@@ -1405,6 +1417,28 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("tekst", "Tekst", _richTextDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt, mandatory: true), "innhold");
         ct.AddPropertyType(Prop("rekkefolge", "Rekkefølge", _numericDt), "innhold");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
+    /// <summary>
+    /// Replacement for omOssSeksjon — a draggable block on Om Oss.
+    /// </summary>
+    private IContentType CreateOmOssBlokkElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "omOssBlokk",
+            Name = "Om Oss Seksjon",
+            Description = "En seksjon på Om Oss-siden. Tittel, tekst og valgfritt bilde.",
+            Icon = "icon-document",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("innhold", "Innhold");
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("tekst", "Tekst", _richTextDt, mandatory: true), "innhold");
+        ct.AddPropertyType(Prop("bilde", "Bilde", _mediaPickerDt), "innhold");
+        ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
         _contentTypeService.Save(ct);
         return ct;
     }
@@ -1425,21 +1459,15 @@ public class ContentTypeComponent : IAsyncComponent
         ct.AddPropertyType(Prop("heroUndertittel", "Hero-undertittel", _textStringDt), "innhold");
         ct.AddPropertyType(Prop("introTekst", "Intro-tekst", _richTextDt), "innhold");
         ct.AddPropertyType(Prop("misjonTekst", "Misjonstekst", _richTextDt, description: "Tekst i den blå misjonsbanneren"), "innhold");
+        ct.AddPropertyType(Prop("seksjoner", "Seksjoner", _blockListOmOssDt, description: "Drag og slipp for å endre rekkefølge på seksjoner."), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
         ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
         ct.AddPropertyType(Prop("seoBilde", "SEO-bilde", _mediaPickerDt, description: "Bilde som vises ved deling på sosiale medier"), "seo");
 
-        // Allow omOssSeksjon as child
-        var seksjonType = _contentTypeService.Get("omOssSeksjon");
-        if (seksjonType != null)
-        {
-            ct.AllowedContentTypes = new[]
-            {
-                new ContentTypeSort(seksjonType.Key, 0, seksjonType.Alias)
-            };
-        }
+        // No allowed children — sections live as blocks on the page itself
+        ct.AllowedContentTypes = Array.Empty<ContentTypeSort>();
 
         _contentTypeService.Save(ct);
         return ct;
@@ -1449,9 +1477,32 @@ public class ContentTypeComponent : IAsyncComponent
     {
         var ct = _contentTypeService.Get("omOss");
         if (ct == null) return;
-        if (ct.PropertyTypeExists("misjonTekst")) return;
-        ct.AddPropertyType(Prop("misjonTekst", "Misjonstekst", _richTextDt, description: "Tekst i den blå misjonsbanneren"), "innhold");
-        _contentTypeService.Save(ct);
+
+        bool changed = false;
+
+        // Add misjonTekst if missing (legacy migration)
+        if (!ct.PropertyTypeExists("misjonTekst"))
+        {
+            ct.AddPropertyType(Prop("misjonTekst", "Misjonstekst", _richTextDt, description: "Tekst i den blå misjonsbanneren"), "innhold");
+            changed = true;
+        }
+
+        // Add seksjoner Block List if missing (Om Oss flatten)
+        if (!ct.PropertyTypeExists("seksjoner"))
+        {
+            ct.AddPropertyType(Prop("seksjoner", "Seksjoner", _blockListOmOssDt, description: "Drag og slipp for å endre rekkefølge på seksjoner."), "innhold");
+            changed = true;
+        }
+
+        // Remove omOssSeksjon from allowed children (sections move to blocks)
+        if (ct.AllowedContentTypes != null && ct.AllowedContentTypes.Any())
+        {
+            ct.AllowedContentTypes = Array.Empty<ContentTypeSort>();
+            changed = true;
+        }
+
+        if (changed)
+            _contentTypeService.Save(ct);
     }
 
     private IContentType CreateSandkasse()

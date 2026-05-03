@@ -325,6 +325,13 @@ export interface OmOssSeksjon {
   locale: string;
 }
 
+export interface OmOssSeksjonBlokk {
+  tittel: string;
+  tekst: string; // HTML from RichText
+  bilde?: UmbracoMedia;
+  bildeAlt?: string;
+}
+
 export interface OmOss {
   id: string;
   documentId: string;
@@ -332,6 +339,7 @@ export interface OmOss {
   heroUndertittel?: string;
   introTekst?: UmbracoBlock[];
   misjonTekst?: UmbracoBlock[];
+  seksjoner?: OmOssSeksjonBlokk[];
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -757,12 +765,28 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
       } as T;
 
     case 'omOss':
+      // Map seksjoner Block List to OmOssSeksjonBlokk[]
+      const seksjonerItems = (props.seksjoner as any)?.items || [];
+      const seksjoner: OmOssSeksjonBlokk[] = seksjonerItems.map((block: any) => {
+        const content = block.content || block;
+        const blockProps = content.properties || content;
+        const tekst = blockProps.tekst?.tag === '#root'
+          ? richTextToHtml(blockProps.tekst)
+          : (typeof blockProps.tekst === 'string' ? blockProps.tekst : '');
+        return {
+          tittel: blockProps.tittel || '',
+          tekst,
+          bilde: mapMedia(blockProps.bilde),
+          bildeAlt: blockProps.bildeAlt || '',
+        };
+      });
       return {
         ...base,
         heroTittel: props.heroTittel as string || '',
         heroUndertittel: props.heroUndertittel as string || '',
         introTekst: mapRichText(props.introTekst),
         misjonTekst: mapRichText(props.misjonTekst),
+        seksjoner,
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
         seoBilde: mapMedia(props.seoBilde),

@@ -4,13 +4,19 @@ import BlocksRenderer from '../components/shared/BlocksRenderer.astro';
 import PartnersSection from '../components/shared/PartnersSection.astro';
 import { getOmOss, getOmOssSeksjoner, getArtikler, getMediaUrl, getPlainText } from '../lib/umbraco';
 
-let omOss = null;
+let omOss: any = null;
 let seksjoner: any[] = [];
 let latestArticles: any[] = [];
 try {
   omOss = await getOmOss();
-  const seksjonerRes = await getOmOssSeksjoner();
-  seksjoner = seksjonerRes.data;
+  // Prefer the new flat structure: seksjoner as Block List on omOss itself.
+  // Fall back to the legacy standalone omOssSeksjon child content if blocks aren't populated yet.
+  if (omOss?.seksjoner && Array.isArray(omOss.seksjoner) && omOss.seksjoner.length > 0) {
+    seksjoner = omOss.seksjoner;
+  } else {
+    const seksjonerRes = await getOmOssSeksjoner();
+    seksjoner = seksjonerRes.data;
+  }
   const artiklerRes = await getArtikler(3);
   latestArticles = artiklerRes.data;
 } catch (e) {
@@ -48,23 +54,31 @@ const seoDesc = omOss?.seoBeskrivelse || 'Om KI Norge – en nasjonal satsing fo
 
     <!-- Alternating stubs -->
     <div class="om-oss-seksjoner">
-      {seksjoner.map((seksjon, index) => (
-        <section class:list={['om-oss-stub', index % 2 === 0 ? 'stub--image-left' : 'stub--image-right']}>
-          <div class="stub-image" aria-hidden="true">
-            {seksjon.bilde ? (
-              <img src={getMediaUrl(seksjon.bilde)} alt={seksjon.bilde.alternativeText || seksjon.tittel} loading="lazy" class="stub-img" />
-            ) : (
-              <div class="stub-image-placeholder"></div>
-            )}
-          </div>
-          <div class="stub-content">
-            <h2 class="stub-title">{seksjon.tittel}</h2>
-            <div class="stub-text">
-              <BlocksRenderer blocks={seksjon.tekst} />
+      {seksjoner.map((seksjon, index) => {
+        // New blocks: tekst is HTML string. Legacy seksjoner: tekst is RichText blocks.
+        const isHtmlString = typeof seksjon.tekst === 'string';
+        return (
+          <section class:list={['om-oss-stub', index % 2 === 0 ? 'stub--image-left' : 'stub--image-right']}>
+            <div class="stub-image" aria-hidden="true">
+              {seksjon.bilde ? (
+                <img src={getMediaUrl(seksjon.bilde)} alt={seksjon.bildeAlt || seksjon.bilde.alternativeText || ''} loading="lazy" class="stub-img" />
+              ) : (
+                <div class="stub-image-placeholder"></div>
+              )}
             </div>
-          </div>
-        </section>
-      ))}
+            <div class="stub-content">
+              <h2 class="stub-title">{seksjon.tittel}</h2>
+              <div class="stub-text">
+                {isHtmlString ? (
+                  <div set:html={seksjon.tekst} />
+                ) : (
+                  <BlocksRenderer blocks={seksjon.tekst} />
+                )}
+              </div>
+            </div>
+          </section>
+        );
+      })}
     </div>
 
     <!-- Mission banner -->
