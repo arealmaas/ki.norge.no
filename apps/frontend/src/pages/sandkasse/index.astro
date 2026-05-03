@@ -60,10 +60,10 @@ const seoDescription = sandkasse?.seoBeskrivelse || 'KI-sandkassen skal støtte 
         </div>
         <p class="sandkasse-hero-countdown">{sandkasse?.nedtelling || '120 dager til du kan søke!'}</p>
         <div class="sandkasse-hero-illustrations">
-          <img src="/sandkasse/sandkasse-bucket.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--bucket" aria-hidden="true" />
+          <img loading="lazy" decoding="async" src="/sandkasse/sandkasse-bucket.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--bucket" aria-hidden="true" />
           <div class="sandkasse-hero-img-group">
-            <img src="/sandkasse/sandkasse-sandcastle.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--sandcastle" aria-hidden="true" />
-            <img src="/sandkasse/sandkasse-shovel.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--shovel" aria-hidden="true" />
+            <img loading="lazy" decoding="async" src="/sandkasse/sandkasse-sandcastle.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--sandcastle" aria-hidden="true" />
+            <img loading="lazy" decoding="async" src="/sandkasse/sandkasse-shovel.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--shovel" aria-hidden="true" />
           </div>
         </div>
       </div>
@@ -73,7 +73,7 @@ const seoDescription = sandkasse?.seoBeskrivelse || 'KI-sandkassen skal støtte 
     <section class="sandkasse-section sandkasse-section--white">
       <div class="sandkasse-section-inner sandkasse-row">
         <div class="sandkasse-image-col">
-          <img src={hvemBildeUrl || '/sandkasse/sandkasse-sandkasse.png'} alt={sandkasse?.hvemBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.hvemBilde?.alternativeText} />
+          <img loading="lazy" decoding="async" src={hvemBildeUrl || '/sandkasse/sandkasse-sandkasse.png'} alt={sandkasse?.hvemBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.hvemBilde?.alternativeText} />
         </div>
         <div class="sandkasse-text-col">
           <h2 class="sandkasse-section-title">{sandkasse?.hvemTittel || 'Hvem er det til for?'}</h2>
@@ -142,7 +142,7 @@ const seoDescription = sandkasse?.seoBeskrivelse || 'KI-sandkassen skal støtte 
           </div>
         </div>
         <div class="sandkasse-image-col">
-          <img src={resultatBildeUrl || '/sandkasse/sandkasse-sandkasse-2.png'} alt={sandkasse?.resultatBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.resultatBilde?.alternativeText} />
+          <img loading="lazy" decoding="async" src={resultatBildeUrl || '/sandkasse/sandkasse-sandkasse-2.png'} alt={sandkasse?.resultatBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.resultatBilde?.alternativeText} />
         </div>
       </div>
     </section>

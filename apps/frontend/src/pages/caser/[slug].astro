@@ -57,7 +57,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
             </div>
             {heroImage?.url && (
               <div class="article-hero-image">
-                <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" />
+                <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
               </div>
             )}
           </div>
@@ -70,7 +70,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
           </div>
           {heroImage?.url && (
             <div class="article-hero-image">
-              <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" />
+              <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
             </div>
           )}
         </div>
@@ -157,7 +157,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
             <div class={classes}>
               {c.bilde?.url && (
                 <div class="article-fremheving-image">
-                  <img src={getMediaUrl(c.bilde)} alt={c.bildeAlt || ''} />
+                  <img src={getMediaUrl(c.bilde)} alt={c.bildeAlt || ''} loading="lazy" decoding="async" />
                 </div>
               )}
               <div class="article-fremheving-content">
@@ -235,7 +235,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
           return (
             <figure class="article-image-section col-center-6">
               {block.content.bilde?.url ? (
-                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildeAlt || ''} class="stub-img" />
+                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildeAlt || ''} class="stub-img" loading="lazy" decoding="async" />
               ) : (
                 <div class="article-image-placeholder"></div>
               )}
