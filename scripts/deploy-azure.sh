@@ -236,6 +236,8 @@ properties:
         value: https://ki-norge-frontend.greentree-c9e56a64.norwayeast.azurecontainerapps.io
       - name: HeadlessPreview__PreviewSecret
         value: '59cfdda7b9140784c3c80149b5348d81'
+      - name: LAUNCH_MODE
+        value: production
       image: ${UMBRACO_IMAGE}
       name: ki-norge-cms
       volumeMounts:

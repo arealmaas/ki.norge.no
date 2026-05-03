@@ -61,6 +61,16 @@ public class ContentSeeder : IAsyncComponent
     {
         if (_runtimeState.Level < RuntimeLevel.Run) return Task.CompletedTask;
 
+        // Skip ALL seeding (including migrations) when LAUNCH_MODE=production.
+        // Prevents seeder from re-creating content that editors deleted on prod.
+        // For fresh installs / local dev, leave LAUNCH_MODE unset.
+        var launchMode = Environment.GetEnvironmentVariable("LAUNCH_MODE")?.ToLowerInvariant();
+        if (launchMode == "production")
+        {
+            Console.WriteLine("ContentSeeder: LAUNCH_MODE=production, skipping all seeding");
+            return Task.CompletedTask;
+        }
+
         // Migration: seed ordbok even if other content already exists
         try { MigrateOrdbokOppslag(); }
         catch (Exception ex) { Console.WriteLine($"ContentSeeder MigrateOrdbokOppslag: {ex.Message}"); }
