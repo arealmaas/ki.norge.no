@@ -58,7 +58,14 @@ check "Veiledning"        "$FRONTEND/veiledning"
 check "Om oss"            "$FRONTEND/om-oss"
 check "FAQ"               "$FRONTEND/faq"
 check "KI-ordbok"         "$FRONTEND/ki-ordbok"
-check "Sandkasse"         "$FRONTEND/sandkasse"
+# Sandkasse: returns 200 if a Sandkasse content node exists, 302 (redirect to /)
+# if no content yet. Both are acceptable until Sara creates the prod node.
+SANDKASSE_TOTAL=$(curl -s "$CMS/umbraco/delivery/api/v2/content?filter=contentType:sandkasse&take=1" -H "Api-Key: $API_KEY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('total',0))" 2>/dev/null || echo 0)
+if [ "$SANDKASSE_TOTAL" -gt 0 ]; then
+  check "Sandkasse"         "$FRONTEND/sandkasse"
+else
+  check "Sandkasse (no content yet)" "$FRONTEND/sandkasse" "302" "0"
+fi
 check "Kontakt"           "$FRONTEND/kontakt"
 check "404 page (custom)" "$FRONTEND/this-route-does-not-exist" "404"
 
