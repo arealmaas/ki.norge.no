@@ -100,9 +100,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Defends against clickjacking, MIME sniffing, leaking referrer to other origins,
   // and protocol downgrade. CSP is intentionally loose for now (allows inline styles
   // because Astro inlines critical CSS, and Google Fonts is allowed); tighten later.
-  if (!response.headers.has('X-Frame-Options')) {
-    response.headers.set('X-Frame-Options', 'DENY');
-  }
+  // X-Frame-Options is intentionally NOT set globally — it would block the CMS preview
+  // iframe on /umbraco/section/content/.../preview from embedding the frontend. CSP
+  // frame-ancestors below is the modern replacement and lets the CMS embed us.
   if (!response.headers.has('X-Content-Type-Options')) {
     response.headers.set('X-Content-Type-Options', 'nosniff');
   }
@@ -128,7 +128,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
         "font-src 'self' https://fonts.gstatic.com data:",
         "img-src 'self' data: https://ki-norge-cms.greentree-c9e56a64.norwayeast.azurecontainerapps.io https://cms.ki.norge.no",
         "connect-src 'self' https://ki-norge-cms.greentree-c9e56a64.norwayeast.azurecontainerapps.io https://cms.ki.norge.no",
-        "frame-ancestors 'none'",
+        // Allow CMS to embed the frontend in the preview iframe. Both the prod CMS
+        // origin and the localhost CMS dev origin are listed so preview works in dev too.
+        "frame-ancestors 'self' https://cms.ki.norge.no https://ki-norge-cms.greentree-c9e56a64.norwayeast.azurecontainerapps.io http://localhost:5000 https://localhost:44391",
         "base-uri 'self'",
         "form-action 'self'",
       ].join('; '),

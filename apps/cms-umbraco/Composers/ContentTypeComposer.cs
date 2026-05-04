@@ -42,8 +42,8 @@ public class ContentTypeComponent : IAsyncComponent
     private IDataType _blockListAccordionDt = null!;
     private IDataType _blockListTipsDt = null!;
     private IDataType _blockListArtikkelDt = null!;
-    private IDataType _blockListSandkasseStegDt = null!;
-    private IDataType _blockListSandkasseFaqDt = null!;
+    // _blockListSandkasseStegDt + _blockListSandkasseFaqDt: REMOVED 2026-05-04.
+    // Sandkasse now uses _blockListArtikkelDt (the same Block List as articles).
     private IDataType _blockListVeiledningKortDt = null!;
     private IDataType _blockListVerktoyKortDt = null!;
     private IDataType _blockListProsessStegItemsDt = null!;
@@ -117,11 +117,9 @@ public class ContentTypeComponent : IAsyncComponent
             if (_contentTypeService.Get("artikkelKontaktkort") == null)
                 CreateArtikkelKontaktkortElement();
 
-            // Sandkasse element types
-            if (_contentTypeService.Get("sandkasseSteg") == null)
-                CreateSandkasseStegElement();
-            if (_contentTypeService.Get("sandkasseFaq") == null)
-                CreateSandkasseFaqElement();
+            // Sandkasse element types: REMOVED 2026-05-04 (sandkasseSteg, sandkasseFaq)
+            // The new Sandkasse uses the same article block list, so sandkasse-specific
+            // step/FAQ element types are gone. Resurrect via git if needed.
 
             // Veiledning Oversikt element types
             if (_contentTypeService.Get("veiledningKort") == null)
@@ -183,6 +181,8 @@ public class ContentTypeComponent : IAsyncComponent
                 MigrateOmOss();
             if (_contentTypeService.Get("sandkasse") == null)
                 CreateSandkasse();
+            else
+                MigrateSandkasse();
             if (_contentTypeService.Get("veiledningOversikt") == null)
                 CreateVeiledningOversikt();
 
@@ -681,43 +681,6 @@ public class ContentTypeComponent : IAsyncComponent
             _contentTypeService.Save(ct);
     }
 
-    // --- Sandkasse element types ---
-
-    private IContentType CreateSandkasseStegElement()
-    {
-        var ct = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "sandkasseSteg",
-            Name = "Sandkasse Steg",
-            Description = "Et steg i sandkasse-prosessen",
-            Icon = "icon-ordered-list",
-            IsElement = true,
-        };
-        ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("nummer", "Nummer", _textStringDt), "innhold");
-        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("beskrivelse", "Beskrivelse", _richTextDt), "innhold");
-        _contentTypeService.Save(ct);
-        return ct;
-    }
-
-    private IContentType CreateSandkasseFaqElement()
-    {
-        var ct = new ContentType(_shortStringHelper, -1)
-        {
-            Alias = "sandkasseFaq",
-            Name = "Sandkasse FAQ",
-            Description = "Et spørsmål og svar i sandkasse-FAQ",
-            Icon = "icon-help-alt",
-            IsElement = true,
-        };
-        ct.AddPropertyGroup("innhold", "Innhold");
-        ct.AddPropertyType(Prop("sporsmal", "Spørsmål", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("svar", "Svar", _richTextDt), "innhold");
-        _contentTypeService.Save(ct);
-        return ct;
-    }
-
     // --- Block List DataTypes ---
 
     private void CreateBlockListDataTypes()
@@ -733,10 +696,6 @@ public class ContentTypeComponent : IAsyncComponent
         _blockListCaseDt = CreateOrGetMultiBlockListDataType(
             "Block List - Case Innhold",
             CaseModules);
-        _blockListSandkasseStegDt = CreateOrGetBlockListDataType(
-            "Block List - Sandkasse Steg", "sandkasseSteg");
-        _blockListSandkasseFaqDt = CreateOrGetBlockListDataType(
-            "Block List - Sandkasse FAQ", "sandkasseFaq");
         _blockListVeiledningKortDt = CreateOrGetBlockListDataType(
             "Block List - Veiledning Kort", "veiledningKort");
         _blockListVerktoyKortDt = CreateOrGetBlockListDataType(
@@ -1480,40 +1439,15 @@ public class ContentTypeComponent : IAsyncComponent
         {
             Alias = "sandkasse",
             Name = "Sandkasse",
-            Description = "Sandkasse-siden",
+            Description = "Sandkasse-siden. Skal kun finnes ett eksemplar, plassert under Sider.",
             Icon = "icon-science",
-            AllowedAsRoot = true,
+            AllowedAsRoot = false,
         };
 
-        // Tab: Hero
-        ct.AddPropertyGroup("hero", "Hero");
-        ct.AddPropertyType(Prop("heroTittel", "Tittel", _textStringDt, description: "Hovedoverskriften øverst på sandkasse-siden"), "hero");
-        ct.AddPropertyType(Prop("heroTekst", "Ingress", _richTextDt, description: "Kort introduksjon under tittelen. Forklarer kort hva sandkassen er."), "hero");
-        ct.AddPropertyType(Prop("nedtelling", "Nedtelling", _textStringDt, description: "Valgfri tekst som viser nedtelling til neste søknadsfrist (eks 'Frist 15. juni')"), "hero");
+        ct.AddPropertyGroup("innhold", "Innhold");
+        AddArtikkelhodeFields(ct);
+        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Bygg opp siden med artikkelmoduler (tekst, prosess-steg, trekkspill, osv.)."), "innhold");
 
-        // Tab: Hvem
-        ct.AddPropertyGroup("hvem", "Hvem");
-        ct.AddPropertyType(Prop("hvemTittel", "Tittel", _textStringDt, description: "Overskrift for 'Hvem kan søke'-seksjonen"), "hvem");
-        ct.AddPropertyType(Prop("hvemTekst", "Tekst", _richTextDt, description: "Forklarer hvem som kan søke om plass i sandkassen"), "hvem");
-        ct.AddPropertyType(Prop("hvemBilde", "Bilde", _mediaPickerDt, description: "Illustrasjon ved siden av teksten"), "hvem");
-
-        // Tab: Prosess
-        ct.AddPropertyGroup("prosess", "Prosess");
-        ct.AddPropertyType(Prop("prosessTittel", "Tittel", _textStringDt, description: "Overskrift for 'Slik foregår det'-seksjonen"), "prosess");
-        ct.AddPropertyType(Prop("prosessSteg", "Steg", _blockListSandkasseStegDt, description: "Legg til ett steg av gangen. Nummereres automatisk."), "prosess");
-
-        // Tab: Resultat
-        ct.AddPropertyGroup("resultat", "Resultat");
-        ct.AddPropertyType(Prop("resultatTittel", "Tittel", _textStringDt, description: "Overskrift for 'Hva sitter du igjen med'-seksjonen"), "resultat");
-        ct.AddPropertyType(Prop("resultatTekst", "Tekst", _richTextDt, description: "Forklarer hva deltagerne får ut av sandkassen"), "resultat");
-        ct.AddPropertyType(Prop("resultatBilde", "Bilde", _mediaPickerDt, description: "Illustrasjon ved siden av teksten"), "resultat");
-
-        // Tab: FAQ
-        ct.AddPropertyGroup("faq", "FAQ");
-        ct.AddPropertyType(Prop("faqTittel", "Tittel", _textStringDt, description: "Overskrift for FAQ-seksjonen"), "faq");
-        ct.AddPropertyType(Prop("faqSeksjoner", "Spørsmål", _blockListSandkasseFaqDt, description: "Legg til spørsmål og svar. Vises som trekkspill."), "faq");
-
-        // Tab: SEO
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
         ct.AddPropertyType(Prop("seoBeskrivelse", "SEO-beskrivelse", _textAreaDt, description: "Overstyr beskrivelse i søkeresultater og sosiale medier"), "seo");
@@ -1521,6 +1455,92 @@ public class ContentTypeComponent : IAsyncComponent
 
         _contentTypeService.Save(ct);
         return ct;
+    }
+
+    /// <summary>
+    /// Brings an existing sandkasse content type up to the new article-style schema:
+    /// drops the old fixed sections (hero/hvem/prosess/resultat/faq tabs and their fields)
+    /// and adds the Artikkelhode fields + a single innhold block list pointing at the
+    /// shared Block List - Artikkel Innhold data type. Idempotent.
+    /// </summary>
+    private void MigrateSandkasse()
+    {
+        var ct = _contentTypeService.Get("sandkasse");
+        if (ct == null) return;
+
+        bool changed = false;
+
+        // Lock down: must live under Sider, not at root
+        if (ct.AllowedAsRoot)
+        {
+            ct.AllowedAsRoot = false;
+            changed = true;
+        }
+
+        // Add Artikkelhode fields if missing
+        var hodeFields = new[] { "tittel", "slug", "ingress", "artikkelBilde", "bildeAlt", "bakgrunn" };
+        if (hodeFields.Any(f => !ct.PropertyTypeExists(f)))
+        {
+            // Ensure the "innhold" group exists before adding to it
+            if (!ct.PropertyGroups.Any(g => g.Alias == "innhold"))
+                ct.AddPropertyGroup("innhold", "Innhold");
+            AddArtikkelhodeFields(ct);
+            changed = true;
+        }
+
+        // Add the single innhold block list field if missing (alias collides — use innholdBlokker if needed)
+        // Note: the existing field "innhold" is the property GROUP, not a property.
+        if (!ct.PropertyTypeExists("innhold") || ct.PropertyTypes.First(p => p.Alias == "innhold").DataTypeId != _blockListArtikkelDt.Id)
+        {
+            // If a property with alias "innhold" exists with a different data type, swap it
+            var existing = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "innhold");
+            if (existing == null)
+            {
+                ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Bygg opp siden med artikkelmoduler (tekst, prosess-steg, trekkspill, osv.)."), "innhold");
+                changed = true;
+            }
+            else if (existing.DataTypeId != _blockListArtikkelDt.Id)
+            {
+                existing.DataTypeId = _blockListArtikkelDt.Id;
+                changed = true;
+            }
+        }
+
+        // Drop legacy property aliases that no longer make sense
+        var legacyAliases = new[]
+        {
+            "heroTittel", "heroTekst", "nedtelling",
+            "hvemTittel", "hvemTekst", "hvemBilde",
+            "prosessTittel", "prosessSteg",
+            "resultatTittel", "resultatTekst", "resultatBilde",
+            "faqTittel", "faqSeksjoner",
+        };
+        foreach (var alias in legacyAliases)
+        {
+            var p = ct.PropertyTypes.FirstOrDefault(x => x.Alias == alias);
+            if (p != null)
+            {
+                ct.RemovePropertyType(alias);
+                changed = true;
+            }
+        }
+
+        // Drop legacy property GROUPS that are now empty
+        foreach (var groupAlias in new[] { "hero", "hvem", "prosess", "resultat", "faq" })
+        {
+            var grp = ct.PropertyGroups.FirstOrDefault(g => g.Alias == groupAlias);
+            if (grp != null)
+            {
+                ct.PropertyGroups.Remove(grp);
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            _contentTypeService.Save(ct);
+            Console.WriteLine("ContentTypeComposer: Migrated sandkasse to article-style schema (Artikkelhode + innhold block list)");
+        }
     }
 
     private IContentType CreateForside()

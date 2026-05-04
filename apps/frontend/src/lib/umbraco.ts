@@ -349,33 +349,16 @@ export interface OmOss {
   locale: string;
 }
 
-export interface SandkasseSteg {
-  nummer: string;
-  tittel: string;
-  beskrivelse: UmbracoBlock[];
-}
-
-export interface SandkasseFaq {
-  sporsmal: string;
-  svar: UmbracoBlock[];
-}
-
 export interface Sandkasse {
   id: string;
   documentId: string;
-  heroTittel?: string;
-  heroTekst?: UmbracoBlock[];
-  nedtelling?: string;
-  hvemTittel?: string;
-  hvemTekst?: UmbracoBlock[];
-  hvemBilde?: UmbracoMedia;
-  prosessTittel?: string;
-  prosessSteg?: SandkasseSteg[];
-  resultatTittel?: string;
-  resultatTekst?: UmbracoBlock[];
-  resultatBilde?: UmbracoMedia;
-  faqTittel?: string;
-  faqSeksjoner?: SandkasseFaq[];
+  tittel: string;
+  slug: string;
+  ingress: string;
+  artikkelBilde?: UmbracoMedia;
+  bildeAlt?: string;
+  bakgrunn?: string;
+  innhold?: UmbracoBlock[];
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -805,19 +788,13 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
     case 'sandkasse':
       return {
         ...base,
-        heroTittel: props.heroTittel as string || undefined,
-        heroTekst: mapRichText(props.heroTekst),
-        nedtelling: props.nedtelling as string || undefined,
-        hvemTittel: props.hvemTittel as string || undefined,
-        hvemTekst: mapRichText(props.hvemTekst),
-        hvemBilde: mapMedia(props.hvemBilde),
-        prosessTittel: props.prosessTittel as string || undefined,
-        prosessSteg: mapSandkasseSteg(props.prosessSteg),
-        resultatTittel: props.resultatTittel as string || undefined,
-        resultatTekst: mapRichText(props.resultatTekst),
-        resultatBilde: mapMedia(props.resultatBilde),
-        faqTittel: props.faqTittel as string || undefined,
-        faqSeksjoner: mapSandkasseFaq(props.faqSeksjoner),
+        tittel: props.tittel as string || item.name,
+        slug: props.slug as string || 'sandkasse',
+        ingress: props.ingress as string || '',
+        artikkelBilde: mapMedia(props.artikkelBilde),
+        bildeAlt: props.bildeAlt as string || '',
+        bakgrunn: (props.bakgrunn as string) || 'hvit',
+        innhold: mapArtikkelBlocks(props.innhold),
         seoTittel: props.seoTittel as string || undefined,
         seoBeskrivelse: props.seoBeskrivelse as string || undefined,
         seoBilde: mapMedia(props.seoBilde),
@@ -1043,33 +1020,6 @@ function mapEventItems(value: unknown): EventItem[] {
       eventDato: (props.eventDato as string) || undefined,
       eventSted: (props.eventSted as string) || undefined,
       eventUrl: (props.eventUrl as string) || undefined,
-    };
-  });
-}
-
-function mapSandkasseSteg(value: unknown): SandkasseSteg[] {
-  const items = Array.isArray(value) ? value : (value as any)?.items;
-  if (!Array.isArray(items)) return [];
-  return items.map((block: any) => {
-    const content = block.content || block;
-    const props = content.properties || content;
-    return {
-      nummer: (props.nummer as string) || '',
-      tittel: (props.tittel as string) || '',
-      beskrivelse: mapRichText(props.beskrivelse) || [],
-    };
-  });
-}
-
-function mapSandkasseFaq(value: unknown): SandkasseFaq[] {
-  const items = Array.isArray(value) ? value : (value as any)?.items;
-  if (!Array.isArray(items)) return [];
-  return items.map((block: any) => {
-    const content = block.content || block;
-    const props = content.properties || content;
-    return {
-      sporsmal: (props.sporsmal as string) || '',
-      svar: mapRichText(props.svar) || [],
     };
   });
 }

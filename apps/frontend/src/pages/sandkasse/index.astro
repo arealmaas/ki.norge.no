@@ -1,500 +1,584 @@
 ---
-/**
- * Regulatorisk sandkasse landing page.
- * Based on Figma design 561:1761.
- * CMS-driven with hardcoded fallbacks.
- */
 import Layout from '../../components/layout/Layout.astro';
-import BlocksRenderer from '../../components/shared/BlocksRenderer.astro';
 import { getSandkasse, getMediaUrl, getPlainText } from '../../lib/umbraco';
+import { breadcrumbSchema } from '../../lib/seo';
 
-let sandkasse = null;
-try {
-  sandkasse = await getSandkasse();
-} catch (e) {
-  console.error('Failed to fetch sandkasse CMS data:', e);
+const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
+const sandkasse = await getSandkasse({ preview: isPreview });
+
+if (!sandkasse) {
+  return Astro.redirect('/');
 }
 
-const fallbackProcessSteps = [
-  { number: '1', title: 'Søknad', desc: 'Potensielle deltagere sender en søknad til sandkassen. De vil få svar på sin søknad, eventuell beskjed om klargjøring/retting av søknaden innen rimelig tid.' },
-  { number: '2', title: 'Opptak', desc: 'Skal skissere sandkasseforløpet. Det vil inneholde spesifisering av hvilke spørsmål som skal behandles, hvor lang tid det er tenkt til å ta, mv.' },
-  { number: '3', title: 'Planlegging', desc: 'Når sandkasseforløpet er ferdigstilt vil deltageren få et skriftlig bevis og sluttbevis.' },
-  { number: '4', title: 'Sluttbevis', desc: 'Når sandkasseforløpet er ferdigstilt vil deltageren få et skriftlig bevis og sluttbevis.' },
-];
+const seoTitle = sandkasse.seoTittel || sandkasse.tittel;
+const seoDesc = sandkasse.seoBeskrivelse || sandkasse.ingress || getPlainText(sandkasse.innhold, 200);
+const heroImage = sandkasse.artikkelBilde || sandkasse.seoBilde;
+const seoImage = sandkasse.seoBilde?.url || sandkasse.artikkelBilde?.url;
 
-const fallbackFaqItems = [
-  'Hvem kan søke om deltakelse i sandkassen?',
-  'Hvor lang tid tar et sandkasseforløp?',
-  'Hva koster det å delta?',
-  'Hvilke krav stilles til KI-systemet?',
-  'Hva skjer etter sandkasseforløpet?',
-];
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: 'Forside', url: '/' },
+  { name: sandkasse.tittel, url: '/sandkasse' },
+]);
 
-const processSteps = sandkasse?.prosessSteg && sandkasse.prosessSteg.length > 0
-  ? sandkasse.prosessSteg
-  : null;
-
-const faqSeksjoner = sandkasse?.faqSeksjoner && sandkasse.faqSeksjoner.length > 0
-  ? sandkasse.faqSeksjoner
-  : null;
-
-const hvemBildeUrl = sandkasse?.hvemBilde ? getMediaUrl(sandkasse.hvemBilde) : undefined;
-const resultatBildeUrl = sandkasse?.resultatBilde ? getMediaUrl(sandkasse.resultatBilde) : undefined;
-
-const seoTitle = sandkasse?.seoTittel || 'Regulatorisk sandkasse for KI';
-const seoDescription = sandkasse?.seoBeskrivelse || 'KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger.';
+const bakgrunn = sandkasse.bakgrunn || 'hvit';
+const isLightBlueBg = bakgrunn === 'lyseblaa';
 ---
 
-<Layout title={seoTitle} description={seoDescription} headerTheme="dark">
-  <div class="sandkasse-page">
-    <!-- Hero -->
-    <section class="sandkasse-hero">
-      <div class="sandkasse-hero-inner">
-        <h1 class="sandkasse-hero-title">{sandkasse?.heroTittel || 'KI-sandkassen'}</h1>
-        <div class="sandkasse-hero-body">
-          {sandkasse?.heroTekst ? (
-            <BlocksRenderer blocks={sandkasse.heroTekst} />
-          ) : (
-            <p>KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger. Gjennom tett oppfølging og veiledning fra myndighetene får virksomhetene hjelp til å vurdere risiko og forstå relevant regelverk. Målet er at flere norske virksomheter skal lykkes med kunstig intelligens, og at KI-systemene følger lovverket.</p>
-          )}
-        </div>
-        <p class="sandkasse-hero-countdown">{sandkasse?.nedtelling || '120 dager til du kan søke!'}</p>
-        <div class="sandkasse-hero-illustrations">
-          <img loading="lazy" decoding="async" src="/sandkasse/sandkasse-bucket.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--bucket" aria-hidden="true" />
-          <div class="sandkasse-hero-img-group">
-            <img loading="lazy" decoding="async" src="/sandkasse/sandkasse-sandcastle.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--sandcastle" aria-hidden="true" />
-            <img loading="lazy" decoding="async" src="/sandkasse/sandkasse-shovel.png" alt="" class="sandkasse-hero-img sandkasse-hero-img--shovel" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Hvem er det til for? -->
-    <section class="sandkasse-section sandkasse-section--white">
-      <div class="sandkasse-section-inner sandkasse-row">
-        <div class="sandkasse-image-col">
-          <img loading="lazy" decoding="async" src={hvemBildeUrl || '/sandkasse/sandkasse-sandkasse.png'} alt={sandkasse?.hvemBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.hvemBilde?.alternativeText} />
-        </div>
-        <div class="sandkasse-text-col">
-          <h2 class="sandkasse-section-title">{sandkasse?.hvemTittel || 'Hvem er det til for?'}</h2>
-          <div class="sandkasse-section-body">
-            {sandkasse?.hvemTekst ? (
-              <BlocksRenderer blocks={sandkasse.hvemTekst} />
-            ) : (
-              <>
-                <p>Sandkassen er åpen for alle leverandører og fremtidige leverandører av KI-systemer. Den skal fortrinnsvis støtte små og mellomstore bedrifter og oppstartsbedrifter, men større aktører kan også søke.</p>
-                <p>Vi velger sandkasseprosjekter basert på om KI-systemet</p>
-                <ul>
-                  <li>er innovativt</li>
-                  <li>kan bidra til å understøtte offentlige hensyn og interesser</li>
-                  <li>har rettslige utfordringer som gjelder for resten av sektoren.</li>
-                </ul>
-              </>
+<Layout title={seoTitle} description={seoDesc} ogImage={seoImage}>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
+  <div class="article-page grid">
+    <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : (heroImage ? 'col-center-10' : 'col-center-6')}`}>
+      {isLightBlueBg ? (
+        <div class={`grid article-hero-bg-grid`}>
+          <div class={`article-hero-inner ${heroImage ? 'col-center-10' : 'col-center-6'}`}>
+            <div class="article-hero-text">
+              <h1 class="article-title">{sandkasse.tittel}</h1>
+              {sandkasse.ingress && <p class="article-ingress">{sandkasse.ingress}</p>}
+            </div>
+            {heroImage?.url && (
+              <div class="article-hero-image">
+                <img src={getMediaUrl(heroImage)} alt={sandkasse.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
+              </div>
             )}
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- Slik foregår prosessen -->
-    <section class="sandkasse-process">
-      <div class="sandkasse-process-inner">
-        <h2 class="sandkasse-process-title">{sandkasse?.prosessTittel || 'Slik foregår prosessen'}</h2>
-        <div class="sandkasse-process-grid">
-          {processSteps ? (
-            processSteps.map(step => (
-              <div class="process-step">
-                <span class="process-step-number">{step.nummer}</span>
-                <h3 class="process-step-title">{step.tittel}</h3>
-                <div class="process-step-desc">
-                  <BlocksRenderer blocks={step.beskrivelse} />
-                </div>
-              </div>
-            ))
-          ) : (
-            fallbackProcessSteps.map(step => (
-              <div class="process-step">
-                <span class="process-step-number">{step.number}</span>
-                <h3 class="process-step-title">{step.title}</h3>
-                <p class="process-step-desc">{step.desc}</p>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </section>
-
-    <!-- Hva får du ut av det? -->
-    <section class="sandkasse-section sandkasse-section--white">
-      <div class="sandkasse-section-inner sandkasse-row sandkasse-row--reverse">
-        <div class="sandkasse-text-col">
-          <h2 class="sandkasse-section-title">{sandkasse?.resultatTittel || 'Hva får du ut av det?'}</h2>
-          <div class="sandkasse-section-body">
-            {sandkasse?.resultatTekst ? (
-              <BlocksRenderer blocks={sandkasse.resultatTekst} />
-            ) : (
-              <>
-                <p>Deltagere i sandkassen får tett oppfølging og veiledning i å vurdere risiko og forstå relevant regelverk.</p>
-                <p>Når sandkasseforløpet er fullført, får deltakerne et skriftlig bevis og en sluttrapport. Sandkassedeltakeren kan bruke dokumentasjonen til å vise at de følger KI-loven.</p>
-                <p>Det vil gjøre det lettere og raskere å få KI-systemet godkjent eller kontrollert.</p>
-              </>
-            )}
+      ) : (
+        <div class="article-hero-inner">
+          <div class="article-hero-text">
+            <h1 class="article-title">{sandkasse.tittel}</h1>
+            {sandkasse.ingress && <p class="article-ingress">{sandkasse.ingress}</p>}
           </div>
-        </div>
-        <div class="sandkasse-image-col">
-          <img loading="lazy" decoding="async" src={resultatBildeUrl || '/sandkasse/sandkasse-sandkasse-2.png'} alt={sandkasse?.resultatBilde?.alternativeText || ''} class="sandkasse-illustration" aria-hidden={!sandkasse?.resultatBilde?.alternativeText} />
-        </div>
-      </div>
-    </section>
-
-    <!-- Ofte stilte spørsmål -->
-    <section class="sandkasse-faq">
-      <div class="sandkasse-faq-inner">
-        <h2 class="sandkasse-faq-title">{sandkasse?.faqTittel || 'Ofte stilte spørsmål'}</h2>
-        <div class="sandkasse-faq-list">
-          {faqSeksjoner ? (
-            faqSeksjoner.map(faq => (
-              <details class="sandkasse-faq-item">
-                <summary class="sandkasse-faq-question">
-                  <span>{faq.sporsmal}</span>
-                  <span class="sandkasse-faq-icon">+</span>
-                </summary>
-                <div class="sandkasse-faq-answer">
-                  <BlocksRenderer blocks={faq.svar} />
-                </div>
-              </details>
-            ))
-          ) : (
-            fallbackFaqItems.map(q => (
-              <details class="sandkasse-faq-item">
-                <summary class="sandkasse-faq-question">
-                  <span>{q}</span>
-                  <span class="sandkasse-faq-icon">+</span>
-                </summary>
-                <div class="sandkasse-faq-answer">
-                  <p>Innhold kommer snart.</p>
-                </div>
-              </details>
-            ))
+          {heroImage?.url && (
+            <div class="article-hero-image">
+              <img src={getMediaUrl(heroImage)} alt={sandkasse.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
+            </div>
           )}
         </div>
-      </div>
+      )}
     </section>
+
+    {sandkasse.innhold?.map(block => {
+        if (block.contentType === 'artikkelByline') {
+          const c = block.content;
+          const date = c.dato;
+          const formatted = date ? new Date(date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+          const parts = [c.navn, c.stilling, c.virksomhet ? `i ${c.virksomhet}` : ''].filter(Boolean).join(' ');
+          if (!parts && !formatted) return null;
+          return (
+            <div class="article-byline col-center-6">
+              {parts && <span class="article-byline-author">{parts}</span>}
+              {parts && formatted && <span class="article-byline-sep">·</span>}
+              {formatted && <time class="article-byline-date" datetime={date}>{formatted}</time>}
+            </div>
+          );
+        }
+        if (block.contentType === 'artikkelInnholdFra') {
+          const c = block.content;
+          if (!c.virksomhet && !c.dato) return null;
+          const date = c.dato;
+          const formatted = date ? new Date(date).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+          return (
+            <aside class="article-innhold-fra col-center-6">
+              {c.virksomhet && (
+                <>
+                  <span class="article-innhold-fra-label">Innhold fra</span>
+                  <strong class="article-innhold-fra-org">{c.virksomhet}</strong>
+                </>
+              )}
+              {formatted && (
+                <span class="article-innhold-fra-date">Sist oppdatert {formatted}</span>
+              )}
+            </aside>
+          );
+        }
+        if (block.contentType === 'artikkelKontaktkort') {
+          const c = block.content;
+          return (
+            <aside class="article-kontaktkort col-center-6">
+              {c.tittel && <h3 class="article-kontaktkort-title">{c.tittel}</h3>}
+              <p class="article-kontaktkort-name">{c.navn}</p>
+              {c.stilling && <p class="article-kontaktkort-row">{c.stilling}</p>}
+              {c.virksomhet && <p class="article-kontaktkort-row">{c.virksomhet}</p>}
+              {c.epost && <p class="article-kontaktkort-row"><a href={`mailto:${c.epost}`}>{c.epost}</a></p>}
+              {c.telefon && <p class="article-kontaktkort-row"><a href={`tel:${c.telefon.replace(/\s/g, '')}`}>{c.telefon}</a></p>}
+            </aside>
+          );
+        }
+        if (block.contentType === 'artikkelProsessteg') {
+          const c = block.content;
+          return (
+            <section class="article-prosessteg col-center-6">
+              {c.tittel && <h2 class="article-prosessteg-title">{c.tittel}</h2>}
+              <ol class="article-prosessteg-list">
+                {c.steg.map((s, i) => (
+                  <li class="article-prosessteg-item">
+                    <div class="article-prosessteg-header">
+                      <span class="article-prosessteg-number">{i + 1}</span>
+                      {s.tittel && <span class="article-prosessteg-label">{s.tittel}</span>}
+                    </div>
+                    <div class="article-prosessteg-body" set:html={s.beskrivelse} />
+                  </li>
+                ))}
+              </ol>
+            </section>
+          );
+        }
+        if (block.contentType === 'artikkelFremheving') {
+          const c = block.content;
+          const classes = [
+            'article-fremheving',
+            'col-center-6',
+            c.visBakgrunn ? 'article-fremheving--bg' : '',
+            c.visAnforselstegn ? 'article-fremheving--quote' : '',
+            c.bilde?.url ? 'article-fremheving--with-image' : '',
+          ].filter(Boolean).join(' ');
+          return (
+            <div class={classes}>
+              {c.bilde?.url && (
+                <div class="article-fremheving-image">
+                  <img src={getMediaUrl(c.bilde)} alt={c.bildeAlt || ''} loading="lazy" decoding="async" />
+                </div>
+              )}
+              <div class="article-fremheving-content">
+                {c.tittel && <h3 class="article-fremheving-title">{c.tittel}</h3>}
+                {c.visAnforselstegn ? (
+                  <blockquote class="article-fremheving-text article-fremheving-text--quote">
+                    <span aria-hidden="true" class="article-fremheving-quote-mark article-fremheving-quote-mark--open">«</span>
+                    <div set:html={c.tekst} />
+                    <span aria-hidden="true" class="article-fremheving-quote-mark article-fremheving-quote-mark--close">»</span>
+                  </blockquote>
+                ) : (
+                  <div class="article-fremheving-text" set:html={c.tekst} />
+                )}
+                {c.kilde && (
+                  <footer class="article-fremheving-source">
+                    <cite>{c.kilde}</cite>
+                  </footer>
+                )}
+              </div>
+            </div>
+          );
+        }
+        if (block.contentType === 'artikkelInfoBoks') {
+          return (
+            <div class="article-info-box col-center-6">
+              {block.content.tittel && <h3 class="info-box-title">{block.content.tittel}</h3>}
+              <div class="info-box-body" set:html={block.content.innhold} />
+            </div>
+          );
+        }
+        if (block.contentType === 'artikkelTrekkspill') {
+          return (
+            <details class="article-accordion col-center-6">
+              <summary class="article-accordion-summary">
+                {block.content.tittel}
+                <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </summary>
+              <div class="article-accordion-body" set:html={block.content.innhold} />
+            </details>
+          );
+        }
+        if (block.contentType === 'artikkelSitat') {
+          return (
+            <blockquote class="article-quote col-center-6">
+              <p class="article-quote-text">{block.content.sitat}</p>
+              {block.content.kilde && (
+                <footer class="article-quote-source">
+                  <cite>{block.content.kilde}</cite>
+                </footer>
+              )}
+            </blockquote>
+          );
+        }
+        if (block.contentType === 'artikkelCallout') {
+          const variant = block.content.variant || 'info';
+          return (
+            <div class={`article-callout article-callout--${variant} col-center-6`} role={variant === 'advarsel' ? 'alert' : 'note'}>
+              {block.content.tittel && <p class="article-callout-title">{block.content.tittel}</p>}
+              <div class="article-callout-body" set:html={block.content.innhold} />
+            </div>
+          );
+        }
+        if (block.contentType === 'artikkelBildeSeksjon') {
+          return (
+            <figure class="article-image-section col-center-6">
+              {block.content.bilde?.url ? (
+                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildeAlt || ''} class="stub-img" loading="lazy" decoding="async" />
+              ) : (
+                <div class="article-image-placeholder"></div>
+              )}
+              {block.content.bildetekst && <figcaption>{block.content.bildetekst}</figcaption>}
+            </figure>
+          );
+        }
+        return (
+          <div class="article-text-block col-center-6" set:html={block.content.innhold} />
+        );
+      })}
   </div>
 </Layout>
 
 <style>
-  .sandkasse-page {
-    margin-top: -72px;
+  .article-page {
+    padding-top: 0;
+    row-gap: 48px;
+    padding-bottom: 120px;
   }
 
-  /* Hero */
-  .sandkasse-hero {
-    background: linear-gradient(180deg, #281ea8 0%, #20199a 40%, #1a1490 100%);
-    padding: 140px 24px 80px;
-    text-align: center;
-    overflow: hidden;
+  .article-hero {
+    padding: 100px 0;
   }
 
-  .sandkasse-hero-inner {
-    max-width: 860px;
-    margin: 0 auto;
+  .article-hero--bg-lyseblaa {
+    background: #e5f2f7;
+    padding: 140px 0 80px;
+    margin: 0;
   }
 
-  .sandkasse-hero-title {
-    font-size: 64px;
-    font-weight: 700;
-    color: white;
-    margin: 0 0 48px;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-
-  .sandkasse-hero-body {
-    font-size: 20px;
-    font-weight: 500;
-    color: white;
-    margin: 0 0 32px;
-    line-height: 1.3;
-    letter-spacing: -0.0025em;
-  }
-
-  .sandkasse-hero-countdown {
-    font-size: 20px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.7);
-    margin: 0 0 48px;
-    line-height: 1.3;
-  }
-
-  .sandkasse-hero-illustrations {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 148px;
-    max-width: 700px;
-    margin: 0 auto;
-  }
-
-  .sandkasse-hero-img {
-    object-fit: contain;
-  }
-
-  .sandkasse-hero-img-group {
-    position: relative;
-    width: 136.4px;
-    height: 100px;
-  }
-
-  .sandkasse-hero-img--sandcastle {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 130px;
-    width: 190px;
-  }
-
-  .sandkasse-hero-img--shovel {
-    position: absolute;
-    bottom: 62%;
-    left: 39%;
-    z-index: 1;
-    height: 120px;
-    width: 190px;
-  }
-
-  .sandkasse-hero-img--bucket {
-    height: 150px;
-  }
-
-  @media (max-width: 639px) {
-    .sandkasse-hero-title {
-      font-size: 32px;
-    }
-    .sandkasse-hero-body {
-      font-size: 16px;
-    }
-    .sandkasse-hero-illustrations {
-      gap: 12px;
-      margin-left: -80px;
-    }
-  }
-
-  /* White content sections */
-  .sandkasse-section--white {
-    padding: 80px 24px;
-  }
-
-  .sandkasse-section-inner {
-    max-width: 930px;
-    margin: 0 auto;
-  }
-
-  .sandkasse-row {
+  .article-hero-inner {
     display: flex;
     flex-direction: column;
     gap: 32px;
-    align-items: center;
-  }
-
-  @media (min-width: 640px) {
-    .sandkasse-row {
-      flex-direction: row;
-      gap: 48px;
-    }
-    .sandkasse-row--reverse {
-      flex-direction: row-reverse;
-    }
-  }
-
-  .sandkasse-image-col {
-    flex-shrink: 0;
-    width: 280px;
-  }
-
-  .sandkasse-illustration {
-    width: 100%;
-    height: auto;
-    border-radius: 4px;
-    mix-blend-mode: darken;
-  }
-
-  .sandkasse-text-col {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .sandkasse-section-title {
-    font-size: 36px;
-    font-weight: 400;
-    color: #000;
-    margin: 0 0 32px;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-
-  .sandkasse-section-body {
-    font-size: 20px;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.75);
-    line-height: 1.3;
-    letter-spacing: -0.0025em;
-  }
-
-  .sandkasse-section-body p {
-    margin: 0 0 16px;
-  }
-
-  .sandkasse-section-body p:last-child {
-    margin-bottom: 0;
-  }
-
-  .sandkasse-section-body ul {
-    margin: 8px 0 0;
-    padding-left: 24px;
-  }
-
-  .sandkasse-section-body li {
-    margin-bottom: 4px;
-  }
-
-  /* Process section */
-  .sandkasse-process {
-    background: #20199a;
-    padding: 80px 24px;
-  }
-
-  .sandkasse-process-inner {
-    max-width: 1120px;
-    margin: 0 auto;
-  }
-
-  .sandkasse-process-title {
-    font-size: 36px;
-    font-weight: 400;
-    color: white;
-    margin: 0 0 48px;
-    line-height: 1.3;
-  }
-
-  .sandkasse-process-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 48px;
-  }
-
-  @media (min-width: 640px) {
-    .sandkasse-process-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
   }
 
   @media (min-width: 1024px) {
-    .sandkasse-process-grid {
-      grid-template-columns: repeat(4, 1fr);
+    .article-hero-inner {
+      flex-direction: row;
+      align-items: center;
     }
   }
 
-  .process-step {
+  .article-hero-text {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
+    gap: 32px;
   }
 
-  .process-step-number {
-    font-size: 128px;
-    font-weight: 600;
-    color: white;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-
-  .process-step-title {
-    font-size: 24px;
-    font-weight: 500;
-    color: white;
-    margin: 0 0 16px;
-    line-height: 1.3;
-  }
-
-  .process-step-desc {
-    font-size: 18px;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.7);
+  .article-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #000;
     margin: 0;
     line-height: 1.3;
+    letter-spacing: -0.5px;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
-  @media (max-width: 640px) {
-    .process-step-number {
-      font-size: 80px;
-    }
-  }
+  @media (min-width: 768px) { .article-title { font-size: 2.5rem; } }
+  @media (min-width: 1024px) { .article-title { font-size: 36px; } }
 
-  /* FAQ section */
-  .sandkasse-faq {
-    background: #20199a;
-    padding: 80px 24px;
-  }
-
-  .sandkasse-faq-inner {
-    max-width: 1120px;
-    margin: 0 auto;
-  }
-
-  .sandkasse-faq-title {
-    font-size: 32px;
+  .article-ingress {
+    font-size: 21px;
     font-weight: 400;
-    color: white;
-    margin: 0 0 32px;
-    line-height: 1.3;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: 1.7;
+    letter-spacing: 0.5px;
+    margin: 0;
   }
 
-  .sandkasse-faq-list {
-    display: flex;
-    flex-direction: column;
+  @media (min-width: 1024px) { .article-ingress { font-size: 24px; } }
+
+  .article-hero-image {
+    flex-shrink: 0;
+    width: 100%;
   }
 
-  .sandkasse-faq-item {
-    border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    margin-bottom: -1px;
+  @media (min-width: 1024px) { .article-hero-image { width: 407px; } }
+
+  .article-hero-img {
+    width: 100%;
+    height: auto;
+    border-radius: 16px;
+    display: block;
+    object-fit: cover;
   }
 
-  .sandkasse-faq-question {
+  @media (min-width: 1024px) { .article-hero-img { height: 331px; } }
+
+  .article-accordion {
+    border: 1px solid #b6d8e4;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 24px 0;
+    transition: border-color 0.15s;
+  }
+  .article-accordion:hover { border-color: #1a2a6d; }
+  .article-accordion[open] { border-color: #1a2a6d; }
+  .article-accordion-summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 28px 16px;
+    padding: 20px 24px;
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #1a2a6d;
     cursor: pointer;
     list-style: none;
-    font-size: 21px;
-    font-weight: 700;
-    color: white;
+    background: #e5f2f7;
   }
-
-  .sandkasse-faq-question::-webkit-details-marker {
-    display: none;
-  }
-
-  .sandkasse-faq-icon {
-    font-size: 24px;
-    color: rgba(255, 255, 255, 0.7);
+  .article-accordion-summary::-webkit-details-marker { display: none; }
+  .article-accordion-chevron {
     flex-shrink: 0;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
+    color: #1a2a6d;
   }
-
-  .sandkasse-faq-item[open] .sandkasse-faq-icon {
-    transform: rotate(45deg);
+  .article-accordion[open] > .article-accordion-summary .article-accordion-chevron {
+    transform: rotate(180deg);
   }
-
-  .sandkasse-faq-answer {
-    padding: 0 16px 28px 16px;
-    font-size: 18px;
-    color: rgba(255, 255, 255, 0.7);
-    line-height: 1.5;
+  .article-accordion-body {
+    padding: 20px 24px;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.75);
+    background: white;
   }
+  .article-accordion-body :global(p) { margin: 0 0 12px; }
+  .article-accordion-body :global(p:last-child) { margin-bottom: 0; }
 
-  .sandkasse-faq-answer p {
+  .article-quote {
+    margin: 32px 0;
+    padding: 24px 32px;
+    border-left: 4px solid #1a2a6d;
+    background: #f8fafc;
+    border-radius: 0 8px 8px 0;
+  }
+  .article-quote-text {
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.6;
+    color: #1e293b;
     margin: 0;
+  }
+  .article-quote-source {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    color: rgba(0, 0, 0, 0.6);
+  }
+  .article-quote-source cite { font-style: normal; }
+
+  .article-callout {
+    margin: 24px 0;
+    padding: 20px 24px;
+    border-radius: 8px;
+    border-left: 4px solid;
+  }
+  .article-callout--info { background: #e5f2f7; border-left-color: #0062ba; }
+  .article-callout--obs { background: #fef9c3; border-left-color: #ca8a04; }
+  .article-callout--advarsel { background: #fef2f2; border-left-color: #dc2626; }
+  .article-callout--suksess { background: #f0fdf4; border-left-color: #16a34a; }
+  .article-callout-title {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0 0 8px;
+    color: #1e293b;
+  }
+  .article-callout-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(0, 0, 0, 0.8);
+  }
+  .article-callout-body :global(p) { margin: 0 0 8px; }
+  .article-callout-body :global(p:last-child) { margin-bottom: 0; }
+
+  .article-byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: baseline;
+    font-size: 16px;
+    color: rgba(0, 0, 0, 0.7);
+  }
+  .article-byline-author { font-weight: 500; color: #000; }
+  .article-byline-sep { color: rgba(0, 0, 0, 0.4); }
+  .article-byline-date { color: rgba(0, 0, 0, 0.55); }
+
+  .article-innhold-fra {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 24px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  .article-innhold-fra-label { font-size: 14px; color: rgba(0, 0, 0, 0.55); }
+  .article-innhold-fra-org { font-size: 18px; font-weight: 600; color: #000; }
+  .article-innhold-fra-date { font-size: 14px; color: rgba(0, 0, 0, 0.55); }
+
+  .article-kontaktkort {
+    background: #e5f2f7;
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .article-kontaktkort-title { font-size: 21px; font-weight: 500; color: #1a2a6d; margin: 0 0 16px; }
+  .article-kontaktkort-name { font-size: 18px; font-weight: 600; color: #000; margin: 0; }
+  .article-kontaktkort-row { font-size: 16px; color: rgba(0, 0, 0, 0.75); margin: 0; }
+  .article-kontaktkort-row a { color: #1a2a6d; text-decoration: none; }
+  .article-kontaktkort-row a:hover { text-decoration: underline; }
+
+  .article-prosessteg {
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .article-prosessteg-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .article-prosessteg-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+  .article-prosessteg-item {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .article-prosessteg-header {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+  }
+  .article-prosessteg-number {
+    font-size: 64px;
+    font-weight: 600;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.43);
+    letter-spacing: 0.024px;
+  }
+  .article-prosessteg-label {
+    font-size: 24px;
+    font-weight: 500;
+    color: #000;
+    letter-spacing: 0.012px;
+  }
+  .article-prosessteg-body {
+    font-size: 18px;
+    line-height: 1.45;
+    color: rgba(0, 0, 0, 0.7);
+  }
+  .article-prosessteg-body :global(p) { margin: 0 0 8px; }
+  .article-prosessteg-body :global(p:last-child) { margin-bottom: 0; }
+
+  .article-fremheving {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border-radius: 24px;
+    padding: 32px;
+    margin: 16px 0;
+  }
+  .article-fremheving--bg { background: #e5f2f7; }
+  @media (min-width: 768px) {
+    .article-fremheving--with-image {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+    .article-fremheving-image { flex-shrink: 0; width: 35%; }
+  }
+  .article-fremheving-image img { width: 100%; height: auto; display: block; border-radius: 12px; }
+  .article-fremheving-content { flex: 1; min-width: 0; }
+  .article-fremheving-title {
+    font-size: 21px;
+    font-weight: 500;
+    color: #1a2a6d;
+    margin: 0 0 16px;
+  }
+  .article-fremheving-text {
+    font-size: 18px;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.8);
+  }
+  .article-fremheving-text :global(p) { margin: 0 0 12px; }
+  .article-fremheving-text :global(p:last-child) { margin-bottom: 0; }
+  .article-fremheving-text--quote {
+    position: relative;
+    font-style: italic;
+    margin: 0;
+  }
+  .article-fremheving-quote-mark {
+    font-size: 2.5em;
+    font-style: normal;
+    color: rgba(0, 0, 0, 0.4);
+    line-height: 0.5;
+    vertical-align: -0.2em;
+  }
+  .article-fremheving-quote-mark--open { margin-right: 0.1em; }
+  .article-fremheving-quote-mark--close { margin-left: 0.1em; }
+  .article-fremheving-source {
+    margin-top: 12px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.55);
+  }
+  .article-fremheving-source cite { font-style: normal; }
+
+  .article-info-box {
+    background: #e5f2f7;
+    border-radius: 24px;
+    padding: 48px;
+    margin: 32px 0;
+  }
+  .info-box-title {
+    font-size: 21px;
+    font-weight: 500;
+    color: #1a2a6d;
+    margin: 0 0 16px;
+  }
+  .info-box-body {
+    font-size: 21px;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.75);
+  }
+
+  .article-image-section { margin: 32px 0; }
+  .article-image-section img { width: 100%; border-radius: 8px; display: block; }
+  .article-image-placeholder {
+    width: 100%;
+    height: 400px;
+    background: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 8px;
+  }
+  .article-image-section figcaption {
+    font-size: 14px;
+    color: rgba(0,0,0,0.55);
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .article-text-block {
+    font-size: 21px;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.75);
+    letter-spacing: 0.005em;
+  }
+  .article-text-block :global(h2) {
+    font-size: 36px;
+    font-weight: 500;
+    color: #1a2a6d;
+    margin: 48px 0 24px;
+  }
+  .article-text-block :global(h3) {
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a2a6d;
+    margin: 32px 0 16px;
+  }
+  .article-text-block :global(p) { margin: 0 0 16px; }
+  .article-text-block :global(ul), .article-text-block :global(ol) {
+    margin: 8px 0 16px;
+    padding-left: 24px;
   }
 </style>
