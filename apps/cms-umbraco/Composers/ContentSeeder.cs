@@ -147,7 +147,6 @@ public class ContentSeeder : IAsyncComponent
         MoveVeiledningOversiktUnderVeiledning();
         FlattenVeiledningOversiktIntoContainer();
         NestVeiledningStegUnderGuide();
-        RemoveDuplicateSandkasseUnderSider();
         FlattenOmOssSeksjonerToBlocks();
         MigrateEksempelToCase();
         FixBakgrunnDropdownValues();
@@ -492,27 +491,12 @@ public class ContentSeeder : IAsyncComponent
         Console.WriteLine($"ContentSeeder: Flattened {children.Count} Om Oss seksjoner into blocks on the page");
     }
 
-    /// <summary>
-    /// Removes any "sandkasse" content node nested under the sider container.
-    /// The top-level sandkasse stays. Idempotent.
-    /// </summary>
-    private void RemoveDuplicateSandkasseUnderSider()
-    {
-        var siderFolder = _contentService.GetRootContent()
-            .FirstOrDefault(c => c.ContentType.Alias == "sider");
-        if (siderFolder == null) return;
-
-        var children = _contentService.GetPagedChildren(siderFolder.Id, 0, int.MaxValue, out _);
-        var sandkasseDuplicates = children
-            .Where(c => c.ContentType.Alias == "sandkasse" || (c.ContentType.Alias == "side" && (c.Name?.ToLowerInvariant().Contains("sandkasse") ?? false)))
-            .ToList();
-
-        foreach (var dup in sandkasseDuplicates)
-        {
-            _contentService.Delete(dup);
-            Console.WriteLine($"ContentSeeder: Removed duplicate '{dup.Name}' under Sider");
-        }
-    }
+    // RemoveDuplicateSandkasseUnderSider: REMOVED 2026-05-04.
+    // This migration assumed that any sandkasse-node under Sider was a duplicate
+    // of one that existed at root. That assumption was wrong: when an editor
+    // moved the real Sandkasse from root into Sider via the UI, the migration
+    // saw it as a "duplicate" and deleted it. Never write a deletion migration
+    // that targets a content type without verifying the "original" still exists.
 
     /// <summary>
     /// Renames the "Veiledninger" container to "Veiledning" (singular).
