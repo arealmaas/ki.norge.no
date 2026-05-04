@@ -39,9 +39,61 @@ function formatDate(dateStr?: string): string {
     return '';
   }
 }
+
+/**
+ * Walks the block list and groups consecutive `artikkelTrekkspill` blocks
+ * into one wrapper. The wrapper becomes a single grid child, so the parent
+ * page's `row-gap` only applies between the group and surrounding blocks
+ * — not between accordions inside the group. CSS then collapses the
+ * borders so the group reads as one cohesive component (matches the FAQ
+ * pattern in the Sandkasse Figma).
+ *
+ * Editor escape hatch: insert any non-trekkspill block (an empty brødtekst,
+ * an image, anything) between two accordions to break the grouping.
+ */
+type GroupedItem = { kind: 'block'; block: UmbracoBlock } | { kind: 'accordionGroup'; blocks: UmbracoBlock[] };
+function groupConsecutiveTrekkspill(items?: UmbracoBlock[]): GroupedItem[] {
+  if (!items) return [];
+  const out: GroupedItem[] = [];
+  for (const block of items) {
+    if (block.contentType === 'artikkelTrekkspill') {
+      const last = out[out.length - 1];
+      if (last && last.kind === 'accordionGroup') {
+        last.blocks.push(block);
+        continue;
+      }
+      out.push({ kind: 'accordionGroup', blocks: [block] });
+    } else {
+      out.push({ kind: 'block', block });
+    }
+  }
+  return out;
+}
+
+const renderItems = groupConsecutiveTrekkspill(blocks);
 ---
 
-{blocks?.map((block) => {
+{renderItems.map((item) => {
+  if (item.kind === 'accordionGroup') {
+    return (
+      <div class="article-accordion-group col-center-6">
+        {item.blocks.map((block) => (
+          <details class="article-accordion">
+            <summary class="article-accordion-summary">
+              {block.content.tittel}
+              <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m6 9 6 6 6-6"/>
+              </svg>
+            </summary>
+            <div class="article-accordion-body" set:html={block.content.innhold} />
+          </details>
+        ))}
+      </div>
+    );
+  }
+  const block = item.block;
+  // existing per-block branches below — falls through to the original switch
+  return (() => {
   if (block.contentType === 'artikkelByline') {
     const c = block.content;
     const date = c.dato || defaultDate;
@@ -159,19 +211,9 @@ function formatDate(dateStr?: string): string {
       </div>
     );
   }
-  if (block.contentType === 'artikkelTrekkspill') {
-    return (
-      <details class="article-accordion col-center-6">
-        <summary class="article-accordion-summary">
-          {block.content.tittel}
-          <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m6 9 6 6 6-6"/>
-          </svg>
-        </summary>
-        <div class="article-accordion-body" set:html={block.content.innhold} />
-      </details>
-    );
-  }
+  // artikkelTrekkspill is handled above by the accordion-group wrapper —
+  // the per-block branch never fires now. Keeping for safety (defensive
+  // fallback if a non-grouped trekkspill ever shows up).
   if (block.contentType === 'artikkelSitat') {
     return (
       <blockquote class="article-quote col-center-6">
@@ -208,4 +250,5 @@ function formatDate(dateStr?: string): string {
   return (
     <div class="article-text-block col-center-6" set:html={block.content.innhold} />
   );
+  })();
 })}

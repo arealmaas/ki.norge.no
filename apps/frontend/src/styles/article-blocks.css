@@ -17,6 +17,39 @@
 }
 .article-accordion:hover { border-color: #1a2a6d; }
 .article-accordion[open] { border-color: #1a2a6d; }
+
+/* Accordion group wrapper. The renderer (ArticleBlocksRenderer.astro)
+   walks the block list and groups consecutive artikkelTrekkspill blocks
+   into one .article-accordion-group div. That div is the single grid
+   child, so the page-level `row-gap` only spaces the GROUP from
+   surrounding blocks — not the accordions inside. CSS here collapses the
+   borders between adjacent accordions inside the group. */
+.article-accordion-group {
+  display: flex;
+  flex-direction: column;
+  margin: 24px 0;
+}
+.article-accordion-group .article-accordion {
+  margin: 0;            /* override the standalone accordion's margin */
+  border-radius: 0;
+}
+.article-accordion-group .article-accordion + .article-accordion {
+  margin-top: -1px;     /* overlap shared border */
+}
+.article-accordion-group .article-accordion:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+.article-accordion-group .article-accordion:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+/* Open state in a group: bring the active item to the front so the inner
+   accent border draws over its neighbours instead of being clipped. */
+.article-accordion-group .article-accordion[open] {
+  position: relative;
+  z-index: 1;
+}
 .article-accordion-summary {
   display: flex;
   align-items: center;
