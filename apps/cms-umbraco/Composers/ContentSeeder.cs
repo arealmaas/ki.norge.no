@@ -239,9 +239,10 @@ public class ContentSeeder : IAsyncComponent
             _contentService.Publish(container, new[] { "*" });
         }
 
-        // Delete the standalone Oversikt node (cascades any children, but it shouldn't have any)
-        _contentService.Delete(oversikt);
-        Console.WriteLine("ContentSeeder: Flattened Veiledning Oversikt into Veiledning container");
+        // Move (don't hard-delete) — preserves recoverability via the recycle bin if a
+        // future ed​itor needs the original back. Cascades children to the recycle bin too.
+        _contentService.MoveToRecycleBin(oversikt);
+        Console.WriteLine("ContentSeeder: Flattened Veiledning Oversikt into Veiledning container (oversikt moved to recycle bin)");
     }
 
     private void RenameFaqContainerNode()
@@ -333,11 +334,12 @@ public class ContentSeeder : IAsyncComponent
             migrated++;
         }
 
-        // Delete the entire Eksempler container (cascades to children)
+        // Move container (don't hard-delete) so a future editor can dig out the original
+        // eksempel content from the recycle bin if needed.
         if (migrated > 0 || eksempler.Count > 0)
         {
-            _contentService.Delete(eksemplerContainer);
-            Console.WriteLine($"ContentSeeder: Migrated {migrated} eksempel(s) to case under Caser, deleted Eksempler container");
+            _contentService.MoveToRecycleBin(eksemplerContainer);
+            Console.WriteLine($"ContentSeeder: Migrated {migrated} eksempel(s) to case under Caser, moved Eksempler container to recycle bin");
         }
     }
 
@@ -482,10 +484,10 @@ public class ContentSeeder : IAsyncComponent
         _contentService.Save(omOss);
         _contentService.Publish(omOss, new[] { "*" });
 
-        // Delete migrated child nodes
+        // Move (don't hard-delete) the original seksjon nodes — recoverable from recycle bin
         foreach (var seksjon in children)
         {
-            _contentService.Delete(seksjon);
+            _contentService.MoveToRecycleBin(seksjon);
         }
 
         Console.WriteLine($"ContentSeeder: Flattened {children.Count} Om Oss seksjoner into blocks on the page");
@@ -577,9 +579,10 @@ public class ContentSeeder : IAsyncComponent
             .FirstOrDefault(c => c.ContentType.Alias == "tilgjengeligeIkoner");
         if (ikonerFolder == null) return;
 
-        // DeleteAsync would be cleaner but Delete on the parent cascades to children
-        _contentService.Delete(ikonerFolder);
-        Console.WriteLine("ContentSeeder: Removed Ikoner container and all child nodes");
+        // Move to recycle bin (cascades to children) instead of hard-delete, so a
+        // future editor can recover ikon-content if needed.
+        _contentService.MoveToRecycleBin(ikonerFolder);
+        Console.WriteLine("ContentSeeder: Moved Ikoner container to recycle bin");
     }
 
     /// <summary>
