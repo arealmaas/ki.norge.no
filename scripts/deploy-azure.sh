@@ -239,7 +239,11 @@ properties:
       - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
         value: 'true'
       - name: ConnectionStrings__umbracoDbDSN
-        value: Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True
+        # Default Timeout=30 sets SQLite busy_timeout to 30s — without this, any
+        # write that collides with a Litestream WAL checkpoint or another writer
+        # fails immediately with "database is locked" / "table is locked".
+        # Litestream docs explicitly recommend >=5s; 30s gives plenty of headroom.
+        value: Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True;Default Timeout=30
       - name: ConnectionStrings__umbracoDbDSN_ProviderName
         value: Microsoft.Data.Sqlite
       - name: UMBRACO__CMS__DELIVERYAPI__ENABLED
@@ -329,7 +333,7 @@ else
       "ASPNETCORE_ENVIRONMENT=Production" \
       "ASPNETCORE_URLS=http://0.0.0.0:8080" \
       "ASPNETCORE_FORWARDEDHEADERS_ENABLED=true" \
-      "ConnectionStrings__umbracoDbDSN=Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True" \
+      "ConnectionStrings__umbracoDbDSN=Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True;Default Timeout=30" \
       "ConnectionStrings__umbracoDbDSN_ProviderName=Microsoft.Data.Sqlite" \
       "UMBRACO__CMS__DELIVERYAPI__ENABLED=true" \
       "UMBRACO__CMS__DELIVERYAPI__PUBLICACCESS=true" \
