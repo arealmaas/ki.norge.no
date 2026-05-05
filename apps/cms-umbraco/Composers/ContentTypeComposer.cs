@@ -97,6 +97,11 @@ public class ContentTypeComponent : IAsyncComponent
                 MigrateArtikkelBildeSeksjon();
             if (_contentTypeService.Get("artikkelTrekkspill") == null)
                 CreateArtikkelTrekkspillElement();
+            // Settings element for artikkelTrekkspill — exposes "Innstillinger" tab on each
+            // accordion block in the editor. Currently lets the editor split groups via
+            // gruppeTittel: when set, that accordion starts a new group with that title.
+            if (_contentTypeService.Get("artikkelTrekkspillSettings") == null)
+                CreateArtikkelTrekkspillSettingsElement();
             if (_contentTypeService.Get("artikkelSitat") == null)
                 CreateArtikkelSitatElement();
             if (_contentTypeService.Get("artikkelCallout") == null)
@@ -458,6 +463,32 @@ public class ContentTypeComponent : IAsyncComponent
         return ct;
     }
 
+    /// <summary>
+    /// Settings element shown as the "Innstillinger" tab on each Trekkspill block in the
+    /// editor. Currently exposes one optional field: gruppeTittel. When set on a trekkspill,
+    /// the frontend renderer treats that block as the START of a new group with that title.
+    /// Adjacent trekkspill blocks without gruppeTittel join the current group. Default
+    /// behavior (all empty) = a single untitled group of all consecutive trekkspill, which
+    /// matches the existing auto-grouping behavior.
+    /// </summary>
+    private IContentType CreateArtikkelTrekkspillSettingsElement()
+    {
+        var ct = new ContentType(_shortStringHelper, -1)
+        {
+            Alias = "artikkelTrekkspillSettings",
+            Name = "Trekkspill — innstillinger",
+            Description = "Per-trekkspill innstillinger. Vises som egen tab i blokk-editoren.",
+            Icon = "icon-settings",
+            IsElement = true,
+        };
+        ct.AddPropertyGroup("gruppe", "Gruppering");
+        ct.AddPropertyType(Prop("gruppeTittel", "Gruppe-tittel", _textStringDt,
+            description: "Hvis satt: dette trekkspillet starter en ny gruppe med denne tittelen. La stå tom for at trekkspillet skal slå seg sammen med trekkspill rett over."),
+            "gruppe");
+        _contentTypeService.Save(ct);
+        return ct;
+    }
+
     private IContentType CreateArtikkelSitatElement()
     {
         var ct = new ContentType(_shortStringHelper, -1)
@@ -750,22 +781,54 @@ public class ContentTypeComponent : IAsyncComponent
     /// Updates an existing Block List data type's allowed element types to match the given list.
     /// Use this to add/remove modules after initial creation. Idempotent.
     /// </summary>
+    /// <summary>
+    /// Per-content-element-type settings element mapping. Keys are content element
+    /// type aliases; values are settings element type aliases. When a content type
+    /// is added to a Block List, if its alias is in this map the block gets a
+    /// settingsElementTypeKey too — adding the "Innstillinger" tab in the editor.
+    /// </summary>
+    private static readonly Dictionary<string, string> BlockSettingsByContent = new()
+    {
+        ["artikkelTrekkspill"] = "artikkelTrekkspillSettings",
+    };
+
+    private object? BuildBlockConfig(string alias, string contextName, string operation)
+    {
+        var elementType = _contentTypeService.Get(alias);
+        if (elementType == null)
+        {
+            Console.WriteLine($"ContentTypeComposer: Element type '{alias}' not found, skipping in block list '{contextName}' ({operation})");
+            return null;
+        }
+        var block = new Dictionary<string, object>
+        {
+            ["contentElementTypeKey"] = elementType.Key,
+        };
+        if (BlockSettingsByContent.TryGetValue(alias, out var settingsAlias))
+        {
+            var settingsType = _contentTypeService.Get(settingsAlias);
+            if (settingsType != null)
+            {
+                block["settingsElementTypeKey"] = settingsType.Key;
+            }
+            else
+            {
+                Console.WriteLine($"ContentTypeComposer: Settings element type '{settingsAlias}' for '{alias}' not found in block list '{contextName}' — skipping settings");
+            }
+        }
+        return block;
+    }
+
     private void RefreshMultiBlockListAllowedModules(string name, string[] elementTypeAliases)
     {
         var dt = _dataTypeService.GetByEditorAlias(Constants.PropertyEditors.Aliases.BlockList)
             .FirstOrDefault(d => d.Name == name);
         if (dt == null) return;
 
-        var blocks = elementTypeAliases.Select(alias =>
-        {
-            var elementType = _contentTypeService.Get(alias);
-            if (elementType == null)
-            {
-                Console.WriteLine($"ContentTypeComposer: Element type '{alias}' not found, skipping in block list '{name}' (refresh)");
-                return (object?)null;
-            }
-            return new { contentElementTypeKey = elementType.Key };
-        }).Where(b => b != null).ToArray();
+        var blocks = elementTypeAliases
+            .Select(alias => BuildBlockConfig(alias, name, "refresh"))
+            .Where(b => b != null)
+            .ToArray();
 
         var config = dt.ConfigurationData ?? new Dictionary<string, object>();
         config["blocks"] = blocks;
@@ -790,16 +853,10 @@ public class ContentTypeComponent : IAsyncComponent
 
         // Skip missing element types so the block list can be created during incremental
         // development. Missing types are logged so they can be tracked down.
-        var blocks = elementTypeAliases.Select(alias =>
-        {
-            var elementType = _contentTypeService.Get(alias);
-            if (elementType == null)
-            {
-                Console.WriteLine($"ContentTypeComposer: Element type '{alias}' not found, skipping in block list '{name}'");
-                return null;
-            }
-            return new { contentElementTypeKey = elementType.Key };
-        }).Where(b => b != null).ToArray();
+        var blocks = elementTypeAliases
+            .Select(alias => BuildBlockConfig(alias, name, "create"))
+            .Where(b => b != null)
+            .ToArray();
 
         var blockListEditor = _propertyEditors[Constants.PropertyEditors.Aliases.BlockList]
             ?? throw new InvalidOperationException("Block List property editor not found");

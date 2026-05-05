@@ -44,27 +44,41 @@ function formatDate(dateStr?: string): string {
  * Walks the block list and groups consecutive `artikkelTrekkspill` blocks
  * into one wrapper. The wrapper becomes a single grid child, so the parent
  * page's `row-gap` only applies between the group and surrounding blocks
- * — not between accordions inside the group. CSS then collapses the
- * borders so the group reads as one cohesive component (matches the FAQ
- * pattern in the Sandkasse Figma).
+ * — not between accordions inside the group. CSS collapses the borders so
+ * the group reads as one cohesive component.
  *
- * Editor escape hatch: insert any non-trekkspill block (an empty brødtekst,
- * an image, anything) between two accordions to break the grouping.
+ * Group break rules:
+ * - A non-trekkspill block always closes the current group.
+ * - A trekkspill with `settings.gruppeTittel` set starts a new group with
+ *   that title (closes any previous group). Editor uses this to split a
+ *   long sequence of accordions into multiple titled sections.
+ * - A trekkspill with no settings joins the current group (default).
+ *
+ * Net effect: editor flow for "titled FAQ" = open the first accordion,
+ * Innstillinger tab, write "Ofte stilte spørsmål". To split into two
+ * groups, set gruppeTittel on the accordion that should start the second
+ * group. To force standalone accordions: drop a non-trekkspill block
+ * between them.
  */
-type GroupedItem = { kind: 'block'; block: UmbracoBlock } | { kind: 'accordionGroup'; blocks: UmbracoBlock[] };
+type GroupedItem =
+  | { kind: 'block'; block: UmbracoBlock }
+  | { kind: 'accordionGroup'; tittel: string; blocks: UmbracoBlock[] };
+
 function groupConsecutiveTrekkspill(items?: UmbracoBlock[]): GroupedItem[] {
   if (!items) return [];
   const out: GroupedItem[] = [];
   for (const block of items) {
-    if (block.contentType === 'artikkelTrekkspill') {
-      const last = out[out.length - 1];
-      if (last && last.kind === 'accordionGroup') {
-        last.blocks.push(block);
-        continue;
-      }
-      out.push({ kind: 'accordionGroup', blocks: [block] });
-    } else {
+    if (block.contentType !== 'artikkelTrekkspill') {
       out.push({ kind: 'block', block });
+      continue;
+    }
+    const tittel = ((block.settings?.gruppeTittel as string) || '').trim();
+    const last = out[out.length - 1];
+    // Start a new group when: previous wasn't a group OR this block declares its own title
+    if (!last || last.kind !== 'accordionGroup' || tittel) {
+      out.push({ kind: 'accordionGroup', tittel, blocks: [block] });
+    } else {
+      last.blocks.push(block);
     }
   }
   return out;
@@ -76,19 +90,22 @@ const renderItems = groupConsecutiveTrekkspill(blocks);
 {renderItems.map((item) => {
   if (item.kind === 'accordionGroup') {
     return (
-      <div class="article-accordion-group col-center-6">
-        {item.blocks.map((block) => (
-          <details class="article-accordion">
-            <summary class="article-accordion-summary">
-              {block.content.tittel}
-              <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m6 9 6 6 6-6"/>
-              </svg>
-            </summary>
-            <div class="article-accordion-body" set:html={block.content.innhold} />
-          </details>
-        ))}
-      </div>
+      <section class="article-accordion-group col-center-6">
+        {item.tittel && <h2 class="article-accordion-group-title">{item.tittel}</h2>}
+        <div class="article-accordion-group-list">
+          {item.blocks.map((block) => (
+            <details class="article-accordion">
+              <summary class="article-accordion-summary">
+                {block.content.tittel}
+                <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m6 9 6 6 6-6"/>
+                </svg>
+              </summary>
+              <div class="article-accordion-body" set:html={block.content.innhold} />
+            </details>
+          ))}
+        </div>
+      </section>
     );
   }
   const block = item.block;

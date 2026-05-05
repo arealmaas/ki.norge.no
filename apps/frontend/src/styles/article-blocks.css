@@ -20,14 +20,28 @@
 
 /* Accordion group wrapper. The renderer (ArticleBlocksRenderer.astro)
    walks the block list and groups consecutive artikkelTrekkspill blocks
-   into one .article-accordion-group div. That div is the single grid
-   child, so the page-level `row-gap` only spaces the GROUP from
-   surrounding blocks — not the accordions inside. CSS here collapses the
-   borders between adjacent accordions inside the group. */
+   into one .article-accordion-group section. That section is the single
+   grid child, so the page-level `row-gap` only spaces the GROUP from
+   surrounding blocks — not the accordions inside. CSS collapses the
+   borders between adjacent accordions inside the group. Optional title
+   is rendered above the accordions but inside the same grid child, so
+   they read as one unit. */
 .article-accordion-group {
   display: flex;
   flex-direction: column;
+  gap: 16px;
   margin: 24px 0;
+}
+.article-accordion-group-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  line-height: 1.3;
+}
+.article-accordion-group-list {
+  display: flex;
+  flex-direction: column;
 }
 .article-accordion-group .article-accordion {
   margin: 0;            /* override the standalone accordion's margin */

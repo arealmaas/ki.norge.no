@@ -31,6 +31,10 @@ interface UmbracoSingleItem extends UmbracoItem {}
 export interface UmbracoBlock {
   contentType: string;
   content: Record<string, unknown>;
+  // Per-block settings (Umbraco's "Innstillinger" tab on the block editor).
+  // Only blocks with a configured settingsElementTypeKey will have this populated.
+  // For artikkelTrekkspill, settings.gruppeTittel signals "start a new group with this title".
+  settings?: Record<string, unknown>;
 }
 
 // Artikkel block types
@@ -874,7 +878,14 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
       if (ct === 'artikkelTrekkspill') {
         const richText = props.innhold;
         const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
-        return { contentType: 'artikkelTrekkspill', content: { tittel: props.tittel || '', innhold: html } };
+        // Per-block settings (Innstillinger tab). gruppeTittel signals "start a new
+        // group with this title" — the renderer uses it to break/merge accordion runs.
+        const settingsProps = block.settings?.properties ?? {};
+        return {
+          contentType: 'artikkelTrekkspill',
+          content: { tittel: props.tittel || '', innhold: html },
+          settings: { gruppeTittel: (settingsProps.gruppeTittel as string) || '' },
+        };
       }
       if (ct === 'artikkelSitat') {
         return { contentType: 'artikkelSitat', content: { sitat: props.sitat || '', kilde: props.kilde || '' } };
