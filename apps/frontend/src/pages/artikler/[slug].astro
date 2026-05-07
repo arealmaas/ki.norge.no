@@ -114,12 +114,24 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
     padding: 100px 0;
   }
 
-  /* Light-blue full-bleed background variant: extends edge-to-edge,
-     including up behind the transparent site header */
+  /* Light-blue full-bleed background variant. Extends BOTH:
+     - horizontally: from viewport-left to viewport-right, past the grid's
+       max-width (via 100vw + the negative-margin "yank" trick). Requires
+       overflow-x:clip on body — set in global.css. Without that, the 100vw
+       creates a horizontal scrollbar on desktops with visible scrollbars.
+     - vertically: up behind the absolutely-positioned site header. The
+       negative top margin counteracts main's padding-top (which equals
+       --header-height); we add it back as inner padding so the visible
+       content still starts where it did before. */
   .article-hero--bg-lyseblaa {
     background: #e5f2f7;
-    padding: 140px 0 80px; /* extra top padding so content clears header */
-    margin: 0;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: calc(-1 * var(--header-height, 72px));
+    padding-top: calc(140px + var(--header-height, 72px));
+    padding-bottom: 80px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   /* When in bg-lyseblaa, the inner grid wrapper handles column placement */
@@ -200,7 +212,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
   .article-hero-img {
     width: 100%;
     height: auto;
-    border-radius: 16px;
+    border-radius: 8px;
     display: block;
     object-fit: cover;
   }
@@ -302,7 +314,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
   .more-article-image {
     flex: 1;
     background: var(--image-fallback-bg, #D9D9D9);
-    border-radius: 24px;
+    border-radius: 8px;
     min-height: 120px;
   }
 </style>

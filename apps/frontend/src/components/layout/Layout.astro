@@ -102,7 +102,11 @@ const ogImageUrl = `${siteUrl}${ogImage || DEFAULT_OG_IMAGE}`;
 <style>
   main {
     flex: 1;
-    padding-top: 72px;
+    /* Padding equals the absolutely-positioned site header height so content
+       starts below it. Variable defined in global.css; full-bleed hero
+       sections (.article-hero--bg-lyseblaa) negate this with negative
+       margin to extend their background up behind the header. */
+    padding-top: var(--header-height, 72px);
   }
 
   body {

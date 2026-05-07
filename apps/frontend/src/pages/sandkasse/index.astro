@@ -73,10 +73,16 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
     padding: 100px 0;
   }
 
+  /* Light-blue full-bleed: see artikler/[slug].astro for full comment. */
   .article-hero--bg-lyseblaa {
     background: #e5f2f7;
-    padding: 140px 0 80px;
-    margin: 0;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: calc(-1 * var(--header-height, 72px));
+    padding-top: calc(140px + var(--header-height, 72px));
+    padding-bottom: 80px;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .article-hero-inner {
@@ -135,7 +141,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
   .article-hero-img {
     width: 100%;
     height: auto;
-    border-radius: 16px;
+    border-radius: 8px;
     display: block;
     object-fit: cover;
   }

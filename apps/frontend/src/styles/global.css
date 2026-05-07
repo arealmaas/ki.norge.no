@@ -26,10 +26,27 @@
 
   /* Font family */
   --ds-font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Site chrome dimensions. Used by Layout.astro for <main> top padding AND
+     by full-bleed hero sections that need to extend up behind the absolute
+     header (see .article-hero--bg-lyseblaa in page styles). Change here in
+     one place if header height ever changes. */
+  --header-height: 72px;
 }
 
 html {
   font-family: var(--ds-font-family);
+}
+
+/* Full-bleed sections (e.g. .article-hero--bg-lyseblaa) use width: 100vw +
+   negative-margin trick to escape the grid's max-width. 100vw includes the
+   scrollbar on desktop which would create a horizontal scrollbar — `clip`
+   suppresses that. `clip` over `hidden` because it doesn't create a new
+   scroll container, so future sticky/fixed elements inside still work.
+   Tradeoff: the whole site can never horizontally scroll. Acceptable for
+   content; revisit if a module ever genuinely needs horizontal overflow. */
+html, body {
+  overflow-x: clip;
 }
 
 html, body {
