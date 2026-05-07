@@ -168,13 +168,18 @@
   padding: 24px 0;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
+/* Label, org, and date all match in size — they're meta-info that should
+   read as one visual unit (not a heading + caption). Org keeps weight 600
+   to retain emphasis without size mismatch. */
 .article-innhold-fra-label { font-size: 14px; color: rgba(0, 0, 0, 0.55); }
-.article-innhold-fra-org { font-size: 18px; font-weight: 600; color: #000; }
+.article-innhold-fra-org { font-size: 14px; font-weight: 600; color: #000; }
 .article-innhold-fra-date { font-size: 14px; color: rgba(0, 0, 0, 0.55); }
 
-/* Kontaktkort */
+/* Kontaktkort. Background is neutral gray (was light blue) — kontaktkort
+   is a secondary card, not a hero element, so it shouldn't compete with
+   accent-colored fremheving/info blocks. */
 .article-kontaktkort {
-  background: #e5f2f7;
+  background: #f4f5f7;
   border-radius: 8px;
   padding: 32px;
   display: flex;
@@ -272,18 +277,27 @@
 .article-fremheving-text p { margin: 0 0 12px; }
 .article-fremheving-text p:last-child { margin-bottom: 0; }
 
-/* Quote variant: « and » render INLINE with the body text (not as
-   decorative big marks above/below). Quote text uses 24px (= ds font
-   size 6) to match the body/long/xl scale used for highlighted reading. */
+/* Quote variant: « and » sit INLINE with the body text on the same
+   baseline. The renderer puts the marks in <span> siblings of a wrapping
+   <div set:html>; the div contains <p> tags from the rich text. We force
+   the wrapping div + its child p tags to display: inline so everything
+   collapses onto one running line of text and the marks naturally flow
+   with the words. Italic body, 24px (= ds font size 6). */
 .article-fremheving-text--quote {
   font-style: italic;
   margin: 0;
   font-size: var(--ds-font-size-6, 24px);
   line-height: 1.5;
+  text-align: center;
+}
+.article-fremheving-text--quote > div,
+.article-fremheving-text--quote > div > p {
+  display: inline;
+  margin: 0;
 }
 .article-fremheving-quote-mark {
-  /* Inline with text — same size, same color, same weight. */
   font-style: normal;
+  vertical-align: baseline;
 }
 .article-fremheving-quote-mark--open { margin-right: 0.15em; }
 .article-fremheving-quote-mark--close { margin-left: 0.15em; }

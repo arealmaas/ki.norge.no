@@ -341,7 +341,7 @@ public class ContentTypeComponent : IAsyncComponent
     }
 
     private PropertyType Prop(string alias, string name, IDataType dataType,
-        bool mandatory = false, string? description = null)
+        bool mandatory = false, string? description = null, int sortOrder = 0)
     {
         return new PropertyType(_shortStringHelper, dataType)
         {
@@ -349,6 +349,7 @@ public class ContentTypeComponent : IAsyncComponent
             Name = name,
             Description = description,
             Mandatory = mandatory,
+            SortOrder = sortOrder,
         };
     }
 
@@ -915,7 +916,11 @@ public class ContentTypeComponent : IAsyncComponent
     {
         new()
         {
-            new() { "Umb.Tiptap.Toolbar.Heading2", "Umb.Tiptap.Toolbar.Heading3", "Umb.Tiptap.Toolbar.Heading4" },
+            // Paragraph (= "Normal" reset) before headings so editors can revert
+            // a heading back to body text without retyping. Heading extension
+            // already covers paragraph as one of its toggle states; the toolbar
+            // button just makes it discoverable.
+            new() { "Umb.Tiptap.Toolbar.Paragraph", "Umb.Tiptap.Toolbar.Heading2", "Umb.Tiptap.Toolbar.Heading3", "Umb.Tiptap.Toolbar.Heading4" },
             new() { "Umb.Tiptap.Toolbar.SourceEditor" },
             new() { "Umb.Tiptap.Toolbar.Bold", "Umb.Tiptap.Toolbar.Italic", "Umb.Tiptap.Toolbar.Underline" },
             new() { "Umb.Tiptap.Toolbar.TextAlignLeft", "Umb.Tiptap.Toolbar.TextAlignCenter", "Umb.Tiptap.Toolbar.TextAlignRight" },
@@ -1118,7 +1123,7 @@ public class ContentTypeComponent : IAsyncComponent
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         AddArtikkelhodeFields(ct);
-        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Hovedinnhold"), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Hovedinnhold", sortOrder: 10), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -1144,7 +1149,7 @@ public class ContentTypeComponent : IAsyncComponent
         };
         ct.AddPropertyGroup("innhold", "Innhold");
         AddArtikkelhodeFields(ct);
-        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListCaseDt, description: "Hovedinnhold"), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListCaseDt, description: "Hovedinnhold", sortOrder: 10), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -1193,12 +1198,16 @@ public class ContentTypeComponent : IAsyncComponent
     /// </summary>
     private void AddArtikkelhodeFields(IContentType ct)
     {
-        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true), "innhold");
-        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true, description: "URL-vennlig identifikator. Genereres automatisk fra tittel hvis tom."), "innhold");
-        ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, mandatory: true, description: "Kort introduksjonstekst som vises under tittelen."), "innhold");
-        ct.AddPropertyType(Prop("artikkelBilde", "Hovedbilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen (eller under på mobil)."), "innhold");
-        ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt."), "innhold");
-        ct.AddPropertyType(Prop("bakgrunn", "Bakgrunn", _bakgrunnDropdownDt, description: "Velg bakgrunnsfarge for artikkelhodet. Standard er hvit."), "innhold");
+        // Explicit sortOrder so the editor sees fields in the order content
+        // appears on the page: tittel → slug → ingress → bilde → bildeAlt
+        // → bakgrunn. Without sortOrder, Umbraco doesn't guarantee insertion
+        // order and editors have reported ingress drifting down the form.
+        ct.AddPropertyType(Prop("tittel", "Tittel", _textStringDt, mandatory: true, sortOrder: 1), "innhold");
+        ct.AddPropertyType(Prop("slug", "Slug", _textStringDt, mandatory: true, description: "URL-vennlig identifikator. Genereres automatisk fra tittel hvis tom.", sortOrder: 2), "innhold");
+        ct.AddPropertyType(Prop("ingress", "Ingress", _textAreaDt, mandatory: true, description: "Kort introduksjonstekst som vises under tittelen.", sortOrder: 3), "innhold");
+        ct.AddPropertyType(Prop("artikkelBilde", "Hovedbilde", _mediaPickerDt, description: "Hovedbilde som vises ved siden av tittelen (eller under på mobil).", sortOrder: 4), "innhold");
+        ct.AddPropertyType(Prop("bildeAlt", "Alternativ tekst for bilde", _textStringDt, description: "Beskriver bildet for skjermlesere. La stå tom hvis bildet kun er dekorativt.", sortOrder: 5), "innhold");
+        ct.AddPropertyType(Prop("bakgrunn", "Bakgrunn", _bakgrunnDropdownDt, description: "Velg bakgrunnsfarge for artikkelhodet. Standard er hvit.", sortOrder: 6), "innhold");
     }
 
     private void MigrateArtikkelType()
@@ -1503,7 +1512,7 @@ public class ContentTypeComponent : IAsyncComponent
 
         ct.AddPropertyGroup("innhold", "Innhold");
         AddArtikkelhodeFields(ct);
-        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Bygg opp siden med artikkelmoduler (tekst, prosess-steg, trekkspill, osv.)."), "innhold");
+        ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Bygg opp siden med artikkelmoduler (tekst, prosess-steg, trekkspill, osv.).", sortOrder: 10), "innhold");
 
         ct.AddPropertyGroup("seo", "SEO");
         ct.AddPropertyType(Prop("seoTittel", "SEO-tittel", _textStringDt, description: "Overstyr tittel i søkeresultater og sosiale medier"), "seo");
@@ -1553,7 +1562,7 @@ public class ContentTypeComponent : IAsyncComponent
             var existing = ct.PropertyTypes.FirstOrDefault(p => p.Alias == "innhold");
             if (existing == null)
             {
-                ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Bygg opp siden med artikkelmoduler (tekst, prosess-steg, trekkspill, osv.)."), "innhold");
+                ct.AddPropertyType(Prop("innhold", "Innhold", _blockListArtikkelDt, description: "Bygg opp siden med artikkelmoduler (tekst, prosess-steg, trekkspill, osv.).", sortOrder: 10), "innhold");
                 changed = true;
             }
             else if (existing.DataTypeId != _blockListArtikkelDt.Id)

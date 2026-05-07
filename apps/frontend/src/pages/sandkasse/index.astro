@@ -28,10 +28,10 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 <Layout title={seoTitle} description={seoDesc} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
   <div class="article-page grid">
-    <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : (heroImage ? 'col-center-10' : 'col-center-6')}`}>
+    <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : 'col-center-10'}`}>
       {isLightBlueBg ? (
         <div class={`grid article-hero-bg-grid`}>
-          <div class={`article-hero-inner ${heroImage ? 'col-center-10' : 'col-center-6'}`}>
+          <div class="article-hero-inner col-center-10">
             <div class="article-hero-text">
               <h1 class="article-title">{sandkasse.tittel}</h1>
               {sandkasse.ingress && <p class="article-ingress">{sandkasse.ingress}</p>}
