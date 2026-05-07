@@ -1,0 +1,42 @@
+---
+/**
+ * Renders an Aksel icon by name.
+ * Uses statically extracted SVG data from @navikt/aksel-icons.
+ * Pass the icon name as used on aksel.nav.no/ikoner (e.g. "HandHeart", "Package").
+ */
+import { akselIcons } from '../../lib/aksel-icons';
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 24, class: className } = Astro.props;
+const svgContent = akselIcons[name];
+---
+
+{svgContent ? (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    class={className}
+    set:html={svgContent}
+  />
+) : (
+  <span class="aksel-icon-missing" title={`Ikon "${name}" ikke funnet`}>⬡</span>
+)}
+
+<style>
+  .aksel-icon-missing {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    color: #dc2626;
+    font-size: inherit;
+  }
+</style>

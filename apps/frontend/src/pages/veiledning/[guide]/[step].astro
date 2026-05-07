@@ -1,0 +1,105 @@
+---
+import Layout from '../../../components/layout/Layout.astro';
+import BlocksRenderer from '../../../components/shared/BlocksRenderer.astro';
+import SubStepPills from '../../../components/guide/SubStepPills.astro';
+import ExampleCard from '../../../components/guide/ExampleCard.astro';
+import NextBar from '../../../components/guide/NextBar.astro';
+import InfoCard from '../../../components/guide/InfoCard.astro';
+import { getVeiledningGuide, getVeiledningSteg, getVeiledningStegBySlug } from '../../../lib/umbraco';
+
+const { guide: guideSlug, step: stepSlug } = Astro.params;
+const guideData = await getVeiledningGuide(guideSlug!);
+if (!guideData) return Astro.redirect('/veiledning');
+
+const allSteps = await getVeiledningSteg(guideSlug!);
+const currentStep = allSteps.find(s => s.slug === stepSlug);
+if (!currentStep) return Astro.redirect(`/veiledning/${guideSlug}`);
+
+// Find sub-steps within same step number
+const sameStepSubsteps = allSteps.filter(s => s.steg === currentStep.steg);
+const substepPills = sameStepSubsteps.map(s => ({
+  title: s.tittel,
+  slug: s.slug,
+  active: s.slug === stepSlug,
+}));
+
+// The step group titles
+const stepGroupTitles: Record<number, string> = {
+  1: 'Finn ut hvilke data du trenger',
+  2: 'Samle inn data',
+  3: 'Forberede data til bruk',
+  4: 'Gjøre data tilgjengelig for KI-systemet',
+  5: 'Slette data',
+};
+
+// Find next step in sorted order
+const currentIndex = allSteps.findIndex(s => s.slug === stepSlug);
+const nextStep = currentIndex < allSteps.length - 1 ? allSteps[currentIndex + 1] : null;
+---
+<Layout title={`${currentStep.tittel} | ${guideData.tittel}`}>
+  <div class="step-page">
+    <SubStepPills
+      substeps={substepPills}
+      guideSlug={guideSlug!}
+      stepNumber={currentStep.steg}
+      stepTitle={stepGroupTitles[currentStep.steg] || `Steg ${currentStep.steg}`}
+    />
+
+    <h1 class="step-title">{currentStep.tittel}</h1>
+
+    {currentStep.innhold && (
+      <div class="step-body">
+        <BlocksRenderer blocks={currentStep.innhold} />
+      </div>
+    )}
+
+    {currentStep.infoKortTittel && (
+      <InfoCard title={currentStep.infoKortTittel}>
+        {currentStep.infoKortInnhold && (
+          <BlocksRenderer blocks={currentStep.infoKortInnhold} />
+        )}
+      </InfoCard>
+    )}
+
+    {currentStep.eksempelTittel && (
+      <ExampleCard title={currentStep.eksempelTittel}>
+        {currentStep.eksempelTekst && (
+          <BlocksRenderer blocks={currentStep.eksempelTekst} />
+        )}
+      </ExampleCard>
+    )}
+
+    {nextStep && (
+      <NextBar
+        title={nextStep.tittel}
+        href={`/veiledning/${guideSlug}/${nextStep.slug}`}
+      />
+    )}
+  </div>
+</Layout>
+<style>
+  .step-page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--ds-size-8) var(--ds-size-4);
+  }
+  .step-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 24px;
+    color: #000;
+  }
+  .step-body {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(0,0,0,0.75);
+    margin-bottom: 24px;
+  }
+  .step-body :global(p) {
+    margin: 0 0 16px;
+  }
+  .step-body :global(ol), .step-body :global(ul) {
+    margin: 8px 0 16px;
+    padding-left: 24px;
+  }
+</style>

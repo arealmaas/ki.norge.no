@@ -1,0 +1,151 @@
+---
+import Layout from '../../components/layout/Layout.astro';
+import ArticleBlocksRenderer from '../../components/shared/ArticleBlocksRenderer.astro';
+import { getSandkasse, getMediaUrl, getPlainText } from '../../lib/umbraco';
+import { breadcrumbSchema } from '../../lib/seo';
+
+const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
+const sandkasse = await getSandkasse({ preview: isPreview });
+
+if (!sandkasse) {
+  return Astro.redirect('/');
+}
+
+const seoTitle = sandkasse.seoTittel || sandkasse.tittel;
+const seoDesc = sandkasse.seoBeskrivelse || sandkasse.ingress || getPlainText(sandkasse.innhold, 200);
+const heroImage = sandkasse.artikkelBilde || sandkasse.seoBilde;
+const seoImage = sandkasse.seoBilde?.url || sandkasse.artikkelBilde?.url;
+
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: 'Forside', url: '/' },
+  { name: sandkasse.tittel, url: '/sandkasse' },
+]);
+
+const bakgrunn = sandkasse.bakgrunn || 'hvit';
+const isLightBlueBg = bakgrunn === 'lyseblaa';
+---
+
+<Layout title={seoTitle} description={seoDesc} ogImage={seoImage}>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
+  <div class="article-page grid">
+    <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : 'col-center-10'}`}>
+      {isLightBlueBg ? (
+        <div class={`grid article-hero-bg-grid`}>
+          <div class="article-hero-inner col-center-10">
+            <div class="article-hero-text">
+              <h1 class="article-title">{sandkasse.tittel}</h1>
+              {sandkasse.ingress && <p class="article-ingress">{sandkasse.ingress}</p>}
+            </div>
+            {heroImage?.url && (
+              <div class="article-hero-image">
+                <img src={getMediaUrl(heroImage)} alt={sandkasse.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div class="article-hero-inner">
+          <div class="article-hero-text">
+            <h1 class="article-title">{sandkasse.tittel}</h1>
+            {sandkasse.ingress && <p class="article-ingress">{sandkasse.ingress}</p>}
+          </div>
+          {heroImage?.url && (
+            <div class="article-hero-image">
+              <img src={getMediaUrl(heroImage)} alt={sandkasse.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+
+    <ArticleBlocksRenderer blocks={sandkasse.innhold} />
+  </div>
+</Layout>
+
+<style>
+  .article-page {
+    padding-top: 0;
+    row-gap: 48px;
+    padding-bottom: 120px;
+  }
+
+  .article-hero {
+    padding: 100px 0;
+  }
+
+  /* Light-blue full-bleed: see artikler/[slug].astro for full comment. */
+  .article-hero--bg-lyseblaa {
+    background: #e5f2f7;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: calc(-1 * var(--header-height, 72px));
+    padding-top: calc(140px + var(--header-height, 72px));
+    padding-bottom: 80px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .article-hero-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  @media (min-width: 1024px) {
+    .article-hero-inner {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
+  .article-hero-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .article-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #000;
+    margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  @media (min-width: 768px) { .article-title { font-size: 2.5rem; } }
+  @media (min-width: 1024px) { .article-title { font-size: 36px; } }
+
+  .article-ingress {
+    font-size: 21px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.75);
+    line-height: 1.7;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+
+  @media (min-width: 1024px) { .article-ingress { font-size: 24px; } }
+
+  .article-hero-image {
+    flex-shrink: 0;
+    width: 100%;
+  }
+
+  @media (min-width: 1024px) { .article-hero-image { width: 407px; } }
+
+  .article-hero-img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    object-fit: cover;
+  }
+
+  @media (min-width: 1024px) { .article-hero-img { height: 331px; } }
+
+</style>

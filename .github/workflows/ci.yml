@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend-build:
+    name: Frontend (Astro/Deno) build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install
+        working-directory: apps/frontend
+        run: deno task install
+
+      - name: Build
+        working-directory: apps/frontend
+        run: deno task build
+
+  cms-build:
+    name: CMS (Umbraco/.NET) build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        working-directory: apps/cms-umbraco
+        run: dotnet restore
+
+      - name: Build
+        working-directory: apps/cms-umbraco
+        run: dotnet build --no-restore -c Release
+
+  smoke-prod:
+    name: Smoke test prod (frontend + Delivery API)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run smoke tests
+        run: bash scripts/smoke-test.sh --prod
+
+  trivy-fs:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy on repo (high/critical only, fail on found)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+          ignore-unfixed: true
+          skip-dirs: '.git,node_modules,.playwright-cli'

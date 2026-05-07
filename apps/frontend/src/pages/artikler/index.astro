@@ -1,0 +1,157 @@
+---
+import Layout from '../../components/layout/Layout.astro';
+import { getArtikler, getPlainText, type Artikkel } from '../../lib/umbraco';
+
+let articles: Artikkel[] = [];
+try {
+  const artiklerRes = await getArtikler();
+  articles = artiklerRes.data;
+} catch (e) {
+  console.error('Failed to fetch artikler:', e);
+}
+---
+
+<Layout title="Aktuelt" description="Nyheter, analyser og artikler om kunstig intelligens i norsk offentlig sektor.">
+  <div class="artikler-page">
+    <div class="artikler-header">
+      <h1 class="artikler-title">Aktuelt</h1>
+      <p class="artikler-lead">Hold deg oppdatert på nyheter, analyser og artikler om kunstig intelligens i norsk offentlig sektor.</p>
+    </div>
+
+    <div class="artikler-content">
+      {articles.length > 0 ? (
+        <div class="artikler-grid">
+          {articles.map(article => (
+            <a href={`/artikler/${article.slug}`} class="artikel-card">
+              <div class="artikel-card-text">
+                <h2 class="artikel-card-title">{article.tittel}</h2>
+                <span class="artikel-card-date">
+                  {new Date(article.publishedAt).toLocaleDateString('nb-NO', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </span>
+                <p class="artikel-card-lead">{getPlainText(article.innhold, 100)}</p>
+              </div>
+              <div class="artikel-card-image"></div>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="empty-state">Ingen artikler funnet.</p>
+      )}
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .artikler-page {
+    padding-top: var(--ds-size-4);
+  }
+
+  .artikler-header {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+  }
+
+  .artikler-title {
+    font-size: 40px;
+    font-weight: 700;
+    color: #000;
+    margin: 0 0 12px;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .artikler-lead {
+    font-size: 18px;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.6);
+    margin: 0;
+    line-height: 1.5;
+    max-width: 600px;
+  }
+
+  .artikler-content {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  .artikler-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  @media (min-width: 640px) {
+    .artikler-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .artikler-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .artikel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 24px;
+    height: 384px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s;
+  }
+
+  .artikel-card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .artikel-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .artikel-card-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .artikel-card-date {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    line-height: 1.45;
+  }
+
+  .artikel-card-lead {
+    font-size: 18px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .artikel-card-image {
+    flex: 1;
+    background: var(--image-fallback-bg, #D9D9D9);
+    border-radius: 24px;
+    min-height: 120px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--ds-size-12);
+    color: rgba(0, 0, 0, 0.62);
+  }
+</style>

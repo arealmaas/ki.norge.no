@@ -1,0 +1,92 @@
+---
+interface SubStep {
+  title: string;
+  slug: string;
+}
+interface Step {
+  number: number;
+  title: string;
+  substeps: SubStep[];
+}
+interface Props {
+  steps: Step[];
+  guideSlug: string;
+}
+const { steps, guideSlug } = Astro.props;
+---
+<div class="step-navigator">
+  {steps.map(step => (
+    <div class="step-group">
+      <div class="step-header">
+        <span class="step-number">{step.number}.</span>
+        <h3 class="step-title">{step.title}</h3>
+      </div>
+      <div class="step-pills">
+        <span class="step-pills-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </span>
+        {step.substeps.map((sub, i) => (
+          <>
+            <a href={`/veiledning/${guideSlug}/${sub.slug}`} class="step-pill">{sub.title}</a>
+            {i < step.substeps.length - 1 && (
+              <span class="step-pill-arrow" aria-hidden="true">&rarr;</span>
+            )}
+          </>
+        ))}
+      </div>
+    </div>
+  ))}
+</div>
+<style>
+  .step-navigator {
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+  .step-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .step-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #7c3aed;
+  }
+  .step-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    color: #000;
+  }
+  .step-pills {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-pills-icon {
+    color: #7c3aed;
+    display: flex;
+    align-items: center;
+  }
+  .step-pill {
+    display: inline-flex;
+    padding: 6px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    color: #000;
+    text-decoration: none;
+    background: white;
+    transition: border-color 0.15s;
+  }
+  .step-pill:hover {
+    border-color: #7c3aed;
+  }
+  .step-pill-arrow {
+    color: #94a3b8;
+    font-size: 0.875rem;
+  }
+</style>

@@ -1,0 +1,188 @@
+---
+// Footer — CMS-editable via forside singleton
+// NOTE: This fetches getForside() independently. On the frontpage, index.astro also
+// fetches it — resulting in a double call. Astro SSR may deduplicate within a request.
+// Future optimization: pass footer data as props through Layout.
+import { getForside } from '../../lib/umbraco';
+let forside = null;
+try { forside = await getForside(); } catch (e) {}
+
+const brand = forside?.footerTittel || 'KI Norge';
+const desc = forside?.footerBeskrivelse || 'Et tverrsektorielt samarbeid for å fremme ansvarlig og sikker bruk av kunstig intelligens i den norske forvaltningen.';
+const igUrl = forside?.footerSosialInstagram || '#';
+const liUrl = forside?.footerSosialLinkedin || '#';
+const xUrl = forside?.footerSosialX || '#';
+
+const navCol1 = [
+  { text: forside?.footerLenke1Tekst || 'Om KI Norge', url: forside?.footerLenke1Url || '/om-oss' },
+  { text: forside?.footerLenke2Tekst || 'Kontakt', url: forside?.footerLenke2Url || '/kontakt' },
+];
+const navCol2 = [
+  { text: forside?.footerLenke3Tekst || 'Personvern og informasjonskapsler', url: forside?.footerLenke3Url || '/personvern' },
+  { text: forside?.footerLenke4Tekst || 'Tilgjengelighet', url: forside?.footerLenke4Url || '/tilgjengelighet' },
+  { text: forside?.footerLenke5Tekst || 'Endre samtykke for informasjonskapsler', url: forside?.footerLenke5Url || '' },
+];
+---
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <p class="footer-brand">{brand}</p>
+      <p class="footer-description">{desc}</p>
+      <div class="footer-social">
+        <a href={igUrl} class="footer-social-icon" aria-label="Instagram">
+          <div class="social-circle"><img loading="lazy" decoding="async" class="social-icon" src="/socials/Instagram.svg" alt="Instagram" /></div>
+        </a>
+        <a href={liUrl} class="footer-social-icon" aria-label="LinkedIn">
+          <div class="social-circle"><img loading="lazy" decoding="async" class="social-icon" src="/socials/LinkenIn.svg" alt="LinkedIn" /></div>
+        </a>
+        <a href={xUrl} class="footer-social-icon" aria-label="X">
+          <div class="social-circle"><img loading="lazy" decoding="async" class="social-icon" src="/socials/X.svg" alt="X" /></div>
+        </a>
+      </div>
+    </div>
+    <div class="footer-right">
+      <div class="footer-nav-col">
+        {navCol1.map(link => (
+          link.url
+            ? <a href={link.url} class="footer-nav-link">{link.text}</a>
+            : <button type="button" class="footer-nav-link footer-nav-button">{link.text}</button>
+        ))}
+      </div>
+      <div class="footer-nav-col">
+        {navCol2.map(link => (
+          link.url
+            ? <a href={link.url} class="footer-nav-link">{link.text}</a>
+            : <button type="button" class="footer-nav-link footer-nav-button">{link.text}</button>
+        ))}
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: linear-gradient(
+      135deg,
+      #cedbfb 0%,
+      #d8cef5 30%,
+      #e8d5f0 50%,
+      #d4c8eb 70%,
+      #cedbfb 100%
+    );
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin-top: auto;
+  }
+
+  .footer-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 80px 64px 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+  }
+
+  @media (min-width: 1024px) {
+    .footer-inner {
+      flex-direction: row;
+      gap: 120px;
+    }
+  }
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+  }
+
+  .footer-brand {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    color: #000;
+  }
+
+  .footer-description {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.55);
+    margin: 0;
+    line-height: 1.6;
+    max-width: 360px;
+  }
+
+  .footer-social {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .footer-social-icon {
+    text-decoration: none;
+  }
+
+  .social-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.15);
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .social-circle:hover {
+    background-color: rgba(0, 0, 0, 0.25);
+    transition: background-color 0.2s ease;
+    fill: #fff;
+    stroke: #fff;
+  }
+
+  .social-icon {
+    width: 24px;
+    height: 24px;
+    margin: 6px;
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 1024px) {
+    .footer-right {
+      gap: 64px;
+    }
+  }
+
+  .footer-nav-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .footer-nav-link {
+    font-size: 16px;
+    font-weight: 500;
+    color: #000;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .footer-nav-link:hover {
+    opacity: 0.7;
+  }
+
+  .footer-nav-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+  }
+</style>

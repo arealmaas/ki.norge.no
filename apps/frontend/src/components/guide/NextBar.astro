@@ -1,0 +1,30 @@
+---
+interface Props {
+  title: string;
+  href: string;
+}
+const { title, href } = Astro.props;
+---
+<a href={href} class="next-bar">
+  <strong>Neste:</strong> {title}
+</a>
+<style>
+  .next-bar {
+    display: block;
+    background: #d1fae5;
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin-top: 32px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #000;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .next-bar:hover {
+    background: #a7f3d0;
+  }
+  .next-bar strong {
+    font-weight: 700;
+  }
+</style>

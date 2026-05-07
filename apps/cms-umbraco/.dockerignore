@@ -1,0 +1,14 @@
+bin/
+obj/
+publish/
+umbraco/Data/
+umbraco/Logs/
+umbraco/mediacache/
+App_Data/
+wwwroot/media/
+*.sqlite.db
+*.sqlite.db-shm
+*.sqlite.db-wal
+appsettings.Development.json
+appsettings.*.local.json
+.git

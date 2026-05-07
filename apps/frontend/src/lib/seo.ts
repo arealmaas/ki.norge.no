@@ -1,0 +1,123 @@
+const SITE_URL = import.meta.env.SITE_URL || 'https://ki.norge.no';
+const SITE_NAME = 'KI Norge';
+
+const publisher = {
+  '@type': 'Organization' as const,
+  name: SITE_NAME,
+  url: SITE_URL,
+};
+
+export function websiteSchema(description: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    description,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SITE_URL}/sok?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+export function articleSchema(opts: {
+  headline: string;
+  description: string;
+  slug: string;
+  datePublished: string;
+  dateModified?: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: opts.headline,
+    description: opts.description,
+    datePublished: opts.datePublished,
+    dateModified: opts.dateModified || opts.datePublished,
+    url: `${SITE_URL}/artikler/${opts.slug}`,
+    publisher,
+  };
+}
+
+export function faqPageSchema(items: { question: string; answer: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map(item => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.answer,
+      },
+    })),
+  };
+}
+
+/**
+ * For Case (case study) detail pages. Schema.org doesn't have a "CaseStudy"
+ * type but Article + about works well.
+ */
+export function caseSchema(opts: {
+  headline: string;
+  description: string;
+  slug: string;
+  datePublished: string;
+  dateModified?: string;
+  organization?: string;
+}) {
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: opts.headline,
+    description: opts.description,
+    datePublished: opts.datePublished,
+    dateModified: opts.dateModified || opts.datePublished,
+    url: `${SITE_URL}/caser/${opts.slug}`,
+    publisher,
+  };
+  if (opts.organization) {
+    data.about = { '@type': 'Organization', name: opts.organization };
+  }
+  return data;
+}
+
+/**
+ * For ki-ordbok terms. DefinedTerm is the right type for glossary entries.
+ * Group all terms under a DefinedTermSet for the page-level schema.
+ */
+export function definedTermSetSchema(terms: { term: string; definition: string; alternativTerm?: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    name: 'KI-ordbok',
+    description: 'Ordliste over begreper innen kunstig intelligens',
+    url: `${SITE_URL}/ki-ordbok`,
+    hasDefinedTerm: terms.map(t => ({
+      '@type': 'DefinedTerm',
+      name: t.term,
+      description: t.definition,
+      ...(t.alternativTerm ? { alternateName: t.alternativTerm } : {}),
+      inDefinedTermSet: `${SITE_URL}/ki-ordbok`,
+    })),
+  };
+}
+
+/**
+ * BreadcrumbList for nested pages. Helps search engines understand
+ * site hierarchy and shows breadcrumbs in SERP results.
+ */
+export function breadcrumbSchema(items: { name: string; url: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((item, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: item.name,
+      item: item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`,
+    })),
+  };
+}

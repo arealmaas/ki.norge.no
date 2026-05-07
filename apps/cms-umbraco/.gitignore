@@ -1,0 +1,28 @@
+## .NET build output
+bin/
+obj/
+publish/
+
+## Umbraco
+umbraco/Data/*
+!umbraco/Data/.gitkeep
+umbraco/Logs/*
+!umbraco/Logs/.gitkeep
+umbraco/mediacache/*
+!umbraco/mediacache/.gitkeep
+App_Data/
+wwwroot/media/*
+!wwwroot/media/.gitkeep
+
+## SQLite database
+*.sqlite.db
+*.sqlite.db-shm
+*.sqlite.db-wal
+
+## Auto-generated schemas
+umbraco-package-schema.json
+appsettings-schema.*.json
+
+## User secrets
+appsettings.*.local.json
+.cms-running.lock

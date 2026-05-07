@@ -1,0 +1,6 @@
+---
+// Permanent redirect: /eksempler/[slug] → /caser/[slug]
+// Beholder gamle lenker for SEO etter at eksempel-konseptet ble migrert til case.
+const { slug } = Astro.params;
+return Astro.redirect(`/caser/${slug}`, 301);
+---

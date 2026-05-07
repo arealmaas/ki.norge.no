@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+.astro/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# Strapi
+apps/cms/.tmp/
+apps/cms/build/
+apps/cms/.cache/
+apps/cms/data/
+apps/cms/.strapi/
+apps/cms/.strapi-updater.json
+
+# Deno (root-level lockfile is a stray artifact)
+/deno.lock
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test results
+playwright-report/
+test-results/
+
+# Playwright CLI
+.playwright-cli/
+
+# Design files
+design/
+.venv/

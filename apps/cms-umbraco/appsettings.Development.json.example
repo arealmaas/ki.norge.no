@@ -1,0 +1,27 @@
+{
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information"
+    }
+  },
+  "Umbraco": {
+    "CMS": {
+      "Hosting": {
+        "Debug": true
+      },
+      "RuntimeMinification": {
+        "UseInMemoryCache": true,
+        "CacheBuster": "Timestamp"
+      },
+      "DeliveryApi": {
+        "ApiKey": "generate-a-random-key-here"
+      }
+    }
+  },
+  "HeadlessPreview": {
+    "FrontendUrl": "http://localhost:4321",
+    "PreviewSecret": "generate-a-random-secret-here"
+  },
+  "ConnectionStrings": {
+  }
+}

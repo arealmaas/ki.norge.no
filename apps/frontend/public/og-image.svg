@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="g1" cx="20%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c9a0d6"/>
+      <stop offset="100%" stop-color="#c9a0d6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g2" cx="50%" cy="40%" r="45%">
+      <stop offset="0%" stop-color="#8b7cc8"/>
+      <stop offset="100%" stop-color="#8b7cc8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g3" cx="80%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#6a80d4"/>
+      <stop offset="100%" stop-color="#6a80d4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g4" cx="95%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#8bbde8"/>
+      <stop offset="100%" stop-color="#8bbde8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f2dae8"/>
+      <stop offset="25%" stop-color="#b8a0d8"/>
+      <stop offset="50%" stop-color="#7b7cc8"/>
+      <stop offset="75%" stop-color="#8bbde8"/>
+      <stop offset="100%" stop-color="#c0dcf2"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#g1)"/>
+  <rect width="1200" height="630" fill="url(#g2)"/>
+  <rect width="1200" height="630" fill="url(#g3)"/>
+  <rect width="1200" height="630" fill="url(#g4)"/>
+
+  <text x="60" y="80" font-family="Inter, system-ui, sans-serif" font-size="32" font-weight="500" fill="#000">
+    ki.norge.no
+  </text>
+
+  <text x="60" y="320" font-family="Inter, system-ui, sans-serif" font-size="80" font-weight="700" fill="#000" letter-spacing="-2">
+    Innovativ og ansvarlig
+  </text>
+  <text x="60" y="410" font-family="Inter, system-ui, sans-serif" font-size="80" font-weight="700" fill="#000" letter-spacing="-2">
+    bruk av kunstig
+  </text>
+  <text x="60" y="500" font-family="Inter, system-ui, sans-serif" font-size="80" font-weight="700" fill="#000" letter-spacing="-2">
+    intelligens
+  </text>
+
+  <text x="60" y="580" font-family="Inter, system-ui, sans-serif" font-size="24" font-weight="500" fill="rgba(0,0,0,0.6)">
+    Veiledning, eksempler og verktøy for offentlig sektor
+  </text>
+</svg>
