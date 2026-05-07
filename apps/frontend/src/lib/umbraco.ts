@@ -490,11 +490,35 @@ function nodeToPlainText(node: RichTextNode): string {
   return (node.elements || []).map(nodeToPlainText).join('');
 }
 
-function renderAttributes(attrs?: Record<string, string>): string {
+function renderAttributes(attrs?: Record<string, unknown>): string {
   if (!attrs || Object.keys(attrs).length === 0) return '';
-  return Object.entries(attrs)
-    .map(([key, value]) => ` ${key}="${escapeHtml(value)}"`)
-    .join('');
+
+  const out: string[] = [];
+
+  // Tiptap stores internal links with a `route: { path, queryString, ... }`
+  // metadata object as an "attribute." Browsers don't understand it. Derive
+  // a real href from route.path + route.queryString and skip the metadata.
+  const route = attrs.route as undefined | { path?: string; queryString?: string };
+  if (route && typeof route.path === 'string') {
+    const href = route.path + (typeof route.queryString === 'string' ? route.queryString : '');
+    out.push(` href="${escapeHtml(href)}"`);
+  }
+
+  for (const [key, value] of Object.entries(attrs)) {
+    // Skip Umbraco-internal metadata that's not a real HTML attribute
+    if (key === 'route' || key === 'destinationId' || key === 'destinationType' ||
+        key === 'linkType' || key === 'router-slot' || key === 'type') {
+      continue;
+    }
+    // Already handled the link case above; skip if Tiptap stored an `href` too
+    if (key === 'href' && route) continue;
+    // Defensive: skip any non-scalar value to avoid crashing on unexpected
+    // shapes from future Tiptap versions
+    if (value == null) continue;
+    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') continue;
+    out.push(` ${key}="${escapeHtml(String(value))}"`);
+  }
+  return out.join('');
 }
 
 function escapeHtml(text: string): string {
