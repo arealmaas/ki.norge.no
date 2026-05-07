@@ -920,7 +920,14 @@ public class ContentTypeComponent : IAsyncComponent
             // a heading back to body text without retyping. Heading extension
             // already covers paragraph as one of its toggle states; the toolbar
             // button just makes it discoverable.
-            new() { "Umb.Tiptap.Toolbar.Paragraph", "Umb.Tiptap.Toolbar.Heading2", "Umb.Tiptap.Toolbar.Heading3", "Umb.Tiptap.Toolbar.Heading4" },
+            //
+            // ClearFormatting (eraser icon) sits next to it as the "wash" button
+            // that strips inline marks (bold, italic, color, font-family, etc).
+            // The pair gives editors two buttons:
+            //   - Paragraph: change current block type back to body text
+            //   - ClearFormatting: strip marks/inline-styles from selection
+            // Click both to fully normalize a pasted-in mess.
+            new() { "Umb.Tiptap.Toolbar.Paragraph", "Umb.Tiptap.Toolbar.Heading2", "Umb.Tiptap.Toolbar.Heading3", "Umb.Tiptap.Toolbar.Heading4", "Umb.Tiptap.Toolbar.ClearFormatting" },
             new() { "Umb.Tiptap.Toolbar.SourceEditor" },
             new() { "Umb.Tiptap.Toolbar.Bold", "Umb.Tiptap.Toolbar.Italic", "Umb.Tiptap.Toolbar.Underline" },
             new() { "Umb.Tiptap.Toolbar.TextAlignLeft", "Umb.Tiptap.Toolbar.TextAlignCenter", "Umb.Tiptap.Toolbar.TextAlignRight" },
