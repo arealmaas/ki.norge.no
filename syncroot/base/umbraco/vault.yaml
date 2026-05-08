@@ -1,0 +1,10 @@
+apiVersion: vault.dis.altinn.cloud/v1alpha1
+kind: Vault
+metadata:
+  name: umbraco
+spec:
+  serviceAccountRef:
+    name: umbraco
+  groupObjectId: ${KINORGE_VAULT_GROUP_OBJECT_ID}
+  tags:
+    app: ki-norge-portal
