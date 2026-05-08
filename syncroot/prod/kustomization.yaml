@@ -30,7 +30,7 @@ patches:
         path: /spec/template/spec/containers/0/env/-
         value:
           name: Umbraco__CMS__Security__BackOfficeHost
-          value: https://cms.ki.norge.no
+          value: https://cms.prod.ki.norge.no
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
@@ -49,4 +49,4 @@ patches:
         path: /spec/hostnames
         value:
           - kinorgeportal.prod.dis-core.altinn.cloud
-          - cms.ki.norge.no
+          - cms.prod.ki.norge.no
