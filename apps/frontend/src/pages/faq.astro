@@ -130,8 +130,8 @@ const faqJsonLd = faqPageSchema(
     gap: var(--ds-size-3);
   }
 
-  /* Accordion colours match the CMS info box: light blue #e5f2f7 header,
-     dark blue #1a2a6d text. When closed only the summary is rendered, so
+  /* Accordion colours match the CMS info box: light blue var(--ds-color-accent-surface-tinted, #e5f2f7) header,
+     dark blue var(--ds-color-accent-base-default, #1a2a6d) text. When closed only the summary is rendered, so
      the whole pill looks blue. When opened, the white answer panel below
      pushes the blue down to the top. */
   .faq-item {
@@ -142,11 +142,11 @@ const faqJsonLd = faqPageSchema(
   }
 
   .faq-item:hover {
-    border-color: #1a2a6d;
+    border-color: var(--ds-color-accent-base-default, #1a2a6d);
   }
 
   .faq-item[open] {
-    border-color: #1a2a6d;
+    border-color: var(--ds-color-accent-base-default, #1a2a6d);
   }
 
   .faq-question {
@@ -156,10 +156,10 @@ const faqJsonLd = faqPageSchema(
     padding: 20px 24px;
     font-size: 1rem;
     font-weight: 500;
-    color: #1a2a6d;
+    color: var(--ds-color-accent-base-default, #1a2a6d);
     cursor: pointer;
     list-style: none;
-    background: #e5f2f7;
+    background: var(--ds-color-accent-surface-tinted, #e5f2f7);
   }
 
   .faq-question::-webkit-details-marker {

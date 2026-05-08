@@ -20,8 +20,8 @@
   margin: 24px 0;
   transition: border-color 0.15s;
 }
-.article-accordion:hover { border-color: #1a2a6d; }
-.article-accordion[open] { border-color: #1a2a6d; }
+.article-accordion:hover { border-color: var(--ds-color-accent-base-default, #1a2a6d); }
+.article-accordion[open] { border-color: var(--ds-color-accent-base-default, #1a2a6d); }
 
 /* Accordion group wrapper. The renderer (ArticleBlocksRenderer.astro)
    walks the block list and groups consecutive artikkelTrekkspill blocks
@@ -76,16 +76,16 @@
   padding: 20px 24px;
   font-size: 1.125rem;
   font-weight: 500;
-  color: #1a2a6d;
+  color: var(--ds-color-accent-base-default, #1a2a6d);
   cursor: pointer;
   list-style: none;
-  background: #e5f2f7;
+  background: var(--ds-color-accent-surface-tinted, #e5f2f7);
 }
 .article-accordion-summary::-webkit-details-marker { display: none; }
 .article-accordion-chevron {
   flex-shrink: 0;
   transition: transform 0.2s ease;
-  color: #1a2a6d;
+  color: var(--ds-color-accent-base-default, #1a2a6d);
 }
 .article-accordion[open] > .article-accordion-summary .article-accordion-chevron {
   transform: rotate(180deg);
@@ -104,7 +104,7 @@
 .article-quote {
   margin: 32px 0;
   padding: 24px 32px;
-  border-left: 4px solid #1a2a6d;
+  border-left: 4px solid var(--ds-color-accent-base-default, #1a2a6d);
   background: #f8fafc;
   border-radius: 0 8px 8px 0;
 }
@@ -129,7 +129,7 @@
   border-radius: 8px;
   border-left: 4px solid;
 }
-.article-callout--info { background: #e5f2f7; border-left-color: #0062ba; }
+.article-callout--info { background: var(--ds-color-accent-surface-tinted, #e5f2f7); border-left-color: #0062ba; }
 .article-callout--obs { background: #fef9c3; border-left-color: #ca8a04; }
 .article-callout--advarsel { background: #fef2f2; border-left-color: #dc2626; }
 .article-callout--suksess { background: #f0fdf4; border-left-color: #16a34a; }
@@ -186,10 +186,10 @@
   flex-direction: column;
   gap: 8px;
 }
-.article-kontaktkort-title { font-size: 21px; font-weight: 500; color: #1a2a6d; margin: 0 0 16px; }
+.article-kontaktkort-title { font-size: 21px; font-weight: 500; color: var(--ds-color-accent-base-default, #1a2a6d); margin: 0 0 16px; }
 .article-kontaktkort-name { font-size: 18px; font-weight: 600; color: #000; margin: 0; }
 .article-kontaktkort-row { font-size: 16px; color: rgba(0, 0, 0, 0.75); margin: 0; }
-.article-kontaktkort-row a { color: #1a2a6d; text-decoration: none; }
+.article-kontaktkort-row a { color: var(--ds-color-accent-base-default, #1a2a6d); text-decoration: none; }
 .article-kontaktkort-row a:hover { text-decoration: underline; }
 
 /* Prosessteg */
@@ -253,7 +253,7 @@
   padding: 32px;
   margin: 16px 0;
 }
-.article-fremheving--bg { background: #e5f2f7; }
+.article-fremheving--bg { background: var(--ds-color-accent-surface-tinted, #e5f2f7); }
 @media (min-width: 768px) {
   .article-fremheving--with-image {
     flex-direction: row;
@@ -266,7 +266,7 @@
 .article-fremheving-title {
   font-size: 21px;
   font-weight: 500;
-  color: #1a2a6d;
+  color: var(--ds-color-accent-base-default, #1a2a6d);
   margin: 0 0 16px;
 }
 .article-fremheving-text {
@@ -310,7 +310,7 @@
 
 /* Legacy info box */
 .article-info-box {
-  background: #e5f2f7;
+  background: var(--ds-color-accent-surface-tinted, #e5f2f7);
   border-radius: 8px;
   padding: 48px;
   margin: 32px 0;
@@ -318,7 +318,7 @@
 .info-box-title {
   font-size: 21px;
   font-weight: 500;
-  color: #1a2a6d;
+  color: var(--ds-color-accent-base-default, #1a2a6d);
   margin: 0 0 16px;
 }
 .info-box-body {
@@ -353,13 +353,13 @@
 .article-text-block h2 {
   font-size: 36px;
   font-weight: 500;
-  color: #1a2a6d;
+  color: var(--ds-color-accent-base-default, #1a2a6d);
   margin: 48px 0 24px;
 }
 .article-text-block h3 {
   font-size: 24px;
   font-weight: 500;
-  color: #1a2a6d;
+  color: var(--ds-color-accent-base-default, #1a2a6d);
   margin: 32px 0 16px;
 }
 .article-text-block p { margin: 0 0 16px; }

@@ -134,11 +134,11 @@ const { title, variant = 'default', icon = 'none' } = Astro.props;
   }
 
   .sidebar-card-content :global(a) {
-    color: #136dec;
+    color: var(--ds-color-accent-base-default, #1a2a6d);
     text-decoration: underline;
   }
 
   .sidebar-card-content :global(a:hover) {
-    color: #0b4fba;
+    color: var(--ds-color-accent-base-hover, #14224f);
   }
 </style>

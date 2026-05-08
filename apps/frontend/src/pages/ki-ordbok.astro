@@ -679,18 +679,18 @@ const ordbokJsonLd = definedTermSetSchema(
     border-radius: 99px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #1a2a6d;
+    color: var(--ds-color-accent-base-default, #1a2a6d);
     text-decoration: none;
     transition: background 0.1s, color 0.1s;
     white-space: nowrap;
   }
 
   .letter-nav-link:hover {
-    background: #e5f2f7;
+    background: var(--ds-color-accent-surface-tinted, #e5f2f7);
   }
 
   .letter-nav-link.active {
-    background: #1a2a6d;
+    background: var(--ds-color-accent-base-default, #1a2a6d);
     color: white;
   }
 
@@ -715,7 +715,7 @@ const ordbokJsonLd = definedTermSetSchema(
   .letter-heading {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1a2a6d;
+    color: var(--ds-color-accent-base-default, #1a2a6d);
     margin: 0 0 8px;
     padding-bottom: 4px;
     border-bottom: 2px solid #7691d1;
@@ -778,7 +778,7 @@ const ordbokJsonLd = definedTermSetSchema(
   .term-name {
     font-size: 1.125rem;
     font-weight: 500;
-    color: #1a2a6d;
+    color: var(--ds-color-accent-base-default, #1a2a6d);
     text-decoration: underline;
     text-decoration-color: rgba(26, 42, 109, 0.35);
     text-underline-offset: 3px;
@@ -795,7 +795,7 @@ const ordbokJsonLd = definedTermSetSchema(
 
   .term-chevron {
     flex-shrink: 0;
-    color: #1a2a6d;
+    color: var(--ds-color-accent-base-default, #1a2a6d);
     transition: transform 0.2s ease;
     margin-left: auto;
   }

@@ -124,7 +124,7 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
        --header-height); we add it back as inner padding so the visible
        content still starts where it did before. */
   .article-hero--bg-lyseblaa {
-    background: #e5f2f7;
+    background: var(--ds-color-accent-surface-tinted, #e5f2f7);
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-top: calc(-1 * var(--header-height, 72px));
