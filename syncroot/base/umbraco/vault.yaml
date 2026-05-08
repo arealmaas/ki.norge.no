@@ -5,6 +5,6 @@ metadata:
 spec:
   serviceAccountRef:
     name: umbraco
-  groupObjectId: ${KINORGE_VAULT_GROUP_OBJECT_ID}
+  groupObjectId: b5949ea9-f3dc-4fd8-9dca-37e997b60c63 # DIS AKS Admin Dev KIN
   tags:
     app: ki-norge-portal
