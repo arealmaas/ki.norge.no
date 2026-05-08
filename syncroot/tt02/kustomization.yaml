@@ -35,7 +35,7 @@ patches:
         path: /spec/template/spec/containers/0/env/-
         value:
           name: Umbraco__Storage__AzureBlob__Media__ConnectionString
-          value: ${KINORGE_MEDIA_STORAGE_TT02_URL}
+          value: https://kinorgemediatt0240c8.blob.core.windows.net
       - op: add
         path: /spec/template/spec/containers/0/env/-
         value:
