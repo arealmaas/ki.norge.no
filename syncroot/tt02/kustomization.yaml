@@ -6,7 +6,7 @@ resources:
 
 images:
   - name: umbraco
-    newName: altinncr.azurecr.io/product-kinorgeportal/umbraco
+    newName: altinncr.azurecr.io/ghcr.io/digdir/ki.norge.no/umbraco
     newTag: will-be-replaced
 
 patches:
