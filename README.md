@@ -2,23 +2,35 @@
 
 Portal for kunstig intelligens i norsk offentlig sektor.
 
+- **Live**: https://ki.norge.no
+- **CMS**: https://cms.ki.norge.no/umbraco
+- **Repo**: https://github.com/digdir/ki.norge.no
+- **Project board**: https://github.com/orgs/digdir/projects/58
+
 ## Tech Stack
 
 ### CMS
-- **Umbraco 17.1.0 LTS** — Headless CMS (.NET 10 / C#)
-- **Content Delivery API v2** — REST API for frontend consumption
-- **SQLite** — Database (dev and small deployments). SQL Server 2016+ for larger production setups.
+- **Umbraco 17.3.5** (current LTS line) — headless CMS, .NET 10
+- **Content Delivery API v2** for frontend consumption
+- **SQLite** + **Litestream** continuous backup to Azure Blob Storage
+- Auto-bootstrap via `ContentTypeComposer` + `ContentSeeder` on first run
 
 ### Frontend
-- **Deno 2** — Runtime (replaces Node.js)
-- **Astro 5** — Static site generator (hybrid SSG/SSR)
-- **React 19** — Component library (via `@astrojs/react`)
-- **Designsystemet 1.11** — Norwegian government design system (`@digdir/designsystemet-react`)
-- **TypeScript** — Type safety
+- **Astro 5** SSR with Deno runtime
+- **React 19** for islands (search dialog, etc.)
+- **`@digdir/designsystemet-react`** + **`@digdir/designsystemet-css`** design tokens
+- **`@navikt/aksel-icons`** (extracted to static SVG map for Astro compatibility)
 
 ### Hosting
-- **Frontend** — Cloudflare Pages/Workers (`@astrojs/cloudflare` adapter)
-- **CMS** — Azure Web App (planned)
+- **Azure Container Apps** in resource group `ki-norge`, region `norwayeast`
+- Frontend: `ki-norge-frontend` container app
+- CMS: `ki-norge-cms` container app (max 1 replica due to SQLite)
+- Container Registry: `kinorgeacr.azurecr.io`
+- Storage: `kinorgestorage` (blob container `umbraco-db` for Litestream, file share `umbraco-data` for media)
+
+### Testing
+- **`scripts/smoke-test.sh`** — bash + curl smoke check (~10s, 21 checks). Run after every deploy.
+- **Playwright** in `tests/` — frontend smoke + CMS auth/tree state. See `tests/README.md`.
 
 ### Testing
 - **Playwright 1.44** — E2E tests (functional, visual regression, accessibility)
@@ -51,42 +63,31 @@ ki.norge.no/
 
 ### Prerequisites
 - .NET 10 SDK (for CMS)
-- Deno 2+ (for frontend)
+- Deno 2+ or Node 20+ (for frontend)
 
-### Setup
+### Quick start
 
-**CMS:**
 ```bash
-cd apps/cms-umbraco
-cp appsettings.Development.json.example appsettings.Development.json
-# Edit appsettings.Development.json — generate a random API key and preview secret
-dotnet restore
+# Frontend (Astro on Deno)
+npm run frontend:dev          # http://localhost:4321
+
+# CMS (Umbraco 17 / .NET 10)
+npm run cms:dev               # http://localhost:5000/umbraco
+                              # admin@ki.norge.no / KiNorge2025!
+
+# Frontend pointing at prod CMS (no local CMS needed)
+npm run frontend:dev:prod
 ```
 
-**Frontend:**
+On first CMS run, the SQLite database is created, `ContentTypeComposer` creates
+all content types, and `ContentSeeder` populates demo content. Admin user is
+created via unattended install env vars.
+
+**Terminal 2 — Frontend (Astro/Node + pnpm):**
 ```bash
 cd apps/frontend
-cp .env.example .env
-# Edit .env — set the same API key and preview secret as the CMS
-deno install --allow-scripts
-```
-
-### Start Development Servers
-
-**Terminal 1 — CMS (Umbraco):**
-```bash
-cd apps/cms-umbraco
-dotnet run
-```
-- Admin panel: http://localhost:5000/umbraco
-- Delivery API: http://localhost:5000/umbraco/delivery/api/v2/content
-
-On first run, Umbraco will prompt you to create an admin user. The `ContentTypeComposer` automatically creates all content types, and the `ContentSeeder` populates demo content.
-
-**Terminal 2 — Frontend (Astro/Deno):**
-```bash
-cd apps/frontend
-deno task dev
+pnpm install
+pnpm run dev
 ```
 - Frontend: http://localhost:4321
 
@@ -99,7 +100,7 @@ The frontend uses **hybrid rendering**:
 
 In development, the Astro dev server re-fetches from Umbraco on each page load, so CMS changes appear on refresh.
 
-In production, run `deno task build` to rebuild with latest content. Consider webhook-triggered rebuilds when CMS content changes.
+In production, run `pnpm run build` to rebuild with latest content. Consider webhook-triggered rebuilds when CMS content changes.
 
 ## Content Types
 
@@ -175,13 +176,13 @@ The preview flow: Umbraco → Razor template redirect → `/api/preview?secret=.
 cd apps/frontend
 
 # Run all tests (starts dev server automatically)
-deno task test:e2e
+pnpm run test:e2e
 
 # Update visual regression snapshots
-deno task test:e2e:update
+pnpm run test:e2e:update
 
 # Run tests with UI
-deno task test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 81 tests across 6 browser configurations (Chrome, Firefox, Safari, Chrome Dark, Mobile Chrome, Mobile Safari).

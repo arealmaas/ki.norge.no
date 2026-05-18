@@ -17,6 +17,34 @@ STORAGE_ACCOUNT="kinorgestorage"
 BLOB_CONTAINER="umbraco-db"
 IMAGE_TAG="$(date +%Y%m%d%H%M%S)"
 
+# Guard: refuse to run after the K8s cutover. cms.ki.norge.no currently CNAMEs
+# to ki-norge-cms.greentree-c9e56a64.norwayeast.azurecontainerapps.io. When the
+# K8s deploy via .github/workflows/publish-syncroot-main.yaml takes over, the
+# CNAME will change and this script should not target the orphan Container App.
+# (No-op if dig fails or the host can't resolve DNS — only blocks on a
+# definitive non-Container-Apps answer.)
+_CUTOVER_CNAME="$(dig +short CNAME cms.ki.norge.no 2>/dev/null || true)"
+if [ -n "$_CUTOVER_CNAME" ] && ! echo "$_CUTOVER_CNAME" | grep -q "azurecontainerapps"; then
+  echo "ERROR: K8s cutover detected (cms.ki.norge.no CNAME = ${_CUTOVER_CNAME})."
+  echo "This script targets the legacy Container Apps deploy and is deprecated."
+  echo "Use the K8s flow via .github/workflows/publish-syncroot-main.yaml instead."
+  exit 1
+fi
+
+# Guard: refuse to run if the CMS image no longer bundles Litestream.
+# This script relies on Litestream restoring the SQLite DB from Azure Blob
+# Storage on container startup, because /app/umbraco/Data is in the writable
+# container layer and has no persistent volume mount. If entrypoint.sh is
+# gone, the image build will skip the Litestream binary and the next deploy
+# will spin up with an empty database = total content loss.
+if [ ! -f "${REPO_ROOT}/apps/cms-umbraco/entrypoint.sh" ]; then
+  echo "ERROR: apps/cms-umbraco/entrypoint.sh is missing — the new image will"
+  echo "not bundle Litestream. Deploying via this script would create an empty"
+  echo "SQLite DB on an ephemeral path on the next container restart = data loss."
+  echo "Use the K8s flow via .github/workflows/publish-syncroot-main.yaml instead."
+  exit 1
+fi
+
 # Ensure Azure auth + PIM activation before deploying
 # Handles: expired MFA, wrong tenant, missing subscription, PIM activation
 TENANT_ID="cd0026d8-283b-4a55-9bfa-d0ef4a8ba21c"
@@ -135,6 +163,40 @@ az storage container create \
   --only-show-errors >/dev/null 2>&1 || true
 echo "OK"
 
+# --- Re-set environment storage account key (idempotent, prevents recurring VolumeMountFailure) ---
+# Background: Container Apps env-level storage definitions occasionally lose their account key
+# (Azure quirk seen 2026-04-30). When this happens, the file mount fails with "Permission denied"
+# and the container can't start. Setting the key on every deploy is cheap insurance.
+echo "==> Refreshing env storage account key for media mount"
+az containerapp env storage set \
+  --name "${CONTAINERAPPS_ENV}" \
+  --resource-group "${RESOURCE_GROUP}" \
+  --storage-name umbracomedia \
+  --azure-file-account-name "${STORAGE_ACCOUNT}" \
+  --azure-file-account-key "${STORAGE_KEY}" \
+  --azure-file-share-name umbraco-data \
+  --access-mode ReadWrite >/dev/null 2>&1 || echo "  (storage 'umbracomedia' not yet defined — manual setup required first time)"
+echo "OK"
+
+# --- Tag currently-deployed image as :prev for rollback ---
+# Pulls digest of whatever's running now and re-tags it as :prev so we can
+# roll back fast if the new image breaks. Best-effort — fails quietly on
+# first deploy or if no current image exists.
+echo "==> Tagging current images as :prev for rollback safety"
+for app in cms frontend; do
+  case "$app" in
+    cms) current_ref=$(az containerapp show -g "${RESOURCE_GROUP}" -n "${UMBRACO_APP_NAME}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null | sed "s|${ACR_NAME}.azurecr.io/||") ;;
+    frontend) current_ref=$(az containerapp show -g "${RESOURCE_GROUP}" -n "${FRONTEND_APP_NAME}" --query "properties.template.containers[0].image" -o tsv 2>/dev/null | sed "s|${ACR_NAME}.azurecr.io/||") ;;
+  esac
+  if [ -n "${current_ref:-}" ]; then
+    az acr import --name "${ACR_NAME}" --source "${ACR_NAME}.azurecr.io/${current_ref}" --image "ki-norge/${app}:prev" --force >/dev/null 2>&1 \
+      && echo "  ${app}: ${current_ref} → :prev" \
+      || echo "  ${app}: skip (no previous image)"
+  else
+    echo "  ${app}: skip (first deploy)"
+  fi
+done
+
 # --- Build images (remote ACR build) ---
 echo "==> Building CMS image: ${UMBRACO_IMAGE}"
 az acr build \
@@ -149,7 +211,7 @@ az acr build \
   --registry "${ACR_NAME}" \
   --image "ki-norge/frontend:${IMAGE_TAG}" \
   --file "${REPO_ROOT}/apps/frontend/Dockerfile" \
-  "${REPO_ROOT}/apps/frontend" 2>&1 | tail -5
+  "${REPO_ROOT}" 2>&1 | tail -5
 echo "OK"
 
 # --- Container Apps Environment ---
@@ -205,7 +267,11 @@ properties:
       - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
         value: 'true'
       - name: ConnectionStrings__umbracoDbDSN
-        value: Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True
+        # Default Timeout=30 sets SQLite busy_timeout to 30s — without this, any
+        # write that collides with a Litestream WAL checkpoint or another writer
+        # fails immediately with "database is locked" / "table is locked".
+        # Litestream docs explicitly recommend >=5s; 30s gives plenty of headroom.
+        value: Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True;Default Timeout=30
       - name: ConnectionStrings__umbracoDbDSN_ProviderName
         value: Microsoft.Data.Sqlite
       - name: UMBRACO__CMS__DELIVERYAPI__ENABLED
@@ -219,6 +285,8 @@ properties:
       - name: UMBRACO__CMS__GLOBAL__MAINDOMLOCK
         value: FileSystemMainDomLock
       - name: UMBRACO__CMS__UNATTENDED__INSTALLUNATTENDED
+        value: 'true'
+      - name: UMBRACO__CMS__UNATTENDED__UPGRADEUNATTENDED
         value: 'true'
       - name: UMBRACO__CMS__UNATTENDED__UNATTENDEDUSERNAME
         value: 'admin'
@@ -236,6 +304,8 @@ properties:
         value: https://ki-norge-frontend.greentree-c9e56a64.norwayeast.azurecontainerapps.io
       - name: HeadlessPreview__PreviewSecret
         value: '59cfdda7b9140784c3c80149b5348d81'
+      - name: LAUNCH_MODE
+        value: production
       image: ${UMBRACO_IMAGE}
       name: ki-norge-cms
       volumeMounts:
@@ -244,6 +314,21 @@ properties:
       resources:
         cpu: 0.5
         memory: 1Gi
+      probes:
+      - type: liveness
+        httpGet:
+          path: /api/health
+          port: 8080
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        failureThreshold: 10
+      - type: readiness
+        httpGet:
+          path: /api/health/ready
+          port: 8080
+        initialDelaySeconds: 60
+        periodSeconds: 30
+        failureThreshold: 10
     volumes:
     - name: umbracomedia
       storageName: umbracomedia
@@ -276,7 +361,7 @@ else
       "ASPNETCORE_ENVIRONMENT=Production" \
       "ASPNETCORE_URLS=http://0.0.0.0:8080" \
       "ASPNETCORE_FORWARDEDHEADERS_ENABLED=true" \
-      "ConnectionStrings__umbracoDbDSN=Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True" \
+      "ConnectionStrings__umbracoDbDSN=Data Source=/app/umbraco/Data/Umbraco.sqlite.db;Cache=Shared;Foreign Keys=True;Pooling=True;Default Timeout=30" \
       "ConnectionStrings__umbracoDbDSN_ProviderName=Microsoft.Data.Sqlite" \
       "UMBRACO__CMS__DELIVERYAPI__ENABLED=true" \
       "UMBRACO__CMS__DELIVERYAPI__PUBLICACCESS=true" \
@@ -357,9 +442,9 @@ properties:
         failureThreshold: 3
       - type: readiness
         httpGet:
-          path: /api/health
+          path: /api/health/ready
           port: 4321
-        periodSeconds: 10
+        periodSeconds: 30
         failureThreshold: 3
 PROBES
 

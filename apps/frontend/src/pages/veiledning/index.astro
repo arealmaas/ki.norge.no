@@ -68,7 +68,7 @@ const seoDesc = cmsData?.seoBeskrivelse || 'Vi veileder deg gjennom regler, krav
         </div>
         <div class="veil-hero-image">
           {heroImageUrl ? (
-            <img src={heroImageUrl} alt={heroTitle} class="veil-hero-img" />
+            <img loading="lazy" decoding="async" src={heroImageUrl} alt={heroTitle} class="veil-hero-img" />
           ) : (
             <div class="veil-hero-placeholder"></div>
           )}
@@ -127,7 +127,7 @@ const seoDesc = cmsData?.seoBeskrivelse || 'Vi veileder deg gjennom regler, krav
                 <p class="veil-tool-desc">{card.desc}</p>
               </div>
               {card.imageUrl ? (
-                <img src={card.imageUrl} alt={card.title} class="veil-tool-image" />
+                <img loading="lazy" decoding="async" src={card.imageUrl} alt={card.title} class="veil-tool-image" />
               ) : (
                 <div class="veil-tool-image"></div>
               )}

@@ -11,8 +11,9 @@
     <PackageReference Include="Jumoo.TranslationManager" Version="17.2.5" />
     <PackageReference Include="Jumoo.TranslationManager.Microsoft" Version="17.0.0" />
     <PackageReference Include="Kjac.HeadlessPreview" Version="3.0.0" />
-    <PackageReference Include="Umbraco.Cms" Version="17.1.0" />
-    <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.1.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
+    <PackageReference Include="Umbraco.Cms" Version="17.3.5" />
+    <PackageReference Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.3.5" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,6 +31,10 @@ interface UmbracoSingleItem extends UmbracoItem {}
 export interface UmbracoBlock {
   contentType: string;
   content: Record<string, unknown>;
+  // Per-block settings (Umbraco's "Innstillinger" tab on the block editor).
+  // Only blocks with a configured settingsElementTypeKey will have this populated.
+  // For artikkelTrekkspill, settings.gruppeTittel signals "start a new group with this title".
+  settings?: Record<string, unknown>;
 }
 
 // Artikkel block types
@@ -68,7 +72,64 @@ export interface ArtikkelCalloutBlock {
 export interface ArtikkelBildeSeksjonBlock {
   contentType: 'artikkelBildeSeksjon';
   bilde?: UmbracoMedia;
+  bildeAlt?: string;
   bildetekst?: string;
+}
+
+export interface ArtikkelFremhevingBlock {
+  contentType: 'artikkelFremheving';
+  content: {
+    tittel?: string;
+    tekst: string; // HTML from restricted RichText
+    bilde?: UmbracoMedia;
+    bildeAlt?: string;
+    visBakgrunn: boolean;
+    visAnforselstegn: boolean;
+    kilde?: string;
+  };
+}
+
+export interface ProsessStegItem {
+  tittel?: string; // optional label, defaults to no label if empty (placeholder "Steg" in CMS)
+  beskrivelse: string; // HTML from restricted RichText
+}
+
+export interface ArtikkelProsessStegBlock {
+  contentType: 'artikkelProsessteg';
+  content: {
+    tittel?: string;
+    steg: ProsessStegItem[];
+  };
+}
+
+export interface ArtikkelBylineBlock {
+  contentType: 'artikkelByline';
+  content: {
+    navn?: string;
+    stilling?: string;
+    virksomhet?: string;
+    dato?: string; // ISO date
+  };
+}
+
+export interface ArtikkelInnholdFraBlock {
+  contentType: 'artikkelInnholdFra';
+  content: {
+    virksomhet: string;
+    dato?: string; // ISO date
+  };
+}
+
+export interface ArtikkelKontaktkortBlock {
+  contentType: 'artikkelKontaktkort';
+  content: {
+    tittel?: string;
+    navn: string;
+    stilling?: string;
+    virksomhet?: string;
+    epost: string;
+    telefon?: string;
+  };
 }
 
 // Content types matching Umbraco document type schemas
@@ -77,6 +138,10 @@ export interface Artikkel {
   documentId: string;
   tittel: string;
   slug: string;
+  ingress?: string;
+  artikkelBilde?: UmbracoMedia;
+  bildeAlt?: string;
+  bakgrunn?: 'hvit' | 'lyseblaa' | string;
   innhold?: UmbracoBlock[];
   seoTittel?: string;
   seoBeskrivelse?: string;
@@ -264,6 +329,13 @@ export interface OmOssSeksjon {
   locale: string;
 }
 
+export interface OmOssSeksjonBlokk {
+  tittel: string;
+  tekst: string; // HTML from RichText
+  bilde?: UmbracoMedia;
+  bildeAlt?: string;
+}
+
 export interface OmOss {
   id: string;
   documentId: string;
@@ -271,6 +343,7 @@ export interface OmOss {
   heroUndertittel?: string;
   introTekst?: UmbracoBlock[];
   misjonTekst?: UmbracoBlock[];
+  seksjoner?: OmOssSeksjonBlokk[];
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -280,33 +353,16 @@ export interface OmOss {
   locale: string;
 }
 
-export interface SandkasseSteg {
-  nummer: string;
-  tittel: string;
-  beskrivelse: UmbracoBlock[];
-}
-
-export interface SandkasseFaq {
-  sporsmal: string;
-  svar: UmbracoBlock[];
-}
-
 export interface Sandkasse {
   id: string;
   documentId: string;
-  heroTittel?: string;
-  heroTekst?: UmbracoBlock[];
-  nedtelling?: string;
-  hvemTittel?: string;
-  hvemTekst?: UmbracoBlock[];
-  hvemBilde?: UmbracoMedia;
-  prosessTittel?: string;
-  prosessSteg?: SandkasseSteg[];
-  resultatTittel?: string;
-  resultatTekst?: UmbracoBlock[];
-  resultatBilde?: UmbracoMedia;
-  faqTittel?: string;
-  faqSeksjoner?: SandkasseFaq[];
+  tittel: string;
+  slug: string;
+  ingress: string;
+  artikkelBilde?: UmbracoMedia;
+  bildeAlt?: string;
+  bakgrunn?: string;
+  innhold?: UmbracoBlock[];
   seoTittel?: string;
   seoBeskrivelse?: string;
   seoBilde?: UmbracoMedia;
@@ -434,11 +490,35 @@ function nodeToPlainText(node: RichTextNode): string {
   return (node.elements || []).map(nodeToPlainText).join('');
 }
 
-function renderAttributes(attrs?: Record<string, string>): string {
+function renderAttributes(attrs?: Record<string, unknown>): string {
   if (!attrs || Object.keys(attrs).length === 0) return '';
-  return Object.entries(attrs)
-    .map(([key, value]) => ` ${key}="${escapeHtml(value)}"`)
-    .join('');
+
+  const out: string[] = [];
+
+  // Tiptap stores internal links with a `route: { path, queryString, ... }`
+  // metadata object as an "attribute." Browsers don't understand it. Derive
+  // a real href from route.path + route.queryString and skip the metadata.
+  const route = attrs.route as undefined | { path?: string; queryString?: string };
+  if (route && typeof route.path === 'string') {
+    const href = route.path + (typeof route.queryString === 'string' ? route.queryString : '');
+    out.push(` href="${escapeHtml(href)}"`);
+  }
+
+  for (const [key, value] of Object.entries(attrs)) {
+    // Skip Umbraco-internal metadata that's not a real HTML attribute
+    if (key === 'route' || key === 'destinationId' || key === 'destinationType' ||
+        key === 'linkType' || key === 'router-slot' || key === 'type') {
+      continue;
+    }
+    // Already handled the link case above; skip if Tiptap stored an `href` too
+    if (key === 'href' && route) continue;
+    // Defensive: skip any non-scalar value to avoid crashing on unexpected
+    // shapes from future Tiptap versions
+    if (value == null) continue;
+    if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean') continue;
+    out.push(` ${key}="${escapeHtml(String(value))}"`);
+  }
+  return out.join('');
 }
 
 function escapeHtml(text: string): string {
@@ -552,11 +632,27 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
   };
 
   switch (contentType) {
+    case 'caser':
+      return {
+        ...base,
+        heroTittel: props.heroTittel as string || '',
+        heroIngress: props.heroIngress as string || '',
+        seoTittel: props.seoTittel as string || '',
+        seoBeskrivelse: props.seoBeskrivelse as string || '',
+        seoBilde: mapMedia(props.seoBilde),
+      } as T;
+
     case 'artikkel':
+    case 'case':
+      // Case has identical shape to Artikkel (mirror content type)
       return {
         ...base,
         tittel: props.tittel as string || item.name,
         slug: props.slug as string || '',
+        ingress: props.ingress as string || '',
+        artikkelBilde: mapMedia(props.artikkelBilde),
+        bildeAlt: props.bildeAlt as string || '',
+        bakgrunn: (props.bakgrunn as string) || 'hvit',
         innhold: mapArtikkelBlocks(props.innhold),
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
@@ -690,12 +786,28 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
       } as T;
 
     case 'omOss':
+      // Map seksjoner Block List to OmOssSeksjonBlokk[]
+      const seksjonerItems = (props.seksjoner as any)?.items || [];
+      const seksjoner: OmOssSeksjonBlokk[] = seksjonerItems.map((block: any) => {
+        const content = block.content || block;
+        const blockProps = content.properties || content;
+        const tekst = blockProps.tekst?.tag === '#root'
+          ? richTextToHtml(blockProps.tekst)
+          : (typeof blockProps.tekst === 'string' ? blockProps.tekst : '');
+        return {
+          tittel: blockProps.tittel || '',
+          tekst,
+          bilde: mapMedia(blockProps.bilde),
+          bildeAlt: blockProps.bildeAlt || '',
+        };
+      });
       return {
         ...base,
         heroTittel: props.heroTittel as string || '',
         heroUndertittel: props.heroUndertittel as string || '',
         introTekst: mapRichText(props.introTekst),
         misjonTekst: mapRichText(props.misjonTekst),
+        seksjoner,
         seoTittel: props.seoTittel as string || '',
         seoBeskrivelse: props.seoBeskrivelse as string || '',
         seoBilde: mapMedia(props.seoBilde),
@@ -704,25 +816,22 @@ function mapItem<T>(item: UmbracoItem, contentType: string): T {
     case 'sandkasse':
       return {
         ...base,
-        heroTittel: props.heroTittel as string || undefined,
-        heroTekst: mapRichText(props.heroTekst),
-        nedtelling: props.nedtelling as string || undefined,
-        hvemTittel: props.hvemTittel as string || undefined,
-        hvemTekst: mapRichText(props.hvemTekst),
-        hvemBilde: mapMedia(props.hvemBilde),
-        prosessTittel: props.prosessTittel as string || undefined,
-        prosessSteg: mapSandkasseSteg(props.prosessSteg),
-        resultatTittel: props.resultatTittel as string || undefined,
-        resultatTekst: mapRichText(props.resultatTekst),
-        resultatBilde: mapMedia(props.resultatBilde),
-        faqTittel: props.faqTittel as string || undefined,
-        faqSeksjoner: mapSandkasseFaq(props.faqSeksjoner),
+        tittel: props.tittel as string || item.name,
+        slug: props.slug as string || 'sandkasse',
+        ingress: props.ingress as string || '',
+        artikkelBilde: mapMedia(props.artikkelBilde),
+        bildeAlt: props.bildeAlt as string || '',
+        bakgrunn: (props.bakgrunn as string) || 'hvit',
+        innhold: mapArtikkelBlocks(props.innhold),
         seoTittel: props.seoTittel as string || undefined,
         seoBeskrivelse: props.seoBeskrivelse as string || undefined,
         seoBilde: mapMedia(props.seoBilde),
       } as T;
 
     case 'veiledningOversikt':
+    case 'veiledninger':
+      // veiledninger container now has the same fields as the old standalone Oversikt.
+      // Both cases mapped identically so transitional content still works.
       return {
         ...base,
         heroLabel: props.heroLabel as string || undefined,
@@ -793,7 +902,14 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
       if (ct === 'artikkelTrekkspill') {
         const richText = props.innhold;
         const html = richText?.tag === '#root' ? richTextToHtml(richText) : (typeof richText === 'string' ? richText : '');
-        return { contentType: 'artikkelTrekkspill', content: { tittel: props.tittel || '', innhold: html } };
+        // Per-block settings (Innstillinger tab). gruppeTittel signals "start a new
+        // group with this title" — the renderer uses it to break/merge accordion runs.
+        const settingsProps = block.settings?.properties ?? {};
+        return {
+          contentType: 'artikkelTrekkspill',
+          content: { tittel: props.tittel || '', innhold: html },
+          settings: { gruppeTittel: (settingsProps.gruppeTittel as string) || '' },
+        };
       }
       if (ct === 'artikkelSitat') {
         return { contentType: 'artikkelSitat', content: { sitat: props.sitat || '', kilde: props.kilde || '' } };
@@ -804,7 +920,59 @@ function mapArtikkelBlocks(value: unknown): UmbracoBlock[] {
         return { contentType: 'artikkelCallout', content: { tittel: props.tittel || '', innhold: html, variant: props.variant || 'info' } };
       }
       if (ct === 'artikkelBildeSeksjon') {
-        return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildetekst: props.bildetekst || '' } };
+        return { contentType: 'artikkelBildeSeksjon', content: { bilde: mapMedia(props.bilde), bildeAlt: props.bildeAlt || '', bildetekst: props.bildetekst || '' } };
+      }
+      if (ct === 'artikkelByline') {
+        return { contentType: 'artikkelByline', content: {
+          navn: props.navn || '',
+          stilling: props.stilling || '',
+          virksomhet: props.virksomhet || '',
+          dato: props.dato || '',
+        } };
+      }
+      if (ct === 'artikkelInnholdFra') {
+        return { contentType: 'artikkelInnholdFra', content: {
+          virksomhet: props.virksomhet || '',
+          dato: props.dato || '',
+        } };
+      }
+      if (ct === 'artikkelKontaktkort') {
+        return { contentType: 'artikkelKontaktkort', content: {
+          tittel: props.tittel || '',
+          navn: props.navn || '',
+          stilling: props.stilling || '',
+          virksomhet: props.virksomhet || '',
+          epost: props.epost || '',
+          telefon: props.telefon || '',
+        } };
+      }
+      if (ct === 'artikkelProsessteg') {
+        // Nested Block List: props.steg has items, each with content.beskrivelse RichText
+        const stegItems = (props.steg as any)?.items || [];
+        const steg: ProsessStegItem[] = stegItems.map((item: any) => {
+          const itemContent = item.content || item;
+          const itemProps = itemContent.properties || itemContent;
+          const beskrivelse = itemProps.beskrivelse?.tag === '#root'
+            ? richTextToHtml(itemProps.beskrivelse)
+            : (typeof itemProps.beskrivelse === 'string' ? itemProps.beskrivelse : '');
+          return { tittel: itemProps.tittel || '', beskrivelse };
+        });
+        return { contentType: 'artikkelProsessteg', content: { tittel: props.tittel || '', steg } };
+      }
+      if (ct === 'artikkelFremheving') {
+        const tekst = props.tekst?.tag === '#root' ? richTextToHtml(props.tekst) : (typeof props.tekst === 'string' ? props.tekst : '');
+        // Defaults: visBakgrunn=true (Faktaboks-stil), visAnforselstegn=false
+        const visBakgrunn = props.visBakgrunn === false ? false : true;
+        const visAnforselstegn = props.visAnforselstegn === true;
+        return { contentType: 'artikkelFremheving', content: {
+          tittel: props.tittel || '',
+          tekst,
+          bilde: mapMedia(props.bilde),
+          bildeAlt: props.bildeAlt || '',
+          visBakgrunn,
+          visAnforselstegn,
+          kilde: props.kilde || '',
+        } };
       }
 
       // Fallback: treat as tekst block (legacy rich text)
@@ -887,33 +1055,6 @@ function mapEventItems(value: unknown): EventItem[] {
       eventDato: (props.eventDato as string) || undefined,
       eventSted: (props.eventSted as string) || undefined,
       eventUrl: (props.eventUrl as string) || undefined,
-    };
-  });
-}
-
-function mapSandkasseSteg(value: unknown): SandkasseSteg[] {
-  const items = Array.isArray(value) ? value : (value as any)?.items;
-  if (!Array.isArray(items)) return [];
-  return items.map((block: any) => {
-    const content = block.content || block;
-    const props = content.properties || content;
-    return {
-      nummer: (props.nummer as string) || '',
-      tittel: (props.tittel as string) || '',
-      beskrivelse: mapRichText(props.beskrivelse) || [],
-    };
-  });
-}
-
-function mapSandkasseFaq(value: unknown): SandkasseFaq[] {
-  const items = Array.isArray(value) ? value : (value as any)?.items;
-  if (!Array.isArray(items)) return [];
-  return items.map((block: any) => {
-    const content = block.content || block;
-    const props = content.properties || content;
-    return {
-      sporsmal: (props.sporsmal as string) || '',
-      svar: mapRichText(props.svar) || [],
     };
   });
 }
@@ -1061,7 +1202,45 @@ export async function getSide(slug: string, options: FetchOptions = {}) {
   return fetchBySlug<Side>('side', slug, options);
 }
 
-// ── Eksempel (Case) API functions ───────────────────────────────
+// ── Case API (new content type, replaces Eksempel) ──────────────
+
+export interface Case extends Artikkel {
+  // Same shape as Artikkel for now (mirror content type).
+  // Add case-specific fields here when they diverge.
+}
+
+export interface CaserOversikt {
+  id: string;
+  documentId: string;
+  heroTittel?: string;
+  heroIngress?: string;
+  seoTittel?: string;
+  seoBeskrivelse?: string;
+  seoBilde?: UmbracoMedia;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+}
+
+export async function getCaserOversikt(options: FetchOptions = {}): Promise<CaserOversikt | null> {
+  const result = await fetchCollection<CaserOversikt>('caser', { ...options, take: 1 });
+  return result.data[0] || null;
+}
+
+export async function getCaser(options: FetchOptions = {}) {
+  return fetchCollection<Case>('case', {
+    skip: 0,
+    take: 50,
+    sort: 'updateDate:desc',
+    ...options,
+  });
+}
+
+export async function getCase(slug: string, options: FetchOptions = {}) {
+  return fetchBySlug<Case>('case', slug, options);
+}
+
+// ── Eksempel (legacy, will be removed once content migrates to Case) ──
 
 export async function getEksempler(options: FetchOptions = {}) {
   return fetchCollection<Eksempel>('eksempel', {
@@ -1145,7 +1324,16 @@ export async function getSandkasse(options: FetchOptions = {}): Promise<Sandkass
 
 // ── Veiledning Oversikt API functions ────────────────────────────
 
+/**
+ * Fetches the Veiledning overview content. Prefers the new flat structure (fields on
+ * the 'veiledninger' container itself); falls back to legacy standalone 'veiledningOversikt'
+ * during the migration window.
+ */
 export async function getVeiledningOversikt(options: FetchOptions = {}): Promise<VeiledningOversikt | null> {
+  // Try new structure first
+  const flat = await fetchCollection<VeiledningOversikt>('veiledninger', { ...options, take: 1 });
+  if (flat.data[0]?.heroTittel) return flat.data[0];
+  // Fall back to legacy
   const result = await fetchCollection<VeiledningOversikt>('veiledningOversikt', { ...options, take: 1 });
   return result.data[0] || null;
 }

@@ -35,20 +35,29 @@ Frontend henter innhold via Umbraco Delivery API v2. CMS-databasen replikeres ti
 **Stack:** Astro (server mode) + React (islands) + @digdir/designsystemet-react + @digdir/designsystemet-css
 
 **Sider** (`apps/frontend/src/pages/`)
-- Forsiden, artikler, eksempler, veiledning (guide + steg), sandkasse, FAQ, kontakt, om-oss, ki-ordbok, søk, status (admin-only)
-- Dynamiske ruter: `artikler/[slug]`, `eksempler/[slug]`, `veiledning/[guide]`, `veiledning/[guide]/[step]`
+- Forsiden, artikler, caser, veiledning (guide + steg), sandkasse, FAQ, kontakt, om-oss, ki-ordbok, søk, status (admin-only)
+- Dynamiske ruter: `artikler/[slug]`, `caser/[slug]`, `veiledning/[guide]`, `veiledning/[guide]/[step]`
+- `eksempler/[slug]` og `eksempler/index` redirecter til `/caser/...` (301)
 
 **Nøkkelfiler**
 - `src/lib/umbraco.ts` — all datahenting fra CMS. Interfaces, fetch-funksjoner, mapItem() som mapper content types til TypeScript-typer
 - `src/lib/aksel-icons.ts` — statisk SVG-map for Aksel-ikoner (React-only pakke, kan ikke brukes direkte i Astro)
 - `src/lib/seo.ts` — JSON-LD structured data
-- `src/middleware.ts` — caching, admin-tilgang (ki_admin cookie), kommer-snart-modus
-- `src/components/shared/BlocksRenderer.astro` — rendrer UmbracoBlock[] til HTML
+- `src/middleware.ts` — caching, admin-tilgang (ki_admin cookie), kommer-snart-modus, security headers (CSP, HSTS osv.)
+- `src/components/shared/ArticleBlocksRenderer.astro` — **eneste** sted artikkelmoduler rendres. Brukt av artikler/[slug], caser/[slug], sandkasse/index. CSS i `src/styles/article-blocks.css`. Endre denne én filen → alle sidene oppdateres.
+- `src/components/shared/BlocksRenderer.astro` — eldre/enklere blocks renderer (tekst, advarsel, lenkeliste, faqInnhold). Brukes ikke for artikkelmoduler.
 - `src/components/shared/AkselIcon.astro` — rendrer Aksel-ikon etter navn
 - `src/components/shared/SearchDialog.tsx` — KI-søk dialog (React, client:load)
-- `src/styles/global.css` og `search-dialog.css`
+- `src/components/shared/CookieNotice.astro` — minimal cookie-notice (essential cookies only)
+- `src/components/shared/BackToTop.astro` — flytende back-to-top knapp på lange sider
+- `src/styles/global.css`, `search-dialog.css`, `grid.css`, `article-blocks.css`
 
-**Breakpoints:** 640px og 1024px. Ikke bruk andre.
+**Grid-system:** 12-kolonne responsivt grid (se `src/styles/grid.css` og `Grid.astro`).
+- Over 1024px: 12 kolonner, under 768px: 6 kolonner
+- Brødtekst og moduler: `col-center-6`. Hero med bilde: `col-center-10`. Full bleed: `col-all`.
+- Alle nye artikkelmoduler skal ha `col-center-6` som standard.
+
+**Breakpoints:** 768px og 1024px (grid). Eldre kode bruker også 640px.
 
 **Designsystem:** Bruk designsystemet-tokens (--ds-size-4, --ds-color-text-default osv.) der de finnes. Ingen Tailwind.
 
@@ -74,9 +83,13 @@ Frontend henter innhold via Umbraco Delivery API v2. CMS-databasen replikeres ti
 - artikkelBildeSeksjon (bilde + bildetekst)
 - artikkelMorkPanel (skal fjernes)
 
-**Connection string:** Må bruke `|DataDirectory|` i path, ikke relativ sti. Ellers finner ikke Umbraco databasen.
+**Connection string:** Må bruke `|DataDirectory|` i path, ikke relativ sti. Ellers finner ikke Umbraco databasen. På prod: `Default Timeout=30` setter SQLite busy_timeout for å unngå "database is locked"-feil ved samtidige skrivinger.
 
 **RichText toolbar:** Konfigureres programmatisk i ContentTypeComposer (EnsureRichTextHeadings). Har H2, H3, H4.
+
+**Migrasjon til SQL Server planlagt**: SQLite + Litestream gir lock-contention på multi-editor-bruk. Plan i `docs/sql-server-migration-plan.md`. Tester forberedt i `tests/sql-migration/`. Avventer team-go-ahead.
+
+**Innholdsskriving fra kode = anti-pattern**: Se `docs/seeder-content-write-audit.md`. Strukturmigreringer (content types) er OK; å skrive content NODES fra startup-kode har gitt 2 prod-incidenter (Sandkasse, nesten Caser). Mål: pre-launch er all auto-content-skriving fjernet, demo/test-innhold lages via editor.
 
 ## Deploy
 

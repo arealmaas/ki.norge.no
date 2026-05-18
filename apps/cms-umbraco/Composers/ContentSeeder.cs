@@ -61,13 +61,31 @@ public class ContentSeeder : IAsyncComponent
     {
         if (_runtimeState.Level < RuntimeLevel.Run) return Task.CompletedTask;
 
+        // Structure migrations always run (idempotent fixes for content tree organization).
+        // These don't create new content — they reorganize, sort, or remove existing items.
+        try { RunStructureMigrations(); }
+        catch (Exception ex) { Console.WriteLine($"ContentSeeder RunStructureMigrations: {ex.Message}"); }
+
+        // Skip ALL seeding when LAUNCH_MODE=production.
+        // Prevents seeder from re-creating content that editors deleted on prod.
+        // For fresh installs / local dev, leave LAUNCH_MODE unset.
+        var launchMode = Environment.GetEnvironmentVariable("LAUNCH_MODE")?.ToLowerInvariant();
+        if (launchMode == "production")
+        {
+            Console.WriteLine("ContentSeeder: LAUNCH_MODE=production, skipping all seeding");
+            return Task.CompletedTask;
+        }
+
         // Migration: seed ordbok even if other content already exists
         try { MigrateOrdbokOppslag(); }
         catch (Exception ex) { Console.WriteLine($"ContentSeeder MigrateOrdbokOppslag: {ex.Message}"); }
 
-        // Skip if content already exists
-        var existing = _contentService.GetRootContent();
-        if (existing.Any()) return Task.CompletedTask;
+        // Skip if Forside already exists — RunStructureMigrations may have created
+        // some root content (Caser, KI-ordbok) on its own, so a generic Any() check
+        // would skip seeding on first install. Forside is created only by the main
+        // seeder, so it's a reliable "have we seeded before" marker.
+        var existing = _contentService.GetRootContent().ToList();
+        if (existing.Any(c => c.ContentType.Alias == "forside")) return Task.CompletedTask;
 
         try
         {
@@ -75,14 +93,14 @@ public class ContentSeeder : IAsyncComponent
             var artiklerFolder = CreateFolder("artikler", "Artikler");
             var siderFolder = CreateFolder("sider", "Sider");
             var eksemplerFolder = CreateFolder("eksempler", "Eksempler");
+            var caserFolder = CreateFolder("caser", "Caser");
             var veiledningerFolder = CreateFolder("veiledninger", "Veiledninger");
             var faqFolder = CreateFolder("faqSamling", "FAQ");
             var merkelapperFolder = CreateFolder("merkelapper", "Merkelapper");
-            var ikonerFolder = CreateFolder("tilgjengeligeIkoner", "Tilgjengelige ikoner");
             var ordbokFolder = CreateFolder("ordbokSamling", "KI-ordbok");
 
-            // Seed icons and media
-            SeedIkoner(ikonerFolder.Id);
+            // Ikoner deaktivert — bruk Media-mappe i stedet for ikon-content type.
+            // Cleanup of existing ikoner content done in RunStructureMigrations.
 
             // Seed media images
             SeedMedia();
@@ -90,7 +108,7 @@ public class ContentSeeder : IAsyncComponent
             // Create root-level content nodes
             SeedForside();
             var omOssNode = SeedOmOss();
-            SeedSandkasse();
+            SeedSandkasse(siderFolder.Id);
             SeedVeiledningOversikt();
 
             // Seed merkelapper FIRST so we can reference them from other content
@@ -100,6 +118,7 @@ public class ContentSeeder : IAsyncComponent
             SeedArticles(artiklerFolder.Id);
             SeedPages(siderFolder.Id);
             SeedExamples(eksemplerFolder.Id);
+            SeedCases(caserFolder.Id);
             SeedVeiledninger(veiledningerFolder.Id);
             SeedFAQ(faqFolder.Id, merkelappMap);
             SeedOrdbokOppslag(ordbokFolder.Id);
@@ -114,6 +133,512 @@ public class ContentSeeder : IAsyncComponent
     }
 
     public Task TerminateAsync(bool isRestarting, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    // ── Structure migrations (idempotent, run on every startup including LAUNCH_MODE=production) ──
+
+    private void RunStructureMigrations()
+    {
+        // Create root folders if missing (idempotent — only creates if not present)
+        EnsureCaserFolderExists();
+        // Reorganize existing content
+        ForceForsideToTop();
+        RemoveIkonerContent();
+        RenameVeiledningerToVeiledning();
+        RenameFaqContainerNode();
+        MoveOmOssIntoSider();
+        ClearFaqKategoriReferences();
+        MoveVeiledningOversiktUnderVeiledning();
+        FlattenVeiledningOversiktIntoContainer();
+        NestVeiledningStegUnderGuide();
+        FlattenOmOssSeksjonerToBlocks();
+        MigrateEksempelToCase();
+        FixBakgrunnDropdownValues();
+        EnsureSandkasseExistsForDev();
+    }
+
+    /// <summary>
+    /// Local-dev convenience: if there's no Sandkasse content node anywhere, seed one
+    /// under Sider with placeholder content. Skipped on prod (LAUNCH_MODE=production)
+    /// so the editor creates the real one with their own copy. Idempotent.
+    /// </summary>
+    private void EnsureSandkasseExistsForDev()
+    {
+        if (Environment.GetEnvironmentVariable("LAUNCH_MODE")?.ToLowerInvariant() == "production") return;
+
+        var ct = _contentTypeService.Get("sandkasse");
+        if (ct == null) return;
+
+        // Walk every node looking for an existing sandkasse (any depth, any parent)
+        bool exists = false;
+        foreach (var root in _contentService.GetRootContent())
+        {
+            if (root.ContentType.Alias == "sandkasse") { exists = true; break; }
+            var descendants = _contentService.GetPagedDescendants(root.Id, 0, int.MaxValue, out _);
+            if (descendants.Any(d => d.ContentType.Alias == "sandkasse")) { exists = true; break; }
+        }
+        if (exists) return;
+
+        var siderFolder = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "sider");
+        if (siderFolder == null) return;
+
+        SeedSandkasse(siderFolder.Id);
+        Console.WriteLine("ContentSeeder: Created placeholder Sandkasse under Sider (dev only)");
+    }
+
+    /// <summary>
+    /// Fixes the bakgrunn dropdown field on artikkel and case content.
+    /// The DropDown.Flexible editor stores values as JSON array, but earlier code
+    /// set plain strings ("hvit", "lyseblaa") which breaks the Delivery API.
+    /// This migration finds non-JSON values and either wraps them in JSON array form
+    /// or clears them. Idempotent.
+    /// </summary>
+    private void FixBakgrunnDropdownValues()
+    {
+        var allTypes = new[] { "artikkel", "case" };
+        int fixedCount = 0;
+
+        foreach (var alias in allTypes)
+        {
+            // Get all root content of these types — case lives under caser, so check children too
+            var allContent = _contentService.GetRootContent()
+                .SelectMany(root => _contentService.GetPagedDescendants(root.Id, 0, int.MaxValue, out _))
+                .Concat(_contentService.GetRootContent())
+                .Where(c => c.ContentType.Alias == alias)
+                .ToList();
+
+            foreach (var c in allContent)
+            {
+                if (!c.HasProperty("bakgrunn")) continue;
+                var raw = c.GetValue<string>("bakgrunn");
+                if (string.IsNullOrEmpty(raw)) continue;
+                if (raw.StartsWith("[")) continue; // already JSON array
+
+                // Wrap plain string in JSON array
+                var fixedValue = $"[\"{raw}\"]";
+                c.SetValue("bakgrunn", fixedValue);
+                _contentService.Save(c);
+                if (c.Published) _contentService.Publish(c, new[] { "*" });
+                fixedCount++;
+            }
+        }
+
+        if (fixedCount > 0)
+            Console.WriteLine($"ContentSeeder: Fixed bakgrunn dropdown JSON format on {fixedCount} content nodes");
+    }
+
+    /// <summary>
+    /// Copies field values from the standalone Veiledning Oversikt content node onto the
+    /// Veiledning container content node, then deletes the standalone Oversikt node.
+    /// Editor can then click "Veiledning" in the tree and edit the overview directly.
+    /// Idempotent: skips if no Oversikt node exists or if container already has the values.
+    /// </summary>
+    private void FlattenVeiledningOversiktIntoContainer()
+    {
+        var container = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (container == null) return;
+
+        // Find Oversikt node — could be at root or already under container
+        var oversikt = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "veiledningOversikt");
+        if (oversikt == null)
+        {
+            // Check inside the container
+            oversikt = _contentService.GetPagedChildren(container.Id, 0, int.MaxValue, out _)
+                .FirstOrDefault(c => c.ContentType.Alias == "veiledningOversikt");
+        }
+        if (oversikt == null) return;
+
+        // Copy each property from Oversikt to container (only if container has the field)
+        var fieldsToCopy = new[] {
+            "heroLabel", "heroTittel", "heroTekst", "heroBilde",
+            "seksjon1Tittel", "seksjon1Kort",
+            "seksjon2Tittel", "seksjon2Kort",
+            "verktoyTittel", "verktoyKort",
+            "seoTittel", "seoBeskrivelse", "seoBilde"
+        };
+
+        bool changed = false;
+        foreach (var field in fieldsToCopy)
+        {
+            if (!container.Properties.Any(p => p.Alias == field)) continue;
+            var srcValue = oversikt.GetValue(field);
+            if (srcValue == null) continue;
+            container.SetValue(field, srcValue);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            _contentService.Save(container);
+            _contentService.Publish(container, new[] { "*" });
+        }
+
+        // Move (don't hard-delete) — preserves recoverability via the recycle bin if a
+        // future ed​itor needs the original back. Cascades children to the recycle bin too.
+        _contentService.MoveToRecycleBin(oversikt);
+        Console.WriteLine("ContentSeeder: Flattened Veiledning Oversikt into Veiledning container (oversikt moved to recycle bin)");
+    }
+
+    private void RenameFaqContainerNode()
+    {
+        var faq = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "faqSamling");
+        if (faq == null) return;
+        if (faq.Name == "Ofte stilte spørsmål") return;
+        faq.Name = "Ofte stilte spørsmål";
+        _contentService.Save(faq);
+        Console.WriteLine("ContentSeeder: Renamed FAQ folder to 'Ofte stilte spørsmål'");
+    }
+
+    /// <summary>
+    /// Migrates each existing eksempel content node to a new case node under Caser folder.
+    /// Maps fields: tittel/slug direct, beskrivelse → ingress (plain text) + first Brødtekst
+    /// block, resultater → second Brødtekst block, organisasjon → InnholdFra block at end,
+    /// bilde → artikkelBilde, seo* direct.
+    /// After migrating all, deletes the original Eksempler container content node and its children.
+    /// Idempotent: skips eksempel content where a case with the same slug already exists under Caser.
+    /// </summary>
+    private void MigrateEksempelToCase()
+    {
+        var eksemplerContainer = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "eksempler");
+        if (eksemplerContainer == null) return;
+
+        var caserContainer = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "caser");
+        if (caserContainer == null) return;
+
+        var caseType = _contentTypeService.Get("case");
+        var brodtekstType = _contentTypeService.Get("artikkelTekst");
+        var innholdFraType = _contentTypeService.Get("artikkelInnholdFra");
+        if (caseType == null || brodtekstType == null) return;
+
+        var existingCaseSlugs = _contentService.GetPagedChildren(caserContainer.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "case")
+            .Select(c => c.GetValue<string>("slug") ?? "")
+            .ToHashSet();
+
+        var eksempler = _contentService.GetPagedChildren(eksemplerContainer.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "eksempel")
+            .ToList();
+
+        int migrated = 0;
+        foreach (var eks in eksempler)
+        {
+            var slug = eks.GetValue<string>("slug") ?? "";
+            if (string.IsNullOrEmpty(slug) || existingCaseSlugs.Contains(slug)) continue;
+
+            var nytt = _contentService.Create(eks.Name ?? "Case", caserContainer.Id, "case");
+            nytt.SetValue("tittel", eks.GetValue<string>("tittel") ?? eks.Name ?? "");
+            nytt.SetValue("slug", slug);
+
+            var beskrivelse = eks.GetValue<string>("beskrivelse") ?? "";
+            var resultater = eks.GetValue<string>("resultater") ?? "";
+
+            // Ingress: first 200 chars of beskrivelse plain text
+            var ingressText = StripHtml(beskrivelse);
+            if (ingressText.Length > 250) ingressText = ingressText.Substring(0, 247) + "...";
+            nytt.SetValue("ingress", ingressText);
+            // Don't set bakgrunn — dropdown stores JSON array format, default empty is fine
+
+            // artikkelBilde: copy bilde value (MediaPicker)
+            var bilde = eks.GetValue("bilde");
+            if (bilde != null) nytt.SetValue("artikkelBilde", bilde);
+
+            // Body Block List: Brødtekst(beskrivelse), Brødtekst(resultater), optional InnholdFra
+            var blocks = new List<(string, Dictionary<string, object>)>();
+            if (!string.IsNullOrWhiteSpace(beskrivelse))
+                blocks.Add(("artikkelTekst", new Dictionary<string, object> { ["innhold"] = beskrivelse }));
+            if (!string.IsNullOrWhiteSpace(resultater))
+                blocks.Add(("artikkelTekst", new Dictionary<string, object> { ["innhold"] = $"<h2>Resultater</h2>{resultater}" }));
+            var organisasjon = eks.GetValue<string>("organisasjon");
+            if (!string.IsNullOrWhiteSpace(organisasjon) && innholdFraType != null)
+                blocks.Add(("artikkelInnholdFra", new Dictionary<string, object> { ["virksomhet"] = organisasjon }));
+
+            if (blocks.Count > 0)
+                nytt.SetValue("innhold", BuildArticleBlockList(blocks.ToArray()));
+
+            // SEO direct copy
+            nytt.SetValue("seoTittel", eks.GetValue<string>("seoTittel") ?? "");
+            nytt.SetValue("seoBeskrivelse", eks.GetValue<string>("seoBeskrivelse") ?? "");
+            var seoBilde = eks.GetValue("seoBilde");
+            if (seoBilde != null) nytt.SetValue("seoBilde", seoBilde);
+
+            _contentService.Save(nytt);
+            _contentService.Publish(nytt, new[] { "*" });
+            migrated++;
+        }
+
+        // Move container (don't hard-delete) so a future editor can dig out the original
+        // eksempel content from the recycle bin if needed.
+        if (migrated > 0 || eksempler.Count > 0)
+        {
+            _contentService.MoveToRecycleBin(eksemplerContainer);
+            Console.WriteLine($"ContentSeeder: Migrated {migrated} eksempel(s) to case under Caser, moved Eksempler container to recycle bin");
+        }
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return "";
+        return System.Text.RegularExpressions.Regex.Replace(html, "<[^>]+>", " ")
+            .Replace("&nbsp;", " ")
+            .Trim();
+    }
+
+    /// <summary>
+    /// Clears the kategori field on all FAQ items. The kategori field is a content
+    /// picker pointing at merkelapper, which blocks editor from deleting merkelapper
+    /// (Umbraco enforces referential integrity). After clearing, merkelapper can be
+    /// freely deleted. Kategori was a demo-only field anyway.
+    /// </summary>
+    private void ClearFaqKategoriReferences()
+    {
+        var faqContainer = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "faqSamling");
+        if (faqContainer == null) return;
+
+        var faqs = _contentService.GetPagedChildren(faqContainer.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "faq")
+            .ToList();
+
+        int cleared = 0;
+        foreach (var faq in faqs)
+        {
+            var current = faq.GetValue<string>("kategori");
+            if (string.IsNullOrEmpty(current)) continue;
+            faq.SetValue("kategori", "");
+            _contentService.Save(faq);
+            cleared++;
+        }
+        if (cleared > 0)
+            Console.WriteLine($"ContentSeeder: Cleared kategori on {cleared} FAQ items (now safe to delete merkelapper)");
+    }
+
+    /// <summary>
+    /// Moves the standalone "Om Oss" content node from root into the Sider container.
+    /// </summary>
+    private void MoveOmOssIntoSider()
+    {
+        var omOss = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "omOss");
+        if (omOss == null) return;
+
+        var sider = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "sider");
+        if (sider == null) return;
+
+        if (omOss.ParentId == sider.Id) return;
+
+        _contentService.Move(omOss, sider.Id);
+        Console.WriteLine("ContentSeeder: Moved Om Oss into Sider container");
+    }
+
+    /// <summary>
+    /// Creates the "Caser" root folder if it doesn't exist. Idempotent.
+    /// Needed because the seeder is skipped on prod (LAUNCH_MODE=production) but
+    /// Caser was added after the seeder originally ran on prod.
+    /// </summary>
+    private void EnsureCaserFolderExists()
+    {
+        var existing = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "caser");
+        if (existing != null) return;
+
+        var ct = _contentTypeService.Get("caser");
+        if (ct == null) return;
+
+        var folder = _contentService.Create("Caser", -1, ct.Alias);
+        _contentService.Save(folder);
+        _contentService.Publish(folder, new[] { "*" });
+        Console.WriteLine("ContentSeeder: Created Caser root folder");
+    }
+
+    /// <summary>
+    /// Reads existing omOssSeksjon child content nodes under the Om Oss page and
+    /// converts each into an omOssBlokk inside the omOss.seksjoner Block List.
+    /// Then deletes the migrated omOssSeksjon nodes. Idempotent: skips if seksjoner already populated.
+    /// </summary>
+    private void FlattenOmOssSeksjonerToBlocks()
+    {
+        var omOss = _contentService.GetRootContent().FirstOrDefault(c => c.ContentType.Alias == "omOss");
+        if (omOss == null) return;
+
+        // If seksjoner already has blocks, don't overwrite
+        var existingBlocks = omOss.GetValue<string>("seksjoner");
+        if (!string.IsNullOrWhiteSpace(existingBlocks) && existingBlocks.Contains("contentData")) return;
+
+        var children = _contentService.GetPagedChildren(omOss.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "omOssSeksjon")
+            .OrderBy(c => c.GetValue<int>("rekkefolge"))
+            .ToList();
+
+        if (children.Count == 0) return;
+
+        // Need omOssBlokk content type to build blocks
+        var blokkType = _contentTypeService.Get("omOssBlokk");
+        if (blokkType == null) return;
+
+        var contentData = new List<object>();
+        var layoutItems = new List<object>();
+
+        foreach (var seksjon in children)
+        {
+            var guid = Guid.NewGuid();
+            var udi = $"umb://element/{guid:N}";
+
+            layoutItems.Add(new Dictionary<string, object?>
+            {
+                ["contentUdi"] = udi,
+                ["settingsUdi"] = null
+            });
+
+            var data = new Dictionary<string, object>
+            {
+                ["contentTypeKey"] = blokkType.Key.ToString(),
+                ["udi"] = udi,
+                ["tittel"] = seksjon.GetValue<string>("tittel") ?? "",
+                ["tekst"] = seksjon.GetValue<string>("tekst") ?? "",
+            };
+
+            // Bilde is a MediaPicker — store the same value if present
+            var bildeValue = seksjon.GetValue("bilde");
+            if (bildeValue != null) data["bilde"] = bildeValue;
+
+            contentData.Add(data);
+        }
+
+        var blockList = new Dictionary<string, object>
+        {
+            ["layout"] = new Dictionary<string, object>
+            {
+                ["Umbraco.BlockList"] = layoutItems
+            },
+            ["contentData"] = contentData,
+            ["settingsData"] = new List<object>()
+        };
+
+        omOss.SetValue("seksjoner", JsonSerializer.Serialize(blockList));
+        _contentService.Save(omOss);
+        _contentService.Publish(omOss, new[] { "*" });
+
+        // Move (don't hard-delete) the original seksjon nodes — recoverable from recycle bin
+        foreach (var seksjon in children)
+        {
+            _contentService.MoveToRecycleBin(seksjon);
+        }
+
+        Console.WriteLine($"ContentSeeder: Flattened {children.Count} Om Oss seksjoner into blocks on the page");
+    }
+
+    // RemoveDuplicateSandkasseUnderSider: REMOVED 2026-05-04.
+    // This migration assumed that any sandkasse-node under Sider was a duplicate
+    // of one that existed at root. That assumption was wrong: when an editor
+    // moved the real Sandkasse from root into Sider via the UI, the migration
+    // saw it as a "duplicate" and deleted it. Never write a deletion migration
+    // that targets a content type without verifying the "original" still exists.
+
+    /// <summary>
+    /// Renames the "Veiledninger" container to "Veiledning" (singular).
+    /// </summary>
+    private void RenameVeiledningerToVeiledning()
+    {
+        var folder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (folder == null) return;
+        if (folder.Name == "Veiledning") return;
+
+        folder.Name = "Veiledning";
+        _contentService.Save(folder);
+        Console.WriteLine("ContentSeeder: Renamed Veiledninger to Veiledning");
+    }
+
+    /// <summary>
+    /// Moves the standalone "Veiledning Oversikt" content node INSIDE the Veiledning folder
+    /// so the editor sees a single Veiledning section instead of two siblings.
+    /// </summary>
+    private void MoveVeiledningOversiktUnderVeiledning()
+    {
+        var oversikt = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledningOversikt");
+        if (oversikt == null) return;
+
+        var veiledningFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (veiledningFolder == null) return;
+
+        // Already inside?
+        if (oversikt.ParentId == veiledningFolder.Id) return;
+
+        _contentService.Move(oversikt, veiledningFolder.Id);
+        Console.WriteLine("ContentSeeder: Moved Veiledning Oversikt under Veiledning folder");
+    }
+
+    /// <summary>
+    /// Nests existing veiledningSteg nodes under their parent veiledningGuide based on guideSlug.
+    /// Currently many steg are flat siblings of guides; the website hierarchy expects steg as children of guide.
+    /// </summary>
+    private void NestVeiledningStegUnderGuide()
+    {
+        var veiledningFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "veiledninger");
+        if (veiledningFolder == null) return;
+
+        // Get all guides currently under the folder, indexed by their slug
+        var guides = _contentService.GetPagedChildren(veiledningFolder.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "veiledningGuide")
+            .ToDictionary(g => g.GetValue<string>("slug") ?? "", g => g);
+
+        // Get all steg (flat children of folder) that have a guideSlug pointing to a known guide
+        var orphanSteg = _contentService.GetPagedChildren(veiledningFolder.Id, 0, int.MaxValue, out _)
+            .Where(c => c.ContentType.Alias == "veiledningSteg")
+            .ToList();
+
+        int moved = 0;
+        foreach (var steg in orphanSteg)
+        {
+            var guideSlug = steg.GetValue<string>("guideSlug");
+            if (string.IsNullOrEmpty(guideSlug) || !guides.TryGetValue(guideSlug, out var guide)) continue;
+            _contentService.Move(steg, guide.Id);
+            moved++;
+        }
+        if (moved > 0)
+            Console.WriteLine($"ContentSeeder: Nested {moved} VeiledningSteg under their parent VeiledningGuide");
+    }
+
+    /// <summary>
+    /// Deletes the "Tilgjengelige ikoner" container and all its child icon nodes.
+    /// Idempotent — only runs if the container still exists. Editors should use a
+    /// Media folder named "Ikoner" for icon images instead.
+    /// </summary>
+    private void RemoveIkonerContent()
+    {
+        var ikonerFolder = _contentService.GetRootContent()
+            .FirstOrDefault(c => c.ContentType.Alias == "tilgjengeligeIkoner");
+        if (ikonerFolder == null) return;
+
+        // Move to recycle bin (cascades to children) instead of hard-delete, so a
+        // future editor can recover ikon-content if needed.
+        _contentService.MoveToRecycleBin(ikonerFolder);
+        Console.WriteLine("ContentSeeder: Moved Ikoner container to recycle bin");
+    }
+
+    /// <summary>
+    /// Forces Forside to the top of the root content tree by re-sorting ALL root items.
+    /// Forside first (sortOrder 0), everything else after in their current order.
+    /// </summary>
+    private void ForceForsideToTop()
+    {
+        var rootItems = _contentService.GetRootContent().ToList();
+        var forside = rootItems.FirstOrDefault(c => c.ContentType.Alias == "forside");
+        if (forside == null) return;
+
+        // Already at the top?
+        if (rootItems[0].Id == forside.Id) return;
+
+        // Reorder: Forside first, then everything else preserving their relative order
+        var newOrder = new List<IContent> { forside };
+        newOrder.AddRange(rootItems.Where(c => c.Id != forside.Id));
+
+        // ContentService.Sort takes the ordered list and assigns sortOrder by position
+        _contentService.Sort(newOrder.Select(c => c.Id));
+        Console.WriteLine("ContentSeeder: Re-sorted root content with Forside at top");
+    }
 
     private IContent CreateFolder(string contentTypeAlias, string name)
     {
@@ -234,139 +759,73 @@ public class ContentSeeder : IAsyncComponent
 
     // ── Sandkasse ────────────────────────────────────────────
 
-    private void SeedSandkasse()
+    private void SeedSandkasse(int siderFolderId)
     {
         var ct = _contentTypeService.Get("sandkasse")
             ?? throw new InvalidOperationException("Content type 'sandkasse' not found");
-        var sandkasse = _contentService.Create("Sandkasse", -1, ct.Alias);
+        var sandkasse = _contentService.Create("Sandkasse", siderFolderId, ct.Alias);
 
-        // Hero
-        sandkasse.SetValue("heroTittel", "KI-sandkassen");
-        sandkasse.SetValue("heroTekst", "<p>KI-sandkassen er et tilbud der virksomheter kan utvikle, teste og trene KI-løsninger i trygge og kontrollerte omgivelser. Du får juridisk veiledning knyttet til personvern, grunnleggende rettigheter og sikkerhet, og hjelp til å oppfylle kravene i KI-forordningen og annet relevant regelverk.</p>");
-        sandkasse.SetValue("nedtelling", "120 dager til du kan søke!");
+        sandkasse.SetValue("tittel", "Den regulatoriske KI-sandkassen");
+        sandkasse.SetValue("slug", "sandkasse");
+        sandkasse.SetValue("ingress", "(Plassholder) KI-sandkassen skal støtte norske virksomheter i å utvikle og ta i bruk ansvarlige og innovative KI-løsninger. Bytt ut denne teksten med endelig ingress.");
 
-        // Hvem
-        sandkasse.SetValue("hvemTittel", "Hvem er det til for?");
-        sandkasse.SetValue("hvemTekst", @"<p>Sandkassen er åpen for alle som utvikler eller tar i bruk KI-systemer og ønsker veiledning om regelverket.</p>
-<ul>
-<li>Offentlige virksomheter som utvikler eller anskaffer KI-løsninger</li>
-<li>Private virksomheter som leverer KI-tjenester til offentlig sektor</li>
-<li>Forsknings- og utdanningsinstitusjoner som jobber med KI</li>
-<li>Startups og scale-ups med innovative KI-løsninger</li>
-</ul>");
-
-        // Prosess
-        sandkasse.SetValue("prosessTittel", "Slik foregår prosessen");
-        sandkasse.SetValue("prosessSteg", BuildSandkasseStegBlockList(
-            ("1", "Søknad", "<p>Send inn en søknad som beskriver KI-systemet du ønsker å teste, hvilke data det bruker, og hvilke regulatoriske spørsmål du trenger avklaring på. Vi vurderer søknaden og gir deg svar innen fire uker.</p>"),
-            ("2", "Opptak", "<p>Dersom søknaden godkjennes, blir du tatt opp i sandkassen. Du får tildelt et team med juridisk og teknisk ekspertise som følger deg gjennom hele forløpet.</p>"),
-            ("3", "Planlegging", "<p>Sammen med teamet ditt lager du en plan for sandkasseforløpet. Planen beskriver hva som skal testes, hvilke risikoer som skal vurderes, og hvilke milepæler som gjelder.</p>"),
-            ("4", "Sluttbevis", "<p>Etter gjennomført forløp får du et skriftlig bevis som dokumenterer funnene, vurderingene og anbefalingene fra sandkassen. Dette kan brukes som dokumentasjon overfor tilsynsmyndigheter.</p>")
+        sandkasse.SetValue("innhold", BuildArticleBlockList(
+            TextBlock("<p><strong>Hvem er det til for?</strong></p><p>(Plassholder) Sandkassen er åpen for alle leverandører og fremtidige leverandører av KI-systemer. Bytt ut denne teksten med endelig innhold.</p>"),
+            Prosessteg("Slik foregår prosessen",
+                ("Steg", "(Plassholder) Steg 1 - bytt ut med faktisk beskrivelse"),
+                ("Steg", "(Plassholder) Steg 2 - bytt ut med faktisk beskrivelse"),
+                ("Steg", "(Plassholder) Steg 3 - bytt ut med faktisk beskrivelse"),
+                ("Steg", "(Plassholder) Steg 4 - bytt ut med faktisk beskrivelse")
+            ),
+            TextBlock("<p><strong>Hva får du ut av det?</strong></p><p>(Plassholder) Deltagere i sandkassen får tett oppfølging og veiledning. Bytt ut denne teksten med endelig innhold.</p>"),
+            TextBlock("<h2>Ofte stilte spørsmål</h2>"),
+            Trekkspill("(Plassholder) Spørsmål 1 - bytt ut", "<p>(Plassholder) Svar 1 - bytt ut med faktisk svar.</p>"),
+            Trekkspill("(Plassholder) Spørsmål 2 - bytt ut", "<p>(Plassholder) Svar 2 - bytt ut med faktisk svar.</p>"),
+            Trekkspill("(Plassholder) Spørsmål 3 - bytt ut", "<p>(Plassholder) Svar 3 - bytt ut med faktisk svar.</p>")
         ));
 
-        // Resultat
-        sandkasse.SetValue("resultatTittel", "Hva får du ut av det?");
-        sandkasse.SetValue("resultatTekst", @"<p>Deltakelse i KI-sandkassen gir deg verdifull innsikt og dokumentasjon som hjelper deg videre.</p>
-<p>Du får en grundig juridisk vurdering av KI-systemet ditt opp mot gjeldende regelverk, inkludert KI-forordningen, personvernregelverket og sektorspesifikke krav. I tillegg får du praktiske anbefalinger for hvordan du kan tilpasse løsningen din for å oppfylle kravene.</p>
-<p>Etter gjennomført forløp mottar du et sluttbevis som dokumenterer vurderingene og kan brukes overfor tilsynsmyndigheter og samarbeidspartnere.</p>");
-
-        // FAQ
-        sandkasse.SetValue("faqTittel", "Ofte stilte spørsmål");
-        sandkasse.SetValue("faqSeksjoner", BuildSandkasseFaqBlockList(
-            ("Hvem kan søke om deltakelse i sandkassen?", "<p>Sandkassen er åpen for alle leverandører og virksomheter som utvikler, tilbyr eller bruker KI-systemer og ønsker veiledning om regelverket. Både offentlige og private aktører kan søke.</p>"),
-            ("Hvor lang tid tar et sandkasseforløp?", "<p>Et typisk forløp varer 6-12 måneder, avhengig av kompleksiteten til KI-systemet og omfanget av de regulatoriske spørsmålene som skal avklares.</p>"),
-            ("Hva koster det å delta?", "<p>Det er gratis å delta i KI-sandkassen. Deltakerne må selv dekke egne kostnader knyttet til utvikling og tilpasning av KI-systemet.</p>"),
-            ("Hvilke krav stilles til KI-systemet?", "<p>KI-systemet bør være innovativt og reise regulatoriske spørsmål som det er behov for å avklare. Det er en fordel om systemet er i en tidlig fase der det fortsatt er mulig å gjøre tilpasninger basert på veiledningen.</p>"),
-            ("Hva skjer etter sandkasseforløpet?", "<p>Du får et skriftlig bevis som dokumenterer funnene, vurderingene og anbefalingene fra sandkassen. Dette kan brukes som dokumentasjon overfor tilsynsmyndigheter og samarbeidspartnere.</p>")
-        ));
-
-        // SEO
         sandkasse.SetValue("seoTittel", "KI-sandkassen – Test KI-løsninger trygt");
         sandkasse.SetValue("seoBeskrivelse", "KI-sandkassen lar virksomheter teste og utvikle KI-løsninger i et kontrollert miljø med juridisk veiledning og regulatorisk støtte.");
         SaveAndPublish(sandkasse);
     }
 
-    private string BuildSandkasseStegBlockList(params (string nummer, string tittel, string beskrivelse)[] steps)
+    /// <summary>
+    /// Builds an artikkelProsessteg block whose nested 'steg' property is itself a
+    /// Block List of artikkelProsessStegItem entries.
+    /// </summary>
+    private (string, Dictionary<string, object>) Prosessteg(string tittel, params (string etikett, string beskrivelseHtml)[] steg)
     {
-        var contentData = new List<object>();
-        var layoutItems = new List<object>();
-
-        var elementType = _contentTypeService.Get("sandkasseSteg");
-        if (elementType == null) return "{}";
-
-        foreach (var (nummer, tittel, beskrivelse) in steps)
+        var itemType = _contentTypeService.Get("artikkelProsessStegItem");
+        var stegBlockListJson = "{}";
+        if (itemType != null)
         {
-            var guid = Guid.NewGuid();
-            var udi = $"umb://element/{guid:N}";
-
-            layoutItems.Add(new Dictionary<string, object?>
+            var contentData = new List<object>();
+            var layoutItems = new List<object>();
+            foreach (var (etikett, beskrivelse) in steg)
             {
-                ["contentUdi"] = udi,
-                ["settingsUdi"] = null
-            });
-
-            contentData.Add(new Dictionary<string, object>
+                var guid = Guid.NewGuid();
+                var udi = $"umb://element/{guid:N}";
+                layoutItems.Add(new Dictionary<string, object?> { ["contentUdi"] = udi, ["settingsUdi"] = null });
+                contentData.Add(new Dictionary<string, object>
+                {
+                    ["contentTypeKey"] = itemType.Key.ToString(),
+                    ["udi"] = udi,
+                    ["tittel"] = etikett,
+                    ["beskrivelse"] = beskrivelse,
+                });
+            }
+            stegBlockListJson = JsonSerializer.Serialize(new Dictionary<string, object>
             {
-                ["contentTypeKey"] = elementType.Key.ToString(),
-                ["udi"] = udi,
-                ["nummer"] = nummer,
-                ["tittel"] = tittel,
-                ["beskrivelse"] = beskrivelse
+                ["layout"] = new Dictionary<string, object> { ["Umbraco.BlockList"] = layoutItems },
+                ["contentData"] = contentData,
+                ["settingsData"] = new List<object>(),
             });
         }
-
-        var blockList = new Dictionary<string, object>
+        return ("artikkelProsessteg", new Dictionary<string, object>
         {
-            ["layout"] = new Dictionary<string, object>
-            {
-                ["Umbraco.BlockList"] = layoutItems
-            },
-            ["contentData"] = contentData,
-            ["settingsData"] = new List<object>()
-        };
-
-        return JsonSerializer.Serialize(blockList);
-    }
-
-    private string BuildSandkasseFaqBlockList(params (string sporsmal, string svar)[] items)
-    {
-        var contentData = new List<object>();
-        var layoutItems = new List<object>();
-
-        var elementType = _contentTypeService.Get("sandkasseFaq");
-        if (elementType == null) return "{}";
-
-        foreach (var (sporsmal, svar) in items)
-        {
-            var guid = Guid.NewGuid();
-            var udi = $"umb://element/{guid:N}";
-
-            layoutItems.Add(new Dictionary<string, object?>
-            {
-                ["contentUdi"] = udi,
-                ["settingsUdi"] = null
-            });
-
-            contentData.Add(new Dictionary<string, object>
-            {
-                ["contentTypeKey"] = elementType.Key.ToString(),
-                ["udi"] = udi,
-                ["sporsmal"] = sporsmal,
-                ["svar"] = svar
-            });
-        }
-
-        var blockList = new Dictionary<string, object>
-        {
-            ["layout"] = new Dictionary<string, object>
-            {
-                ["Umbraco.BlockList"] = layoutItems
-            },
-            ["contentData"] = contentData,
-            ["settingsData"] = new List<object>()
-        };
-
-        return JsonSerializer.Serialize(blockList);
+            ["tittel"] = tittel,
+            ["steg"] = stegBlockListJson,
+        });
     }
 
     // ── Veiledning Oversikt ─────────────────────────────────
@@ -553,8 +1012,49 @@ public class ContentSeeder : IAsyncComponent
     private (string, Dictionary<string, object>) InfoBox(string title, string html) =>
         ("artikkelInfoBoks", new Dictionary<string, object> { ["tittel"] = title, ["innhold"] = html });
 
-    private (string, Dictionary<string, object>) HeroBlock(string title, string html) =>
-        ("artikkelHero", new Dictionary<string, object> { ["tittel"] = title, ["tekst"] = html });
+    // HeroBlock removed — replaced by InfoBox for now, will become Fremheving in task 5.
+
+    // ── New module helpers (Fremheving, Prosessteg, Forfatter og dato variants) ──
+
+    private (string, Dictionary<string, object>) Fremheving(string? tittel, string html, bool visBakgrunn = true, bool visAnforselstegn = false, string? kilde = null) =>
+        ("artikkelFremheving", new Dictionary<string, object>
+        {
+            ["tittel"] = tittel ?? "",
+            ["tekst"] = html,
+            ["visBakgrunn"] = visBakgrunn ? "1" : "0",
+            ["visAnforselstegn"] = visAnforselstegn ? "1" : "0",
+            ["kilde"] = kilde ?? "",
+        });
+
+    private (string, Dictionary<string, object>) Byline(string navn, string? stilling = null, string? virksomhet = null, string? dato = null) =>
+        ("artikkelByline", new Dictionary<string, object>
+        {
+            ["navn"] = navn,
+            ["stilling"] = stilling ?? "",
+            ["virksomhet"] = virksomhet ?? "",
+            ["dato"] = dato ?? "",
+        });
+
+    private (string, Dictionary<string, object>) InnholdFra(string virksomhet, string? dato = null) =>
+        ("artikkelInnholdFra", new Dictionary<string, object>
+        {
+            ["virksomhet"] = virksomhet,
+            ["dato"] = dato ?? "",
+        });
+
+    private (string, Dictionary<string, object>) Kontaktkort(string navn, string? stilling = null, string? virksomhet = null, string? epost = null, string? telefon = null, string? tittel = null) =>
+        ("artikkelKontaktkort", new Dictionary<string, object>
+        {
+            ["tittel"] = tittel ?? "",
+            ["navn"] = navn,
+            ["stilling"] = stilling ?? "",
+            ["virksomhet"] = virksomhet ?? "",
+            ["epost"] = epost ?? "",
+            ["telefon"] = telefon ?? "",
+        });
+
+    private (string, Dictionary<string, object>) Trekkspill(string tittel, string innhold) =>
+        ("artikkelTrekkspill", new Dictionary<string, object> { ["tittel"] = tittel, ["innhold"] = innhold });
 
     // ── Artikler ──────────────────────────────────────────────
 
@@ -565,6 +1065,7 @@ public class ContentSeeder : IAsyncComponent
         var a1 = Create("artikkel", "Ny nasjonal strategi for kunstig intelligens", parentId);
         a1.SetValue("tittel", "Ny nasjonal strategi for kunstig intelligens");
         a1.SetValue("slug", "ny-nasjonal-strategi-for-kunstig-intelligens");
+        a1.SetValue("ingress", "Regjeringen har lansert en oppdatert nasjonal strategi for kunstig intelligens med vekt på ansvarlig bruk, åpenhet og tillit i offentlig sektor.");
         a1.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>Regjeringen har lansert en oppdatert nasjonal strategi for kunstig intelligens. Strategien legger vekt på ansvarlig bruk av KI i offentlig sektor, med fokus på åpenhet, personvern og tillit.</p>
 <p>Strategien følger opp EUs AI Act og setter rammer for hvordan norske virksomheter kan ta i bruk KI på en trygg og tillitvekkende måte.</p>"),
@@ -583,6 +1084,7 @@ public class ContentSeeder : IAsyncComponent
         var a2 = Create("artikkel", "Kommuner tar i bruk KI for bedre innbyggertjenester", parentId);
         a2.SetValue("tittel", "Kommuner tar i bruk KI for bedre innbyggertjenester");
         a2.SetValue("slug", "kommuner-tar-i-bruk-ki-for-bedre-innbyggertjenester");
+        a2.SetValue("ingress", "Flere norske kommuner eksperimenterer med kunstig intelligens for å forbedre tjenestene til innbyggerne, fra automatisert saksbehandling til prediktivt vedlikehold.");
         a2.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>Flere norske kommuner har begynt å eksperimentere med kunstig intelligens for å forbedre tjenestene til innbyggerne. Fra automatisert saksbehandling til chatboter for innbyggerdialog — mulighetene er mange.</p>
 <p>Stavanger kommune bruker maskinlæring for å predikere vedlikeholdsbehov på kommunale bygg, mens Trondheim har utviklet en KI-basert chatbot som hjelper innbyggere med å finne riktig tjeneste. Bergen kommune tester automatisk klassifisering av innkommende henvendelser, noe som har redusert svartiden med 40 prosent.</p>")
@@ -618,6 +1120,7 @@ public class ContentSeeder : IAsyncComponent
         var a5 = Create("artikkel", "EU AI Act: Hva betyr det for norsk offentlig sektor?", parentId);
         a5.SetValue("tittel", "EU AI Act: Hva betyr det for norsk offentlig sektor?");
         a5.SetValue("slug", "eu-ai-act-hva-betyr-det-for-norsk-offentlig-sektor");
+        a5.SetValue("ingress", "EU har vedtatt verdens første helhetlige regulering av kunstig intelligens. Slik påvirker det norske offentlige virksomheter gjennom EØS-avtalen.");
         a5.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>EUs forordning om kunstig intelligens (AI Act) trådte i kraft i 2024 og innføres gradvis frem mot 2026. Gjennom EØS-avtalen vil regelverket også gjelde i Norge. Hva betyr dette i praksis for offentlige virksomheter?</p>
 <h2>Risikobasert tilnærming</h2>
@@ -683,7 +1186,7 @@ public class ContentSeeder : IAsyncComponent
 <li>Transparens: Kan de registrerte forstå hvordan beslutninger tas?</li>
 <li>Sikkerhet: Er data og modeller tilstrekkelig beskyttet?</li>
 </ul>"),
-            HeroBlock("Når skal risikovurderingen gjøres?", @"<p>Datatilsynet anbefaler at risikovurderingen gjøres <strong>før</strong> systemet settes i produksjon, og at den oppdateres ved vesentlige endringer i modell, data eller bruksområde. Virksomheter som allerede har KI i drift bør gjennomføre en vurdering så snart som mulig.</p>")
+            InfoBox("Når skal risikovurderingen gjøres?", @"<p>Datatilsynet anbefaler at risikovurderingen gjøres <strong>før</strong> systemet settes i produksjon, og at den oppdateres ved vesentlige endringer i modell, data eller bruksområde. Virksomheter som allerede har KI i drift bør gjennomføre en vurdering så snart som mulig.</p>")
         ));
         a8.SetValue("seoTittel", "Datatilsynets risikovurdering for KI — en gjennomgang");
         a8.SetValue("seoBeskrivelse", "Oppsummering av Datatilsynets veileder for risikovurdering av KI-systemer som behandler personopplysninger.");
@@ -696,7 +1199,7 @@ public class ContentSeeder : IAsyncComponent
             TextBlock(@"<p>Flere norske kommuner tester nå generativ KI — store språkmodeller som kan skrive tekst, oppsummere dokumenter og svare på spørsmål. Hva har de lært så langt?</p>
 <h2>Bruksområder som fungerer</h2>
 <p>Kommunene rapporterer best resultater for intern bruk: utkast til brev og vedtak, oppsummering av lange saksdokumenter, og oversettelse til klart språk. Her sparer saksbehandlere mye tid.</p>"),
-            HeroBlock("Utfordringer med utadrettet bruk", @"<p>Utadrettet bruk — som chatboter mot innbyggere — krever mer forsiktighet. Feilaktige svar (hallusinasjoner) kan få alvorlige konsekvenser når det gjelder rettigheter og tjenester. Kommunene anbefaler å starte internt før man vurderer innbyggerrettede løsninger.</p>"),
+            InfoBox("Utfordringer med utadrettet bruk", @"<p>Utadrettet bruk — som chatboter mot innbyggere — krever mer forsiktighet. Feilaktige svar (hallusinasjoner) kan få alvorlige konsekvenser når det gjelder rettigheter og tjenester. Kommunene anbefaler å starte internt før man vurderer innbyggerrettede løsninger.</p>"),
             InfoBox("Anbefalinger fra pilotene", @"<ul>
 <li>Start med intern bruk der feiltoleransen er høyere</li>
 <li>Etabler tydelige retningslinjer for hva som kan og ikke kan deles med KI</li>
@@ -716,7 +1219,7 @@ public class ContentSeeder : IAsyncComponent
 <h2>Juridiske krav</h2>
 <p>Forvaltningsloven krever at vedtak begrunnes. GDPR gir den registrerte rett til informasjon om automatiserte beslutninger. AI Act stiller ytterligere krav til dokumentasjon og transparens for høyrisiko-systemer.</p>"),
             InfoBox("Tekniske tilnærminger", @"<p>Forklarbarhet kan implementeres på ulike nivåer: fra enkle beslutningsregler og featureviktighet til mer avanserte teknikker som SHAP-verdier og kontrafaktiske forklaringer.</p>"),
-            HeroBlock("Praktiske råd for forklarbarhet", @"<ul>
+            InfoBox("Praktiske råd for forklarbarhet", @"<ul>
 <li>Tilpass forklaringen til mottakeren — innbygger, saksbehandler og revisor trenger ulik detaljeringsgrad</li>
 <li>Dokumenter modellens virkemåte ved utvikling, ikke i etterkant</li>
 <li>Test forklaringene med reelle brukere — gir de faktisk mening?</li>
@@ -731,6 +1234,7 @@ public class ContentSeeder : IAsyncComponent
         var aFull = Create("artikkel", "KI-regnekraft i Norge: Status, utvikling og behov fremover", parentId);
         aFull.SetValue("tittel", "KI-regnekraft i Norge: Status, utvikling og behov fremover");
         aFull.SetValue("slug", "ki-regnekraft-i-norge");
+        aFull.SetValue("ingress", "Regnekraft er en grunnleggende forutsetning for utvikling og bruk av moderne kunstig intelligens. Etter hvert som modellene blir større og mer datakrevende, øker behovet for nasjonal kapasitet.");
         aFull.SetValue("innhold", BuildArticleBlockList(
             TextBlock(@"<p>Regnekraft er en grunnleggende forutsetning for utvikling, tilpasning og bruk av moderne kunstig intelligens. Etter hvert som avanserte KI-modeller blir større, mer komplekse og mer datakrevende, øker også behovet for nasjonal kapasitet til å trene, kjøre og videreutvikle dem.</p>"),
             TextBlock(@"<h2>Hva menes med KI-infrastruktur?</h2>
@@ -742,7 +1246,7 @@ public class ContentSeeder : IAsyncComponent
 <li>Regulatoriske mekanismer, inkludert tilsyn, sandkasser og ansvarlig bruk av KI.</li>
 </ul>
 <p>Samlet skal infrastrukturen støtte forskning, innovasjon og bruk av KI i Norge.</p>"),
-            HeroBlock("Status for KI-infrastruktur i Norge", @"<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
+            InfoBox("Status for KI-infrastruktur i Norge", @"<p>I statsbudsjettet for 2026 har regjeringen bevilget 380 millioner kroner over to år til første fase av tiltaket for å styrke nasjonal infrastruktur for tungregning. Dette er en del av den økte satsingen regjeringen har gjort de siste årene for å styrke nasjonal KI-infrastruktur gjennom investeringer i superdatamaskiner, språkmodeller og støtteordninger for forskning og utvikling.</p>
 <p>Sigma2 åpnet i 2025 en ny nasjonal KI-fabrikk som huser Norges kraftigste superdatamaskin, <strong>Olivia</strong>. Maskinen inngår i det europeiske LUMI AI Factory-nettverket og er tilgjengelig for forskningsmiljøer, offentlig sektor og deler av næringslivet.</p>"),
             TextBlock(@"<h2>Nasjonale språkmodeller og datagrunnlag</h2>
 <p>Nasjonalbiblioteket har fått et utvidet mandat til å klargjøre norske og samiske data for KI-trening. Dette inkluderer blant annet en nasjonal lisensordning for bruk av avisinnhold, inngått i samarbeid med Kopinor. Målet er å sikre tilgang til kvalitetsdata som gjenspeiler norske forhold.</p>
@@ -886,6 +1390,60 @@ norsk, samisk, engelsk og de mest utbredte innvandrerspråkene.</p>");
         eFull.SetValue("seoTittel", "Kunnskapsassistenten – KI for kunnskapsarbeid i staten");
         eFull.SetValue("seoBeskrivelse", "Kunnskapsassistenten er et KI-verktøy som støtter faglige vurderinger og utredningsprosesser i offentlig sektor.");
         SaveAndPublish(eFull);
+    }
+
+    // ── Caser (new content type, mirror of artikkel) ──────────
+
+    private void SeedCases(int parentId)
+    {
+        // Case 1: minimal — just Artikkelhode, no body modules
+        var c1 = Create("case", "Test-case uten moduler", parentId);
+        c1.SetValue("tittel", "Test-case uten moduler");
+        c1.SetValue("slug", "test-case-uten-moduler");
+        c1.SetValue("ingress", "Dette er en case uten body-moduler. Kun Artikkelhode-feltene (tittel + ingress + bilde + bakgrunn).");
+        // bakgrunn omitted — defaults to empty (frontend treats as 'hvit')
+        SaveAndPublish(c1);
+
+        // Case 2: mixed — a few common modules
+        var c2 = Create("case", "Test-case med blandet innhold", parentId);
+        c2.SetValue("tittel", "Test-case med blandet innhold");
+        c2.SetValue("slug", "test-case-med-blandet-innhold");
+        c2.SetValue("ingress", "En typisk case med tekst, bilde og en byline.");
+        c2.SetValue("bakgrunn", "lyseblaa");
+        c2.SetValue("innhold", BuildArticleBlockList(
+            Byline("Sara Neziri", "Rådgiver", "Digitaliseringsdirektoratet", "2026-04-15"),
+            TextBlock(@"<p>Dette er en kortfattet case som demonstrerer en typisk struktur:
+en byline øverst, deretter brødtekst, og til slutt en innhold-fra-organisasjon-blokk.</p>
+<h2>Bakgrunn</h2>
+<p>Eksempelteksten er kort fordi formålet er å verifisere at modulene rendres korrekt.</p>"),
+            InnholdFra("Direktoratet for medisinske produkter (DMP)", "2026-04-20")
+        ));
+        SaveAndPublish(c2);
+
+        // Case 3: comprehensive — uses most available modules
+        var c3 = Create("case", "Test-case med alle moduler", parentId);
+        c3.SetValue("tittel", "Test-case med alle moduler");
+        c3.SetValue("slug", "test-case-med-alle-moduler");
+        c3.SetValue("ingress", "En komplett case som bruker hver av de tilgjengelige modulene minst én gang. Brukes for å verifisere visning på frontend.");
+        c3.SetValue("bakgrunn", "lyseblaa");
+        c3.SetValue("innhold", BuildArticleBlockList(
+            Byline("Per Persen", "Seniorrådgiver", "Digdir", "2026-04-10"),
+            TextBlock(@"<p>Dette er en omfattende test-case som inneholder eksempler på hver modultype.
+Den brukes til å verifisere visuell rendering, mobilvisning og editor-UX.</p>
+<h2>Hvorfor brukes denne casen?</h2>
+<p>For å sikre at alle moduler virker som forventet før vi går i produksjon.</p>"),
+            Fremheving("Faktaboks-eksempel", "<p>Dette er en standard Fremheving med lyseblå bakgrunn. Brukes for å fremheve faktainformasjon.</p>"),
+            Fremheving(null, "<p>Dette er et sitat-eksempel uten tittel.</p>", visBakgrunn: false, visAnforselstegn: true, kilde: "Anonym kilde"),
+            Trekkspill("Hva er en case?", "<p>En case er et eksempel på hvordan KI brukes i praksis i offentlig sektor.</p>"),
+            Trekkspill("Hvordan brukes denne testen?", "<p>For å verifisere at editor og frontend fungerer som forventet.</p>"),
+            TextBlock(@"<h2>Mer informasjon</h2>
+<p>Etter alle modulene avsluttes casen med kontaktinfo og en innhold-fra-blokk.</p>"),
+            Kontaktkort("Kari Nordmann", "Prosjektleder", "Digdir", "kari@digdir.no", "+47 12 34 56 78", "Spørsmål om casen?"),
+            InnholdFra("Stavanger kommune", "2026-04-25")
+        ));
+        SaveAndPublish(c3);
+
+        Console.WriteLine("ContentSeeder: Seeded 3 test cases");
     }
 
     // ── Veiledninger ───────────────────────────────────────────
@@ -1389,49 +1947,18 @@ tidligere praksis, eller kvalitetssikre dokumenter.</p>");
         };
 
         var map = new Dictionary<string, IContent>();
-        foreach (var (navn, slug, beskrivelse) in tags)
+        foreach (var (navn, slug, _) in tags)
         {
             var m = Create("merkelapp", navn, parentId);
             m.SetValue("navn", navn);
-            m.SetValue("slug", slug);
-            m.SetValue("beskrivelse", beskrivelse);
+            m.SetValue("slug", slug); // overridden by MerkelappSlugHandler on save anyway
             SaveAndPublish(m);
             map[slug] = m;
         }
         return map;
     }
 
-    // ── Ikoner ──────────────────────────────────────────────────
-
-    private void SeedIkoner(int parentId)
-    {
-        var icons = new[]
-        {
-            ("HandHeart", "Hjerte i hånd"),
-            ("Package", "Pakke"),
-            ("Calculator", "Kalkulator"),
-            ("Office2", "Kontorbygg"),
-            ("SocialAid", "Sosialhjelp"),
-            ("FeedingBottle", "Tåteflaske"),
-            ("Clock", "Klokke"),
-            ("Bookmark", "Bokmerke"),
-            ("LocationPin", "Stedmarkør"),
-            ("Braille", "Blindeskrift"),
-            ("HandShakeHeart", "Håndtrykk med hjerte"),
-            ("Search", "Søk"),
-            ("PersonChat", "Person i samtale"),
-            ("EnvelopeClosed", "Konvolutt"),
-            ("ChevronRight", "Pil høyre"),
-        };
-
-        foreach (var (navn, beskrivelse) in icons)
-        {
-            var ikon = Create("tilgjengeligIkon", beskrivelse, parentId);
-            ikon.SetValue("navn", navn);
-            ikon.SetValue("beskrivelse", beskrivelse);
-            SaveAndPublish(ikon);
-        }
-    }
+    // SeedIkoner removed — Ikoner content type deactivated. Use Media folder instead.
 
     private string Udi(IContent content) => $"umb://document/{content.Key:N}";
 

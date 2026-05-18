@@ -1,8 +1,9 @@
 ---
 import Layout from '../../components/layout/Layout.astro';
+import ArticleBlocksRenderer from '../../components/shared/ArticleBlocksRenderer.astro';
 
 import { getArtikkel, getArtikler, getPlainText, getMediaUrl, type Artikkel } from '../../lib/umbraco';
-import { articleSchema } from '../../lib/seo';
+import { articleSchema, breadcrumbSchema } from '../../lib/seo';
 
 const { slug } = Astro.params;
 const isPreview = Astro.url.searchParams.has('preview') || !!Astro.cookies.get('preview')?.value;
@@ -16,8 +17,9 @@ const formattedDate = new Date(article.publishedAt).toLocaleDateString('nb-NO', 
 });
 
 const seoTitle = article.seoTittel || article.tittel;
-const seoDesc = article.seoBeskrivelse || getPlainText(article.innhold, 200);
-const seoImage = article.seoBilde?.url;
+const seoDesc = article.seoBeskrivelse || article.ingress || getPlainText(article.innhold, 200);
+const heroImage = article.artikkelBilde || article.seoBilde;
+const seoImage = article.seoBilde?.url || article.artikkelBilde?.url;
 
 const articleJsonLd = articleSchema({
   headline: seoTitle,
@@ -27,111 +29,60 @@ const articleJsonLd = articleSchema({
   dateModified: article.updatedAt || article.publishedAt,
 });
 
+const breadcrumbJsonLd = breadcrumbSchema([
+  { name: 'Forside', url: '/' },
+  { name: 'Artikler', url: '/artikler' },
+  { name: article.tittel, url: `/artikler/${slug}` },
+]);
+
 // Fetch other articles for "Flere artikler" section
 const allArticlesRes = await getArtikler(10);
 const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 3);
+
+const bakgrunn = article.bakgrunn || 'hvit';
+const isLightBlueBg = bakgrunn === 'lyseblaa';
 ---
 
 <Layout title={seoTitle} description={seoDesc} ogType="article" publishedAt={article.publishedAt} ogImage={seoImage}>
   <script type="application/ld+json" set:html={JSON.stringify(articleJsonLd).replace(/</g, '\\u003c')} />
-  <div class="article-page">
-    <!-- Hero -->
-    <section class="article-hero">
-      <div class="article-hero-inner">
-        <div class="article-hero-text">
-          <h1 class="article-title">{article.tittel}</h1>
-          <p class="article-meta">{formattedDate}</p>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
+  <div class="article-page grid">
+    <!-- Artikkelhode: title + ingress + image, optionally on full-bleed colored background -->
+    <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : 'col-center-10'}`}>
+      {isLightBlueBg ? (
+        <div class={`grid article-hero-bg-grid`}>
+          <div class="article-hero-inner col-center-10">
+            <div class="article-hero-text">
+              <h1 class="article-title">{article.tittel}</h1>
+              {article.ingress && <p class="article-ingress">{article.ingress}</p>}
+            </div>
+            {heroImage?.url && (
+              <div class="article-hero-image">
+                <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
+              </div>
+            )}
+          </div>
         </div>
-        <div class="article-hero-image">
-          <div class="article-hero-placeholder"></div>
+      ) : (
+        <div class="article-hero-inner">
+          <div class="article-hero-text">
+            <h1 class="article-title">{article.tittel}</h1>
+            {article.ingress && <p class="article-ingress">{article.ingress}</p>}
+          </div>
+          {heroImage?.url && (
+            <div class="article-hero-image">
+              <img src={getMediaUrl(heroImage)} alt={article.bildeAlt || ''} class="article-hero-img" loading="eager" decoding="async" />
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </section>
 
-    <!-- Lead -->
-    {article.innhold && (
-      <section class="article-lead">
-        <p class="article-lead-text">{getPlainText(article.innhold, 300)}</p>
-      </section>
-    )}
+    <ArticleBlocksRenderer blocks={article.innhold} defaultDate={article.publishedAt} />
 
-    <!-- Body -->
-    <article class="article-body-section">
-      {article.innhold?.map(block => {
-        if (block.contentType === 'artikkelInfoBoks') {
-          return (
-            <div class="article-info-box">
-              {block.content.tittel && <h3 class="info-box-title">{block.content.tittel}</h3>}
-              <div class="info-box-body" set:html={block.content.innhold} />
-            </div>
-          );
-        }
-        if (block.contentType === 'artikkelHero') {
-          return (
-            <section class="article-hero-block">
-              <div class="article-hero-block-inner">
-                <h2 class="article-hero-block-title">{block.content.tittel}</h2>
-                {block.content.tekst && <div class="article-hero-block-body" set:html={block.content.tekst} />}
-              </div>
-            </section>
-          );
-        }
-        if (block.contentType === 'artikkelTrekkspill') {
-          return (
-            <details class="article-accordion">
-              <summary class="article-accordion-summary">
-                {block.content.tittel}
-                <svg class="article-accordion-chevron" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="m6 9 6 6 6-6"/>
-                </svg>
-              </summary>
-              <div class="article-accordion-body" set:html={block.content.innhold} />
-            </details>
-          );
-        }
-        if (block.contentType === 'artikkelSitat') {
-          return (
-            <blockquote class="article-quote">
-              <p class="article-quote-text">{block.content.sitat}</p>
-              {block.content.kilde && (
-                <footer class="article-quote-source">
-                  <cite>{block.content.kilde}</cite>
-                </footer>
-              )}
-            </blockquote>
-          );
-        }
-        if (block.contentType === 'artikkelCallout') {
-          const variant = block.content.variant || 'info';
-          return (
-            <div class={`article-callout article-callout--${variant}`} role={variant === 'advarsel' ? 'alert' : 'note'}>
-              {block.content.tittel && <p class="article-callout-title">{block.content.tittel}</p>}
-              <div class="article-callout-body" set:html={block.content.innhold} />
-            </div>
-          );
-        }
-        if (block.contentType === 'artikkelBildeSeksjon') {
-          return (
-            <figure class="article-image-section">
-              {block.content.bilde?.url ? (
-                <img src={getMediaUrl(block.content.bilde)} alt={block.content.bildetekst || ''} />
-              ) : (
-                <div class="article-image-placeholder"></div>
-              )}
-              {block.content.bildetekst && <figcaption>{block.content.bildetekst}</figcaption>}
-            </figure>
-          );
-        }
-        // Default: artikkelTekst or tekst
-        return (
-          <div class="article-text-block" set:html={block.content.innhold} />
-        );
-      })}
-    </article>
-
-    <!-- Flere artikler -->
+    <!-- Flere artikler: col-center-10 -->
     {otherArticles.length > 0 && (
-      <section class="more-articles">
+      <section class="more-articles col-center-10">
         <h2 class="more-articles-heading">Flere artikler</h2>
         <div class="more-articles-grid">
           {otherArticles.map(a => (
@@ -154,362 +105,156 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
 
 <style>
   .article-page {
-    padding-top: var(--ds-size-4);
+    padding-top: 0; /* hero handles its own top padding (incl. clearance for absolute header) */
+    row-gap: 48px; /* vertikal avstand mellom grid-barn */
   }
 
-  /* Hero */
+  /* Hero / Ingress / Artikkelhode */
   .article-hero {
-    max-width: 1230px;
-    margin: 0 auto;
-    padding: 24px 24px 48px;
+    padding: 100px 0;
+  }
+
+  /* Light-blue full-bleed background variant. Extends BOTH:
+     - horizontally: from viewport-left to viewport-right, past the grid's
+       max-width (via 100vw + the negative-margin "yank" trick). Requires
+       overflow-x:clip on body — set in global.css. Without that, the 100vw
+       creates a horizontal scrollbar on desktops with visible scrollbars.
+     - vertically: up behind the absolutely-positioned site header. The
+       negative top margin counteracts main's padding-top (which equals
+       --header-height); we add it back as inner padding so the visible
+       content still starts where it did before. */
+  .article-hero--bg-lyseblaa {
+    background: #e5f2f7;
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-top: calc(-1 * var(--header-height, 72px));
+    padding-top: calc(140px + var(--header-height, 72px));
+    padding-bottom: 80px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* When in bg-lyseblaa, the inner grid wrapper handles column placement */
+  .article-hero-bg-grid {
+    /* uses .grid class — already styled by grid.css */
   }
 
   .article-hero-inner {
     display: flex;
-    gap: 24px;
-    align-items: center;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  @media (min-width: 1024px) {
+    .article-hero-inner {
+      flex-direction: row;
+      align-items: center;
+    }
   }
 
   .article-hero-text {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
   }
 
   .article-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #000;
-    margin: 0 0 24px;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-
-  @media (min-width: 640px) {
-    .article-title {
-      font-size: 3rem;
-    }
-  }
-
-  .article-meta {
-    font-size: 20px;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.75);
     margin: 0;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
-  .article-hero-image {
-    width: 400px;
-    flex-shrink: 0;
-    display: none;
+  @media (min-width: 768px) {
+    .article-title {
+      font-size: 2.5rem;
+    }
   }
 
   @media (min-width: 1024px) {
-    .article-hero-image {
-      display: block;
+    .article-title {
+      font-size: 36px;
     }
   }
 
-  .article-hero-placeholder {
-    width: 100%;
-    height: 300px;
-    background: linear-gradient(90deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.2) 100%), linear-gradient(180deg, rgba(255,255,255,0.2) 71.6%, rgba(0,0,0,0.2) 100%);
-    border-radius: 16px;
-  }
-
-  /* Lead */
-  .article-lead {
-    max-width: 830px;
-    margin: 0 auto;
-    padding: 64px 24px;
-  }
-
-  .article-lead-text {
+  .article-ingress {
     font-size: 21px;
     font-weight: 400;
     color: rgba(0, 0, 0, 0.75);
     line-height: 1.7;
-    letter-spacing: 0.005em;
+    letter-spacing: 0.5px;
     margin: 0;
   }
 
-  /* Body */
-  .article-body-section {
-    max-width: 830px;
-    margin: 0 auto;
-    padding: 0 24px 64px;
+  @media (min-width: 1024px) {
+    .article-ingress {
+      font-size: 24px;
+    }
   }
 
-  /* Info box - light blue */
-  /* Accordion / trekkspill */
-  .article-accordion {
-    border: 1px solid #b6d8e4;
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 24px 0;
-    transition: border-color 0.15s;
-  }
-
-  .article-accordion:hover {
-    border-color: #1a2a6d;
-  }
-
-  .article-accordion[open] {
-    border-color: #1a2a6d;
-  }
-
-  .article-accordion-summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 24px;
-    font-size: 1.125rem;
-    font-weight: 500;
-    color: #1a2a6d;
-    cursor: pointer;
-    list-style: none;
-    background: #e5f2f7;
-  }
-
-  .article-accordion-summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .article-accordion-chevron {
+  .article-hero-image {
     flex-shrink: 0;
-    transition: transform 0.2s ease;
-    color: #1a2a6d;
-  }
-
-  .article-accordion[open] > .article-accordion-summary .article-accordion-chevron {
-    transform: rotate(180deg);
-  }
-
-  .article-accordion-body {
-    padding: 20px 24px;
-    font-size: 1rem;
-    line-height: 1.7;
-    color: rgba(0, 0, 0, 0.75);
-    background: white;
-  }
-
-  .article-accordion-body :global(p) {
-    margin: 0 0 12px;
-  }
-
-  .article-accordion-body :global(p:last-child) {
-    margin-bottom: 0;
-  }
-
-  /* Sitat / blockquote */
-  .article-quote {
-    margin: 32px 0;
-    padding: 24px 32px;
-    border-left: 4px solid #1a2a6d;
-    background: #f8fafc;
-    border-radius: 0 8px 8px 0;
-  }
-
-  .article-quote-text {
-    font-size: 1.25rem;
-    font-style: italic;
-    line-height: 1.6;
-    color: #1e293b;
-    margin: 0;
-  }
-
-  .article-quote-source {
-    margin-top: 12px;
-    font-size: 0.9rem;
-    color: rgba(0, 0, 0, 0.6);
-  }
-
-  .article-quote-source cite {
-    font-style: normal;
-  }
-
-  /* Callout / varselboks */
-  .article-callout {
-    margin: 24px 0;
-    padding: 20px 24px;
-    border-radius: 8px;
-    border-left: 4px solid;
-  }
-
-  .article-callout--info {
-    background: #e5f2f7;
-    border-left-color: #0062ba;
-  }
-
-  .article-callout--obs {
-    background: #fef9c3;
-    border-left-color: #ca8a04;
-  }
-
-  .article-callout--advarsel {
-    background: #fef2f2;
-    border-left-color: #dc2626;
-  }
-
-  .article-callout--suksess {
-    background: #f0fdf4;
-    border-left-color: #16a34a;
-  }
-
-  .article-callout-title {
-    font-weight: 600;
-    font-size: 1rem;
-    margin: 0 0 8px;
-    color: #1e293b;
-  }
-
-  .article-callout-body {
-    font-size: 1rem;
-    line-height: 1.6;
-    color: rgba(0, 0, 0, 0.8);
-  }
-
-  .article-callout-body :global(p) {
-    margin: 0 0 8px;
-  }
-
-  .article-callout-body :global(p:last-child) {
-    margin-bottom: 0;
-  }
-
-  /* Info box */
-  .article-info-box {
-    background: #e5f2f7;
-    border-radius: 24px;
-    padding: 48px;
-    margin: 32px 0;
-  }
-  .info-box-title {
-    font-size: 21px;
-    font-weight: 500;
-    color: #1a2a6d;
-    margin: 0 0 16px;
-  }
-  .info-box-body {
-    font-size: 21px;
-    line-height: 1.7;
-    color: rgba(0,0,0,0.75);
-  }
-
-  /* Hero block - full-width dark banner */
-  .article-hero-block {
-    background: #1b4656;
-    padding: 40px 24px;
-    margin: 32px -24px;
-    /* Break out of max-width container */
-    width: calc(100% + 48px);
-    text-align: center;
-  }
-  @media (min-width: 878px) {
-    .article-hero-block {
-      padding: 64px 24px;
-      margin-left: calc(-50vw + 50%);
-      margin-right: calc(-50vw + 50%);
-      width: 100vw;
-    }
-  }
-  .article-hero-block-inner {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .article-hero-block-title {
-    font-size: 28px;
-    font-weight: 600;
-    color: white;
-    margin: 0 0 20px;
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-  }
-  @media (min-width: 640px) {
-    .article-hero-block-title {
-      font-size: 36px;
-      margin: 0 0 24px;
-    }
-  }
-  .article-hero-block-body {
-    font-size: 18px;
-    line-height: 1.7;
-    color: rgba(255,255,255,0.85);
-  }
-  @media (min-width: 640px) {
-    .article-hero-block-body {
-      font-size: 21px;
-    }
-  }
-
-  /* Image section */
-  .article-image-section {
-    margin: 32px 0;
-  }
-  .article-image-section img {
     width: 100%;
+  }
+
+  @media (min-width: 1024px) {
+    .article-hero-image {
+      width: 407px;
+    }
+  }
+
+  .article-hero-img {
+    width: 100%;
+    height: auto;
     border-radius: 8px;
     display: block;
-  }
-  .article-image-placeholder {
-    width: 100%;
-    height: 400px;
-    background: var(--image-fallback-bg, #D9D9D9);
-    border-radius: 8px;
-  }
-  .article-image-section figcaption {
-    font-size: 14px;
-    color: rgba(0,0,0,0.55);
-    margin-top: 8px;
-    text-align: center;
+    object-fit: cover;
   }
 
-  /* Text block */
-  .article-text-block {
-    font-size: 21px;
-    line-height: 1.7;
-    color: rgba(0,0,0,0.75);
-    letter-spacing: 0.005em;
-  }
-  .article-text-block :global(h2) {
-    font-size: 36px;
-    font-weight: 500;
-    color: #1a2a6d;
-    margin: 48px 0 24px;
-  }
-  .article-text-block :global(h3) {
-    font-size: 24px;
-    font-weight: 500;
-    color: #1a2a6d;
-    margin: 32px 0 16px;
-  }
-  .article-text-block :global(p) {
-    margin: 0 0 16px;
-  }
-  .article-text-block :global(ul), .article-text-block :global(ol) {
-    margin: 8px 0 16px;
-    padding-left: 24px;
+  @media (min-width: 1024px) {
+    .article-hero-img {
+      height: 331px;
+    }
   }
 
   /* More articles */
   .more-articles {
-    max-width: 1120px;
-    margin: 0 auto;
-    padding: 64px 24px 120px;
+    padding: 64px 0 120px;
   }
 
   .more-articles-heading {
-    font-size: 40px;
+    font-size: 32px;
     font-weight: 700;
     color: #000;
-    margin: 0 0 32px;
+    margin: 0 0 24px;
     line-height: 1.2;
     letter-spacing: -0.02em;
+  }
+
+  @media (min-width: 1024px) {
+    .more-articles-heading {
+      font-size: 40px;
+      margin-bottom: 32px;
+    }
   }
 
   .more-articles-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .more-articles-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
   }
 
   @media (min-width: 1024px) {
@@ -525,7 +270,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
     background: rgba(0, 0, 0, 0.05);
     border-radius: 8px;
     padding: 24px;
-    height: 384px;
+    min-height: 280px;
     overflow: hidden;
     text-decoration: none;
     color: inherit;
@@ -569,7 +314,7 @@ const otherArticles = allArticlesRes.data.filter(a => a.slug !== slug).slice(0, 
   .more-article-image {
     flex: 1;
     background: var(--image-fallback-bg, #D9D9D9);
-    border-radius: 24px;
+    border-radius: 8px;
     min-height: 120px;
   }
 </style>
