@@ -196,7 +196,21 @@ const formattedDate = date
   }
 
   .news-card--featured .news-card-title a {
+    color: var(--ds-color-text-default);
+  }
+
+  .news-card--featured .news-card-title-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.2em;
+    height: 1.2em;
+    margin-left: 0.25em;
+    border-radius: 50%;
+    background-color: var(--ds-color-surface-active);
     color: var(--ds-color-brand1-text-default);
+    vertical-align: middle;
+    flex-shrink: 0;
   }
 
   .news-card--featured .news-card-title-arrow {
@@ -227,6 +241,6 @@ const formattedDate = date
     gap: var(--ds-size-2);
     font-size: var(--ds-font-size-3);
     font-weight: 500;
-    color: var(--ds-color-brand1-text-default);
+    color: var(--ds-color-text-default);
   }
 </style>
