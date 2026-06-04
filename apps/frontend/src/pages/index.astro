@@ -8,15 +8,22 @@ import ArrowLink from '../components/shared/ArrowLink.astro';
 import ExampleLinkCards from '../components/shared/ExampleLinkCards.astro';
 import TextWithImage from '../components/shared/TextWithImage.astro';
 import { websiteSchema } from '../lib/seo';
-import { getForside, getArtikler, getPlainText } from '../lib/umbraco';
+import { getForside, getArtikler, getKalenderhendelser, type Kalenderhendelse } from '../lib/umbraco';
 
 let forside = null;
 let latestArticles: any[] = [];
+let upcomingEvents: Kalenderhendelse[] = [];
 try {
   forside = await getForside();
   const artiklerRes = await getArtikler(4);
   latestArticles = artiklerRes.data;
-} catch (e) {
+  const hendelserRes = await getKalenderhendelser();
+  const now = new Date();
+  upcomingEvents = hendelserRes.data
+    .filter(h => new Date(h.sluttDato || h.startDato) >= now)
+    .sort((a, b) => new Date(a.startDato).getTime() - new Date(b.startDato).getTime())
+    .slice(0, 1);
+  } catch (e) {
   console.error('Failed to fetch frontpage CMS data:', e);
 }
 
@@ -25,10 +32,20 @@ const seoDescription = forside?.seoBeskrivelse || 'KI Norge - Norges nasjonale s
 const websiteJsonLd = websiteSchema(seoDescription);
 
 const featuredArticle = latestArticles[0];
+
+const monthNames = ['januar', 'februar', 'mars', 'april', 'mai', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'desember'];
+const formatEventDate = (iso: string) => {
+  const d = new Date(iso);
+  return { day: String(d.getDate()), month: monthNames[d.getMonth()], year: String(d.getFullYear()) };
+};
+const nextEvent = upcomingEvents[0] || null;
+const nextEventDate = nextEvent ? formatEventDate(nextEvent.startDato) : null;
+const nextEventMultiDay = nextEvent?.sluttDato && new Date(nextEvent.sluttDato).toDateString() !== new Date(nextEvent.startDato).toDateString();
 ---
 
-<Layout title={title} description={seoDescription}>
+<Layout title={title} description={seoDescription} hideLogo>
   <Hero />
+  <h1 class="ds-sr-only">ki.norge.no - {title}</h1>
   <script type="application/ld+json" set:html={JSON.stringify(websiteJsonLd).replace(/</g, '\\u003c')} />
 
   <!-- Aktuelt -->
@@ -43,7 +60,7 @@ const featuredArticle = latestArticles[0];
           title={featuredArticle.tittel}
           tagColor="brand1"
           lead={featuredArticle.lead || 'Denne artikkelen gir en oversikt over den norske situasjonen, basert på tidligere utredninger og utviklingstrekk i den nasjonale KI-infrastrukturen.'}
-          image="/article_placeholder.png"
+          image={featuredArticle.image}
           imageAlt=""
           variant="featured"
         />
@@ -56,7 +73,7 @@ const featuredArticle = latestArticles[0];
             href={`/artikler/${article.slug}`}
             title={article.tittel}
             variant="image"
-            image="/article_placeholder.png"
+            image={article.image}
             date={article.publishedAt}
           />
         ))}
@@ -67,22 +84,20 @@ const featuredArticle = latestArticles[0];
 
     <div class="arrangementer-section" data-layout-block="content">
       <h2 class="ds-heading section-heading" data-size="lg">Kommende arrangementer</h2>
-      <EventCard
-        href="/arrangementer/digitaliseringskonferansen"
-        title="Digitaliseringskonferansen"
-        description="Verden endres radikalt med kunstig intelligens. Norge kan sikre digital suverenitet og demokratiske verdier."
-        tag="Konferanse"
-        tagColor="brand1"
-        category="Digitalisering og samordning, datadeling"
-        day="13."
-        month="august"
-        year="2025"
-        time="09:00 – 16:00"
-        timeNote="Arrangement over flere dager"
-        location="Clarion Hotel The Hub, Oslo"
-        seats="FÅ PLASSER IGJEN!"
-      />
-      <ArrowLink href="/arrangementer" text="Se alle arrangementer" />
+      {nextEvent && nextEventDate && (
+        <EventCard
+          href={`/kalender/${nextEvent.slug}`}
+          title={nextEvent.tittel}
+          description={nextEvent.ingress || ''}
+          day={nextEventDate.day}
+          month={nextEventDate.month}
+          year={nextEventDate.year}
+          time={nextEvent.tid || ''}
+          timeNote={nextEventMultiDay ? 'Arrangement over flere dager' : undefined}
+          location={nextEvent.sted || ''}
+        />
+      )}
+      <ArrowLink href="/kalender" text="Se alle arrangementer" />
     </div>
   </section>
 
@@ -129,7 +144,7 @@ const featuredArticle = latestArticles[0];
 
   /* ── Aktuelt ─────────────────────────────────────────── */
   .aktuelt {
-    background-color: var(--ds-color-surface-default);
+    background-color: var(--ds-color-brand2-surface-default);
   }
 
   .featured-article {

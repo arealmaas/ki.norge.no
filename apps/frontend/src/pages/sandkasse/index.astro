@@ -26,7 +26,6 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 ---
 
 <Layout title={seoTitle} description={seoDesc} ogImage={seoImage}>
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
   <div class="article-page grid" data-layout-block="content">
     <section class={`article-hero ${isLightBlueBg ? 'col-all article-hero--bg-lyseblaa' : 'col-center-10'}`}>
       {isLightBlueBg ? (
@@ -57,9 +56,10 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
         </div>
       )}
     </section>
-
+    
     <ArticleBlocksRenderer blocks={sandkasse.innhold} />
   </div>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')} />
 </Layout>
 
 <style>
@@ -119,17 +119,6 @@ const isLightBlueBg = bakgrunn === 'lyseblaa';
 
   @media (min-width: 768px) { .article-title { font-size: 2.5rem; } }
   @media (min-width: 1024px) { .article-title { font-size: 36px; } }
-
-  .article-ingress {
-    font-size: 21px;
-    font-weight: 400;
-    color: rgba(0, 0, 0, 0.75);
-    line-height: 1.7;
-    letter-spacing: 0.5px;
-    margin: 0;
-  }
-
-  @media (min-width: 1024px) { .article-ingress { font-size: 24px; } }
 
   .article-hero-image {
     flex-shrink: 0;

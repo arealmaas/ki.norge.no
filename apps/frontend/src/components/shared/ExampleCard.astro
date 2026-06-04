@@ -1,0 +1,108 @@
+---
+import AkselIcon from './AkselIcon.astro';
+
+interface Props {
+  href: string;
+  title: string;
+  tag?: string;
+  variant?: 'dark' | 'medium' | 'light';
+}
+
+const {
+  href,
+  title,
+  tag = 'Eksempel',
+  variant = 'dark',
+} = Astro.props;
+
+const id = `example-card-${crypto.randomUUID().slice(0, 8)}`;
+---
+
+<article class="example-card" data-variant={variant} data-clickdelegatefor={id}>
+  {tag && <span class="ds-tag" data-size="sm">{tag}</span>}
+  <h3 class="ds-heading example-card-title" data-size="sm">
+    <a id={id} href={href}>
+      {title}
+      <span class="example-card-arrow" aria-hidden="true">
+        <AkselIcon name="ArrowRight" size={20} />
+      </span>
+    </a>
+  </h3>
+</article>
+
+<style>
+  .example-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--ds-size-6);
+    cursor: pointer;
+    position: relative;
+    min-height: 200px;
+
+    & a {
+      text-decoration: none;
+      color: inherit;
+
+      &.\:click-delegate-hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    &:focus-within {
+      box-shadow: var(--dsc-focus-boxShadow);
+      outline: var(--dsc-focus-outline);
+      outline-offset: var(--ds-border-width-focus);
+      z-index: 1;
+    }
+  }
+
+  .ds-tag {
+    margin-bottom: var(--ds-size-4);
+  }
+
+  .example-card-title {
+    margin: 0;
+    flex: 1;
+  }
+
+  .example-card-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background-color: var(--ds-color-base-contrast-default);
+    color: var(--ds-color-base-default);
+    vertical-align: middle;
+    margin-left: 0.35em;
+  }
+
+  .example-card[data-variant='light'] .example-card-arrow {
+    background-color: var(--ds-color-text-default);
+    color: var(--ds-color-surface-hover);
+  }
+
+  /* ── Dark variant (base-default) ── */
+  .example-card[data-variant='dark'] {
+    background-color: var(--ds-color-base-default);
+    color: var(--ds-color-base-contrast-default);
+  }
+
+  /* ── Medium variant (base-hover) ── */
+  .example-card[data-variant='medium'] {
+    background-color: var(--ds-color-base-hover);
+    color: var(--ds-color-base-contrast-default);
+  }
+
+  /* ── Light variant (surface-hover) ── */
+  .example-card[data-variant='light'] {
+    background-color: var(--ds-color-surface-hover);
+    color: var(--ds-color-text-default);
+  }
+</style>
