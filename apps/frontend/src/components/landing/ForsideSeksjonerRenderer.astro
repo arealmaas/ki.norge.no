@@ -9,6 +9,7 @@ import EventCard from '../shared/EventCard.astro';
 import ArrowLink from '../shared/ArrowLink.astro';
 import ExampleLinkCards from '../shared/ExampleLinkCards.astro';
 import TextWithImage from '../shared/TextWithImage.astro';
+import AkselIcon from '../shared/AkselIcon.astro';
 import { getMediaUrl, type ForsideSeksjon, type Kalenderhendelse } from '../../lib/umbraco';
 
 interface Props {
@@ -113,21 +114,31 @@ const featuredArticle = latestArticles[0];
     return (
       <section data-layout-block="content" class="examples-section">
         <h2 class="ds-heading section-heading" data-size="lg">{block.overskrift || 'Lær av andre'}</h2>
-        <ExampleLinkCards cards={eksempelKort} />
+        <ExampleLinkCards cards={eksempelKort.map((c, i) => ({ ...c, variant: i === 0 ? 'medium' : 'light' }))} />
         <ArrowLink href="/eksempler" text="Se alle eksempler" />
       </section>
     );
   }
 
   if (block.contentType === 'forsideSandkasse') {
+    const sandkasseLinkId = `sandkasse-link-${block.id}`;
     return (
-      <section class="sandkasse-section" data-layout-block="edge">
-        <div data-layout-block="content">
-          <h2 class="sandkasse-title">{block.overskrift || 'Den regulatoriske sandkassen'}</h2>
-          {block.tekstHtml
-            ? <div class="sandkasse-desc" set:html={block.tekstHtml} />
-            : <p class="sandkasse-desc">Juridisk veiledning for deg som ønsker å utvikle et risikofylt KI-prosjekt.</p>}
-          {block.lenkeUrl && <ArrowLink href={block.lenkeUrl} text={block.lenketekst || 'Les mer'} />}
+      <section class="sandkasse-section" data-layout-block="content">
+        <div class="sandkasse-card" data-clickdelegatefor={sandkasseLinkId}>
+          <div class="sandkasse-card-image">
+            <img src={block.illustrasjon ? getMediaUrl(block.illustrasjon) : '/placeholder.png'} alt="" loading="lazy" decoding="async" />
+          </div>
+          <div class="sandkasse-card-text">
+            <h2 class="sandkasse-title">
+              <a id={sandkasseLinkId} href={block.lenkeUrl || '/sandkasse'}>
+                {block.overskrift || 'Den regulatoriske sandkassen'}
+                <span class="sandkasse-arrow" aria-hidden="true"><AkselIcon name="ArrowRight" size={20} /></span>
+              </a>
+            </h2>
+            {block.tekstHtml
+              ? <div class="sandkasse-desc ds-paragraph" data-size="lg" set:html={block.tekstHtml} />
+              : <p class="sandkasse-desc ds-paragraph" data-size="lg">Juridisk veiledning for deg som ønsker å utvikle et risikofylt KI-prosjekt.</p>}
+          </div>
         </div>
       </section>
     );
@@ -172,24 +183,98 @@ const featuredArticle = latestArticles[0];
 
   /* ── Sandkassen ──────────────────────────────────────── */
   .sandkasse-section {
-    background-color: var(--ds-color-base-active);
-    color: var(--ds-color-base-contrast-default);
-    padding-block: var(--ds-size-22);
+    padding-block: var(--ds-size-12);
+
+    @media (max-width: 768px) {
+      padding-block: var(--ds-size-8);
+    }
+  }
+
+  .sandkasse-card {
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    border: 6px solid var(--ds-color-border-subtle);
+    background-color: var(--ds-color-brand2-background-default);
+
+    &:focus-within {
+      box-shadow: var(--dsc-focus-boxShadow);
+      outline: var(--dsc-focus-outline);
+      outline-offset: var(--ds-border-width-focus);
+    }
+
+    &:has(.\:click-delegate-hover) a {
+      text-decoration: underline;
+    }
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .sandkasse-card-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ds-size-8);
+
+    @media (max-width: 768px) {
+      padding: var(--ds-size-4);
+    }
+  }
+
+  .sandkasse-card-image img {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .sandkasse-card-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--ds-size-3);
+    padding: var(--ds-size-10);
+
+    @media (max-width: 768px) {
+      padding: var(--ds-size-4);
+    }
   }
 
   .sandkasse-title {
-    display: flex;
-    align-items: center;
-    gap: var(--ds-size-3);
     font-size: var(--ds-heading-lg-font-size);
-    font-weight: 600;
-    margin: 0 0 var(--ds-size-3);
+    margin: 0;
+    line-height: 1.3;
+
+    & a {
+      color: inherit;
+      text-decoration: none;
+
+      &.\:click-delegate-hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        outline: none;
+        box-shadow: none;
+      }
+    }
+  }
+
+  .sandkasse-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1em;
+    height: 1em;
+    border-radius: var(--ds-border-radius-full);
+    background-color: var(--ds-color-surface-tinted);
+    vertical-align: middle;
+    margin-left: var(--ds-size-2);
   }
 
   .sandkasse-desc {
-    font-size: var(--ds-body-md-font-size);
     margin: 0;
-    opacity: 0.85;
-    max-width: 500px;
+    max-width: 400px;
   }
 </style>
