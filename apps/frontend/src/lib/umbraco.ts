@@ -315,19 +315,6 @@ export interface AccordionSection {
   body: UmbracoBlock[];
 }
 
-export interface TipItem {
-  tipsTitle: string;
-  tipsTekst: UmbracoBlock[];
-  tipsBilde?: UmbracoMedia;
-}
-
-export interface EventItem {
-  eventTittel: string;
-  eventDato?: string;
-  eventSted?: string;
-  eventUrl?: string;
-}
-
 // Ett redaktørvalgt kort i forsideAktuelt/forsideLaerAvAndre.
 // id = node-id på valgt artikkel/eksempel. ingress = valgfri overstyring.
 export interface ForsideKort {
@@ -376,13 +363,6 @@ export interface OmOssSeksjon {
   updatedAt: string;
   publishedAt: string;
   locale: string;
-}
-
-export interface OmOssSeksjonBlokk {
-  tittel: string;
-  tekst: string; // HTML from RichText
-  bilde?: UmbracoMedia;
-  bildeAlt?: string;
 }
 
 // Om Oss bruker rik artikkelmal (#362): samme artikkelhode + modul-blokkliste som artikkel.
@@ -1143,35 +1123,6 @@ function mapAccordionSections(value: unknown): AccordionSection[] {
     return {
       title: (props.title as string) || '',
       body: mapRichText(props.body) || [],
-    };
-  });
-}
-
-function mapTipItems(value: unknown): TipItem[] {
-  const items = Array.isArray(value) ? value : (value as any)?.items;
-  if (!Array.isArray(items)) return [];
-  return items.map((block: any) => {
-    const content = block.content || block;
-    const props = content.properties || content;
-    return {
-      tipsTitle: (props.tipsTitle as string) || '',
-      tipsTekst: mapRichText(props.tipsTekst) || [],
-      tipsBilde: mapMedia(props.tipsBilde),
-    };
-  });
-}
-
-function mapEventItems(value: unknown): EventItem[] {
-  const items = Array.isArray(value) ? value : (value as any)?.items;
-  if (!Array.isArray(items)) return [];
-  return items.map((block: any) => {
-    const content = block.content || block;
-    const props = content.properties || content;
-    return {
-      eventTittel: (props.eventTittel as string) || '',
-      eventDato: (props.eventDato as string) || undefined,
-      eventSted: (props.eventSted as string) || undefined,
-      eventUrl: (props.eventUrl as string) || undefined,
     };
   });
 }
