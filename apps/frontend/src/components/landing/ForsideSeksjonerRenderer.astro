@@ -48,10 +48,10 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
     .map((k) => {
       const ex = eksempler.find((e: any) => e.id === k.id);
       return ex
-        ? { href: `/caser/${ex.slug}`, title: ex.tittel, tag: 'Eksempel' as const, lead: k.ingress || ex.ingress }
+        ? { href: `/caser/${ex.slug}`, title: ex.tittel, tag: 'Eksempel' as const }
         : null;
     })
-    .filter((c): c is { href: string; title: string; tag: 'Eksempel'; lead?: string } => c !== null);
+    .filter((c): c is { href: string; title: string; tag: 'Eksempel' } => c !== null);
 ---
 
 {seksjoner.map((block) => {
