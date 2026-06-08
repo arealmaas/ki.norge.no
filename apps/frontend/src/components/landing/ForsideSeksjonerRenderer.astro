@@ -53,10 +53,10 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
     .map((k) => {
       const ex = eksempler.find((e: any) => e.id === k.id);
       return ex
-        ? { href: `/caser/${ex.slug}`, title: ex.tittel, tag: 'Eksempel' as const, lead: k.ingress || ex.ingress }
+        ? { href: `/caser/${ex.slug}`, title: ex.tittel, tag: 'Eksempel' as const, lead: k.ingress || ex.ingress || undefined }
         : null;
     })
-    .filter((c): c is { href: string; title: string; tag: 'Eksempel'; lead?: string } => c !== null);
+    .filter((c) => c !== null) as { href: string; title: string; tag: 'Eksempel'; lead?: string }[];
 ---
 
 {seksjoner.map((block) => {
@@ -120,22 +120,24 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
     const dato = valgt ? formatEventDate(valgt.startDato) : null;
     const flerDager = valgt?.sluttDato && new Date(valgt.sluttDato).toDateString() !== new Date(valgt.startDato).toDateString();
     return (
-      <section class="arrangementer-section" data-layout-block="content">
-        <h2 class="ds-heading section-heading" data-size="lg">{block.overskrift || 'Kommende arrangementer'}</h2>
-        {valgt && dato && (
-          <EventCard
-            href={`/kalender/${valgt.slug}`}
-            title={valgt.tittel}
-            description={valgt.ingress || ''}
-            day={dato.day}
-            month={dato.month}
-            year={dato.year}
-            time={valgt.tid || ''}
-            timeNote={flerDager ? 'Arrangement over flere dager' : undefined}
-            location={valgt.sted || ''}
-          />
-        )}
-        <ArrowLink href={block.lenkeUrl || '/kalender'} text={block.lenketekst || 'Se alle arrangementer'} />
+      <section class="arrangementer" data-layout-block="edge">
+        <div class="arrangementer-section" data-layout-block="content">
+          <h2 class="ds-heading section-heading" data-size="lg">{block.overskrift || 'Kommende arrangementer'}</h2>
+          {valgt && dato && (
+            <EventCard
+              href={`/kalender/${valgt.slug}`}
+              title={valgt.tittel}
+              description={valgt.ingress || ''}
+              day={dato.day}
+              month={dato.month}
+              year={dato.year}
+              time={valgt.tid || ''}
+              timeNote={flerDager ? 'Arrangement over flere dager' : undefined}
+              location={valgt.sted || ''}
+            />
+          )}
+          <ArrowLink href={block.lenkeUrl || '/kalender'} text={block.lenketekst || 'Se alle arrangementer'} />
+        </div>
       </section>
     );
   }
@@ -151,9 +153,9 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
       <section class="veiledning-section" data-layout-block="edge">
         <div data-layout-block="content">
           <TextWithImage
-            title={tittel}
-            href={href}
-            image={image}
+            title={block.tittel || 'Gjør dataene KI-klare'}
+            href={block.lenkeUrl || '/veiledning'}
+            image={block.illustrasjon ? (getMediaUrl(block.illustrasjon) ?? '/people-workshopping.svg') : '/people-workshopping.svg'}
             imageAlt="Illustrasjon"
             label={block.label || 'Veiledning'}
           >
@@ -171,7 +173,7 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
     return (
       <section data-layout-block="content" class="examples-section">
         <h2 class="ds-heading section-heading" data-size="lg">{block.overskrift || 'Lær av andre'}</h2>
-        <ExampleLinkCards cards={kort.map((c, i) => ({ ...c, variant: i === 0 ? 'medium' : 'light' }))} />
+        <ExampleLinkCards cards={kort.filter((c): c is { href: string; title: string; tag: string } => 'href' in c && 'title' in c).map((c, i) => ({ ...c, variant: (i === 0 ? 'medium' : 'light') as 'dark' | 'medium' | 'light' }))} />
         <ArrowLink href={block.lenkeUrl || '/eksempler'} text={block.lenketekst || 'Se alle eksempler'} />
       </section>
     );
@@ -211,7 +213,7 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
       <section class="sandkasse-section" data-layout-block="content">
         <div class="sandkasse-card" data-clickdelegatefor={sandkasseLinkId}>
           <div class="sandkasse-card-image">
-            <img src={block.illustrasjon ? getMediaUrl(block.illustrasjon) : '/placeholder.png'} alt="" loading="lazy" decoding="async" />
+            <img src={block.illustrasjon ? getMediaUrl(block.illustrasjon) : '/people-working.svg'} alt="" loading="lazy" decoding="async" />
           </div>
           <div class="sandkasse-card-text">
             <h2 class="sandkasse-title">
@@ -243,7 +245,7 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
   .aktuelt {
     background-color: var(--ds-color-brand2-surface-default);
   }
-
+  
   .aktuelt :global(.card-grid) {
     margin-bottom: var(--ds-size-6);
   }
@@ -253,6 +255,11 @@ const resolveEksempelKort = (kort: { id?: string; ingress?: string }[] | undefin
   }
 
   /* ── Kommende arrangementer (egen seksjon, uten rosa strek) ── */
+  .arrangementer {
+    background-color: var(--ds-color-brand2-surface-default);
+    margin-block-start: 0 !important;
+  }
+
   .arrangementer-section :global(.event-card) {
     margin-bottom: var(--ds-size-6);
   }
