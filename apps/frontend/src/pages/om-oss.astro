@@ -68,6 +68,7 @@ const contentBlocks = allBlocks.filter(b => b.contentType !== 'artikkelByline');
             title={article.tittel}
             date={article.publishedAt}
             lead={getPlainText(article.innhold, 80)}
+            image={getMediaUrl(article.artikkelBilde)}
             variant="image"
           />
         ))}
@@ -91,6 +92,7 @@ const contentBlocks = allBlocks.filter(b => b.contentType !== 'artikkelByline');
     overflow: hidden;
     padding: 0;
     grid-column: 4;
+    margin-block-start: 0;
 
     @media (max-width: 767px) {
       grid-column: 1 / 5;
