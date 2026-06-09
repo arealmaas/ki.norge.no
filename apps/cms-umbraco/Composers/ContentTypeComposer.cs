@@ -992,7 +992,7 @@ public class ContentTypeComponent : IAsyncComponent
             Alias = "veiledningObs",
             Name = "Obs",
             Description = "Varselboks med tittel og tekst. Brukes for å fremheve viktig informasjon i et veiledningssteg.",
-            Icon = "icon-alert",
+            Icon = "icon-pushpin",
             IsElement = true,
         };
         ct.AddPropertyGroup("innhold", "Innhold");
@@ -1021,6 +1021,14 @@ public class ContentTypeComponent : IAsyncComponent
         if (tittel != null && tittel.Mandatory)
         {
             tittel.Mandatory = false;
+            changed = true;
+        }
+
+        // Backoffice-ikon: bytt advarselstrekant til "merk deg dette" (Dorte).
+        // Publisert side bruker HandKnot; her oppdateres eksisterende noder i prod/tt02.
+        if (ct.Icon != "icon-pushpin")
+        {
+            ct.Icon = "icon-pushpin";
             changed = true;
         }
 
