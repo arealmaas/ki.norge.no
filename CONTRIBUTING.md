@@ -7,15 +7,15 @@ CMS: https://cms.ki.norge.no/umbraco
 ## Setup
 
 ```bash
-# Frontend (Astro on Deno)
-npm run frontend:dev          # http://localhost:4321
+# Frontend (Astro, runs on Node locally)
+pnpm run frontend:dev         # http://localhost:4321
 
 # CMS (Umbraco 17 / .NET 10)
-npm run cms:dev               # http://localhost:5000/umbraco
+pnpm run cms:dev              # http://localhost:5000/umbraco
                               # admin@ki.norge.no / KiNorge2025!
 
 # Frontend pointing at prod CMS (no local CMS needed)
-npm run frontend:dev:prod
+pnpm run frontend:dev:prod
 ```
 
 First time the CMS runs, it auto-creates an admin and seeds demo content.
@@ -23,9 +23,9 @@ First time the CMS runs, it auto-creates an admin and seeds demo content.
 ## Project structure
 
 ```
-apps/frontend/      Astro SSR frontend, runs on Deno
-apps/cms-umbraco/   Umbraco 17 CMS, .NET 10, SQLite + Litestream backup
-scripts/            Deploy and ops scripts (deploy-azure.sh, smoke-test.sh)
+apps/frontend/      Astro SSR frontend, runs on Node / Cloudflare Workers
+apps/cms-umbraco/   Umbraco 17 CMS, .NET 10, Azure SQL (prod) / SQLite (local)
+scripts/            Ops scripts (smoke-test.sh; legacy deploy-azure.sh)
 tests/              Playwright tests (frontend + CMS smoke)
 ```
 
@@ -58,9 +58,10 @@ the PR.
 
 ## Deployment
 
-Manual via `bash scripts/deploy-azure.sh`. Requires Azure PIM activation first
-(see `~/.claude/skills/az-auth/SKILL.md` or `npm run azure:activate`). CI/CD via
-GitHub Actions is on the roadmap.
+CMS deploys via Altinn dis-core (GitHub Actions). Frontend deploys to Cloudflare
+Workers with `pnpm run frontend:deploy:prod` (and `:tt02`). The legacy Container
+Apps script `scripts/deploy-azure.sh` (Azure PIM via `pnpm run azure:activate`)
+is retired, kept for reference.
 
 ## Reporting security issues
 
