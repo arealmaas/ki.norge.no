@@ -13,6 +13,17 @@ async function login(page: Page) {
   // Umbraco 17 renders the login form inside Lit shadow roots. Playwright
   // auto-pierces open shadow DOM, so we can target the inputs by their
   // stable ids (#username-input, #password-input, #umb-login-button).
+  // With an external login provider configured (Entra ID), Umbraco's login
+  // screen shows provider buttons and collapses the local credential form
+  // behind a "Sign in with Umbraco" button. Reveal it first (the button keeps
+  // the untranslated "Umbraco" brand). No-op when the form is shown directly.
+  const localLoginButton = page.getByRole('button', { name: /Umbraco/i }).first();
+  try {
+    await localLoginButton.click({ timeout: 15_000 });
+  } catch {
+    // No provider buttons present — credential form is shown directly.
+  }
+
   const usernameInput = page.locator('#username-input');
   await usernameInput.waitFor({ state: 'visible', timeout: 30_000 });
   await usernameInput.fill(ADMIN_EMAIL);
