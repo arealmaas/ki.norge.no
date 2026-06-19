@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Umbraco.Cms.Api.Management.Security;
 using Umbraco.Cms.Core.Composing;
+using Umbraco.Cms.Infrastructure.Manifest;
 
 namespace KiNorge.Cms.CustomAuthentication;
 
 /// <summary>
-/// Registrerer Microsoft Entra ID som ekstern paalogging for Umbraco-backoffice.
-/// Aktiveres kun naar all konfig under MicrosoftEntraId finnes, ellers er den inert
-/// og lokal passord-paalogging er uendret.
+/// Registrerer Microsoft Entra ID som ekstern paalogging for Umbraco-backoffice,
+/// inkludert Microsoft-knappen paa login-skjermen (via MicrosoftEntraIdManifestReader).
+/// Aktiveres kun naar all konfig under MicrosoftEntraId finnes, ellers er den inert,
+/// ingen knapp vises og lokal passord-paalogging er uendret.
 /// </summary>
 public class MicrosoftEntraIdBackOfficeExternalLoginComposer : IComposer
 {
@@ -42,6 +45,10 @@ public class MicrosoftEntraIdBackOfficeExternalLoginComposer : IComposer
 
         builder.Services.ConfigureOptions<MicrosoftEntraIdBackOfficeExternalLoginProviderOptions>();
         builder.Services.ConfigureOptions<ConfigureMicrosoftEntraIdAuthenticationOptions>();
+
+        // Microsoft-knappen paa login-skjermen leveres via MicrosoftEntraIdManifestReader,
+        // registrert kun her (samme secrets-gate). Uten konfig finnes ingen knapp.
+        builder.Services.AddSingleton<IPackageManifestReader, MicrosoftEntraIdManifestReader>();
 
         builder.AddBackOfficeExternalLogins(logins =>
         {
