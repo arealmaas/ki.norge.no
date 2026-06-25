@@ -2,7 +2,7 @@
 # The Astro Node adapter outputs dist/server/entry.mjs which is a self-contained
 # HTTP server — no Astro CLI needed at runtime.
 
-FROM node:24-alpine@sha256:5fa278c599dbba0c8f873d8717d50ecbb57c5ae6a53b7ab240c25135e0b65995 AS builder
+FROM node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd AS builder
 WORKDIR /app
 
 # Enable corepack so pnpm is available (Node 22+ ships with corepack).
@@ -17,7 +17,7 @@ WORKDIR /app/apps/frontend
 RUN pnpm run build
 
 # ─── Runtime stage ──────────────────────────────────────────────────────────
-FROM node:24-alpine@sha256:5fa278c599dbba0c8f873d8717d50ecbb57c5ae6a53b7ab240c25135e0b65995
+FROM node:24-alpine@sha256:a0b9bf06e4e6193cf7a0f58816cc935ff8c2a908f81e6f1a95432d679c54fbfd
 WORKDIR /app
 
 RUN corepack enable
